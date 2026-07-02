@@ -1,0 +1,619 @@
+﻿# ===== 前端页面生成器：把所有HTML/CSS/JS拼成一个index.html =====
+# 输出路径（backend/static/index.html）`nOUT = os.path.join(os.path.dirname(__file__), "backend", "static", "index.html")
+# 用列表收集所有HTML片段，最后拼起来写入文件`nP = []
+# 添加一段HTML到列表`ndef add(t):
+    P.append(t)  # 追加到列表
+
+# === HEAD ===
+add("<!DOCTYPE html>")
+add("<html lang=\"zh-CN\">")
+add("<head>")
+add("<meta charset=\"UTF-8\">")
+add("<meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\">")
+add("<title>\u667a\u80fd\u5e7f\u544a\u6295\u653e\u52a9\u624b</title>")
+# CSS inline
+add("""<style>
+:root{--navy:#0F1E32;--blue:#1A6DFF;--blue-hover:#1557D4;--card-shadow:0 2px 10px rgba(0,0,0,0.08);--text:#1a1a2e;--text-light:#6b7280;--bg:#f0f4f8;--white:#fff;--danger:#ef4444;--success:#10b981;--warning:#f59e0b;--border:#e5e7eb;--radius:8px;--sidebar-w:220px;--header-h:56px}
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+body{background:var(--bg);color:var(--text);overflow-y:auto;overflow-x:hidden;min-height:100vh}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-thumb{background:#c1c7cd;border-radius:3px}
+.login-wrapper{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#0F1E32 0%,#1a3a5c 100%);padding:20px}
+.login-box{background:var(--white);border-radius:12px;padding:40px;width:400px;max-width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+.login-box h2{text-align:center;margin-bottom:24px;font-size:22px;color:var(--navy)}
+.captcha-row{display:flex;gap:10px;align-items:center}.captcha-row img{height:40px;border-radius:4px;cursor:pointer;border:1px solid var(--border)}
+.app-layout{display:none;min-height:100vh}
+.sidebar{position:fixed;top:0;left:0;width:var(--sidebar-w);height:100vh;background:var(--navy);color:#fff;z-index:100;display:flex;flex-direction:column}
+.sidebar .logo{padding:20px 16px;font-size:18px;font-weight:700;border-bottom:1px solid rgba(255,255,255,0.1)}
+.sidebar .logo span{color:#4a9eff}.sidebar nav{flex:1;overflow-y:auto;padding:8px 0}
+.sidebar nav a{display:flex;align-items:center;gap:10px;padding:12px 20px;color:rgba(255,255,255,0.7);text-decoration:none;font-size:14px;border-left:3px solid transparent}
+.sidebar nav a:hover{background:rgba(255,255,255,0.08);color:#fff}
+.sidebar nav a.active{background:rgba(26,109,255,0.2);color:#4a9eff;border-left-color:var(--blue)}
+.sidebar .user-info{display:none;padding:16px 20px;border-top:1px solid rgba(255,255,255,0.1);font-size:13px}
+.sidebar .logout-btn{padding:10px 20px;text-align:left;background:none;border:none;color:rgba(255,255,255,0.6);cursor:pointer;font-size:13px}
+.main-area{margin-left:var(--sidebar-w);flex:1;min-height:100vh}
+.main-header{position:sticky;top:0;background:var(--white);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);z-index:50;height:var(--header-h)}
+.main-header h1{font-size:18px;font-weight:600}
+.menu-toggle{display:none;background:none;border:none;font-size:22px;cursor:pointer}
+.content{padding:20px 24px}
+.card{background:var(--white);border-radius:var(--radius);padding:20px;box-shadow:var(--card-shadow);margin-bottom:16px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.card-header h3{font-size:16px;font-weight:600}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.stat-card{background:var(--white);border-radius:var(--radius);padding:16px;box-shadow:var(--card-shadow);text-align:center}
+.stat-card .label{font-size:13px;color:var(--text-light);margin-bottom:6px}
+.stat-card .value{font-size:22px;font-weight:700;color:var(--navy)}
+.stat-card .value.green{color:var(--success)}.stat-card .value.red{color:var(--danger)}
+.stat-card .value.orange{color:var(--warning)}.stat-card .value.blue{color:var(--blue)}
+.chart-box{height:320px;width:100%}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;padding:10px 12px;background:#f9fafb;border-bottom:2px solid var(--border);font-weight:600;color:var(--text-light);font-size:13px}
+td{padding:10px 12px;border-bottom:1px solid var(--border)}tr:hover{background:#f8faff}
+.status-badge{padding:3px 10px;border-radius:12px;font-size:12px;font-weight:500}
+.status-badge.active{background:#d1fae5;color:#065f46}.status-badge.paused{background:#fef3c7;color:#92400e}.status-badge.danger{background:#fee2e2;color:#991b1b}
+.form-group{margin-bottom:14px}.form-group label{display:block;font-size:13px;font-weight:500;margin-bottom:4px}
+input,select,textarea{padding:9px 12px;border:1px solid var(--border);border-radius:6px;font-size:14px;width:100%;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,109,255,0.1)}
+.btn{padding:8px 18px;border-radius:6px;border:none;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--blue);color:#fff}.btn-primary:hover{background:var(--blue-hover)}
+.btn-success{background:var(--success);color:#fff}.btn-danger{background:var(--danger);color:#fff}.btn-warning{background:var(--warning);color:#fff}
+.btn-outline{border:1px solid var(--border);background:var(--white);color:var(--text)}.btn-sm{padding:5px 12px;font-size:12px}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}.modal{background:var(--white);border-radius:12px;padding:24px;width:480px;max-width:90vw;max-height:80vh;overflow-y:auto}.modal h3{font-size:17px;margin-bottom:16px}
+.chat-layout{display:flex;gap:16px;height:calc(100vh - var(--header-h) - 40px);overflow:hidden}
+.chat-sidebar{width:200px;flex-shrink:0;display:flex;flex-direction:column;gap:8px}
+.chat-sidebar button{text-align:left;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius);background:var(--white);cursor:pointer;font-size:13px;color:var(--text)}
+.chat-sidebar button:hover{border-color:var(--blue);color:var(--blue)}
+.chat-main{flex:1;display:flex;flex-direction:column;background:var(--white);border-radius:var(--radius);box-shadow:var(--card-shadow);overflow:hidden}
+.chat-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.chat-msgs .msg{max-width:80%;padding:12px 16px;border-radius:12px;line-height:1.6;font-size:14px;word-wrap:break-word;white-space:pre-wrap}
+.chat-msgs .msg.user{background:var(--blue);color:#fff;align-self:flex-end}
+.chat-msgs .msg.assistant{background:#f0f4f8;color:var(--text);align-self:flex-start}
+.chat-input-row{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--border)}
+.chat-input-row input{flex:1}
+.thinking-indicator{padding:8px 16px;color:var(--text-light);font-size:13px;display:none;align-items:center;gap:8px}
+.thinking-indicator .dot-pulse span{width:6px;height:6px;border-radius:50%;background:var(--blue);display:inline-block;animation:pulse 1.4s infinite}
+@keyframes pulse{0%,80%,100%{opacity:0.4}40%{opacity:1}}
+.filter-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.filter-row input,.filter-row select{width:auto;min-width:140px}
+.empty-state{text-align:center;padding:40px 20px;color:var(--text-light)}.empty-state .icon{font-size:48px;margin-bottom:12px}
+.page{display:none}.page.active{display:block}
+.role-boss{background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:10px;font-size:12px}
+.role-admin{background:#e0e7ff;color:#3730a3;padding:2px 8px;border-radius:10px;font-size:12px}
+.role-user{background:#f3e8ff;color:#6b21a8;padding:2px 8px;border-radius:10px;font-size:12px}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}
+  .menu-toggle{display:block}.main-area{margin-left:0}
+  .stat-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
+  .chat-layout{flex-direction:column;height:auto}.chat-sidebar{width:100%;flex-direction:row;flex-wrap:wrap}.chat-main{height:500px}
+}
+</style>
+</head>
+""")
+
+# === LOGIN / APP HTML ===
+add("""<body>
+
+<div class="login-wrapper" id="loginPage">
+  <div class="login-box">
+    <h2>\U0001f4ca \u667a\u80fd\u5e7f\u544a\u6295\u653e\u52a9\u624b</h2>
+    <div class="form-group"><label>\u7528\u6237\u540d</label><input id="loginUser" placeholder="\u8bf7\u8f93\u5165\u7528\u6237\u540d"></div>
+    <div class="form-group"><label>\u5bc6\u7801</label><input id="loginPass" type="password" placeholder="\u8bf7\u8f93\u5165\u5bc6\u7801"></div>
+    <div class="form-group"><label>\u9a8c\u8bc1\u7801</label>
+      <div class="captcha-row"><input id="loginCaptcha" placeholder="\u8f93\u5165\u9a8c\u8bc1\u7801" style="flex:1" maxlength="4">
+        <img id="captchaImg" src="" alt="\u9a8c\u8bc1\u7801" title="\u70b9\u51fb\u5237\u65b0"></div></div>
+    <div id="loginErr" style="color:var(--danger);font-size:13px;margin:8px 0;display:none"></div>
+    <button class="btn btn-primary" onclick="doLogin()" style="width:100%;padding:12px;font-size:15px">\u767b \u5f55</button>
+  </div>
+</div>
+
+<div class="app-layout" id="appLayout">
+<aside class="sidebar" id="sidebar">
+<div class="logo">\U0001f4c8 <span>Ad</span>Agent</div>
+<nav id="sidebarNav">
+<a href="#" data-page="dashboard" class="active" onclick="showPage(\'dashboard\',this)">\U0001f4ca \u4eea\u8868\u76d8</a>
+<a href="#" data-page="plans" onclick="showPage(\'plans\',this)">\U0001f4cb \u6295\u653e\u8ba1\u5212</a>
+<a href="#" data-page="budget" onclick="showPage(\'budget\',this)">\U0001f4b0 \u9884\u7b97\u7ba1\u7406</a>
+<a href="#" data-page="alerts" onclick="showPage(\'alerts\',this)">\U0001f514 \u544a\u8b66\u4e2d\u5fc3</a>
+<a href="#" data-page="materials" onclick="showPage(\'materials\',this)">\U0001f4c1 \u7d20\u6750\u7ba1\u7406</a>
+<a href="#" data-page="chat" onclick="showPage(\'chat\',this)">\U0001f916 AI\u6295\u653e\u52a9\u624b</a>
+<a href="#" data-page="users" id="navUsers" onclick="showPage(\'users\',this)">\U0001f465 \u8d26\u6237\u7ba1\u7406</a>
+<a href="#" data-page="logs" onclick="showPage(\'logs\',this)">\U0001f4dd \u64cd\u4f5c\u65e5\u5fd7</a>
+<a href="#" data-page="decisions" onclick="showPage(\'decisions\',this)">\U0001f9e0 \u51b3\u7b56\u8bb0\u5f55</a>
+<a href="#" data-page="timeline" onclick="showPage(\'timeline\',this)">\U0001f4c5 \u6d3b\u52a8\u65f6\u95f4\u8f74</a>
+</nav>
+<div class="user-info" id="userInfo" style="display:none">
+<div><span class="un" id="navUsername"></span><span class="role-tag" id="navRole" style="background:var(--blue);padding:2px 8px;border-radius:10px;font-size:11px;color:#fff;margin-left:6px"></span></div>
+</div>
+<button class="logout-btn" onclick="doLogout()">\U0001f6aa \u9000\u51fa\u767b\u5f55</button>
+</aside>
+
+<div class="main-area">
+<header class="main-header">
+<div style="display:flex;align-items:center;gap:12px">
+<button class="menu-toggle" onclick="document.getElementById(\'sidebar\').classList.toggle(\'open\')">\u2630</button>
+<h1 id="pageTitle">\u4eea\u8868\u76d8</h1>
+</div>
+<div style="font-size:14px;color:var(--text-light)"><span id="headerTime"></span></div>
+</header>
+<div class="content">
+""")
+
+add("""<!-- Dashboard -->
+<div class="page active" id="page-dashboard">
+<div class="stat-grid" id="dashStats"></div>
+<div class="card" style="margin-top:16px">
+<div class="card-header"><h3>\u6295\u653e\u8d8b\u52bf</h3>
+<select id="trendDays" onchange="loadTrend()" style="width:auto;min-width:100px">
+<option value="7">\u8fd17\u5929</option><option value="14">\u8fd114\u5929</option><option value="30">\u8fd130\u5929</option>
+</select></div>
+<div class="chart-box" id="trendChart"></div>
+</div></div>
+
+<!-- Plans -->
+<div class="page" id="page-plans">
+<div class="card">
+<div class="card-header"><h3>\u6295\u653e\u8ba1\u5212</h3><button class="btn btn-primary btn-sm" onclick="showModal(\'planModal\')">+ \u65b0\u5efa\u8ba1\u5212</button></div>
+<div class="filter-row">
+<input id="planSearch" placeholder="\u641c\u7d22\u8ba1\u5212\u540d\u79f0..." oninput="loadPlans()">
+<select id="planPlatformFilter" onchange="loadPlans()"><option value="">\u5168\u90e8\u5e73\u53f0</option><option>Google Ads</option><option>Meta Ads</option><option>TikTok Ads</option></select>
+<select id="planStatusFilter" onchange="loadPlans()"><option value="">\u5168\u90e8\u72b6\u6001</option><option value="active">\u6295\u653e\u4e2d</option><option value="paused">\u5df2\u6682\u505c</option></select>
+<label style="font-size:13px;display:flex;align-items:center;gap:4px"><input type="checkbox" id="roasSort" onchange="loadPlans()"> \u6309ROAS\u6392\u5e8f</label>
+</div>
+<div id="plansTableWrap"></div>
+</div></div>
+
+<!-- Budget -->
+<div class="page" id="page-budget">
+<div class="card"><div class="card-header"><h3>\u5e7f\u544a\u8d26\u6237\u9884\u7b97</h3></div><div id="budgetTableWrap"></div></div></div>
+
+<!-- Alerts -->
+<div class="page" id="page-alerts">
+<div class="card">
+<div class="card-header"><h3>\u544a\u8b66\u4e2d\u5fc3</h3><button class="btn btn-outline btn-sm" onclick="markAllRead()">\u5168\u90e8\u5df2\u8bfb</button></div>
+<div id="alertsWrap"></div></div></div>
+
+<!-- Materials -->
+<div class="page" id="page-materials">
+<div class="card">
+<div class="card-header"><h3>\u7d20\u6750\u7ba1\u7406</h3><button class="btn btn-primary btn-sm" onclick="showModal(\'materialModal\')">+ \u4e0a\u4f20\u7d20\u6750</button></div>
+<div id="materialsWrap"></div></div></div>
+""")
+
+add("""<!-- Chat -->
+<div class="page" id="page-chat">
+<div class="chat-layout">
+<div class="chat-sidebar">
+<button onclick="sendSug(\'\u5e2e\u6211\u67e5\u770b\u4eca\u5929\u7684\u6570\u636e\u600e\u4e48\u6837\')">\U0001f4ca \u4eca\u5929\u6570\u636e\u600e\u4e48\u6837</button>
+<button onclick="sendSug(\'\u54ea\u4e2a\u8ba1\u5212\u7684ROAS\u6700\u9ad8\')">\U0001f3c6 \u54ea\u4e2a\u8ba1\u5212ROAS\u6700\u9ad8</button>
+<button onclick="sendSug(\'\u6709\u6ca1\u6709\u5f02\u5e38\u7684\u8ba1\u5212\')">\u26a0\ufe0f \u6709\u6ca1\u6709\u5f02\u5e38\u8ba1\u5212</button>
+<button onclick="sendSug(\'\u5e2e\u6211\u5206\u6790\u4e00\u4e0b\u8fd1\u671f\u7684\u6295\u653e\u8d8b\u52bf\')">\U0001f4c8 \u5206\u6790\u6295\u653e\u8d8b\u52bf</button>
+<button onclick="sendSug(\'\u7b56\u7565\u5efa\u8bae\u7ed1\u5b9a\')">\U0001f4a1 \u7b56\u7565\u5efa\u8bae</button>
+<button onclick="sendSug(\'\u5bf9\u6bd4\u672c\u5468\u4e0e\u4e0a\u5468\u7684\u6570\u636e\')">\U0001f4ca \u672c\u5468\u4e0e\u4e0a\u5468\u5bf9\u6bd4</button>
+<button onclick="sendSug(\'\u54ea\u4e9b\u8ba1\u5212\u53ef\u4ee5\u4f18\u5316\')">\U0001f527 \u4f18\u5316\u5efa\u8bae</button>
+</div>
+<div class="chat-main">
+<div class="chat-msgs" id="chatMessages"></div>
+<div class="thinking-indicator" id="chatThinking" style="display:none">
+<span>AI\u6b63\u5728\u601d\u8003</span>
+<span class="dot-pulse"><span></span><span></span><span></span></span>
+</div>
+<div class="chat-input-row">
+<input id="chatInput" placeholder="\u8bf7\u8f93\u5165\u60a8\u7684\u95ee\u9898..." onkeydown="if(event.key===\'Enter\')sendChat()">
+<button class="btn btn-primary" onclick="sendChat()">\u53d1\u9001</button>
+</div></div></div></div>
+
+<!-- Users -->
+<div class="page" id="page-users">
+<div class="card">
+<div class="card-header"><h3>\u8d26\u6237\u7ba1\u7406</h3><button class="btn btn-primary btn-sm" id="createUserBtn" onclick="showModal(\'userModal\')">+ \u521b\u5efa\u8d26\u6237</button></div>
+<div id="usersTableWrap"></div></div></div>
+
+<!-- Logs -->
+<div class="page" id="page-logs"><div class="card"><div class="card-header"><h3>\u64cd\u4f5c\u65e5\u5fd7</h3></div><div id="logsWrap"></div></div></div>
+
+<!-- Decisions -->
+<div class="page" id="page-decisions"><div class="card"><div class="card-header"><h3>\u51b3\u7b56\u8bb0\u5f55</h3></div><div id="decisionsWrap"></div></div></div>
+
+<!-- Timeline -->
+<div class="page" id="page-timeline"><div class="card"><div class="card-header"><h3>\u6d3b\u52a8\u65f6\u95f4\u8f74</h3></div><div id="timelineWrap"></div></div></div>
+
+</div></div></div>
+""")
+
+# === Modals ===
+add("""<div class="modal-overlay" id="planModal"><div class="modal">
+<h3>\u65b0\u5efa\u6295\u653e\u8ba1\u5212</h3>
+<div class="form-group"><label>\u8ba1\u5212\u540d\u79f0</label><input id="planName"></div>
+<div class="form-group"><label>\u5e73\u53f0</label><select id="planPlatform"><option>Google Ads</option><option>Meta Ads</option><option>TikTok Ads</option></select></div>
+<div class="form-group"><label>\u65e5\u9884\u7b97 (\u5143)</label><input id="planBudget" type="number" value="300"></div>
+<div class="modal-actions" style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
+<button class="btn btn-outline" onclick="closeModal(\'planModal\')">\u53d6\u6d88</button>
+<button class="btn btn-primary" onclick="createPlan()">\u521b\u5efa</button></div></div></div>
+
+<div class="modal-overlay" id="userModal"><div class="modal">
+<h3>\u521b\u5efa\u8d26\u6237</h3>
+<div class="form-group"><label>\u7528\u6237\u540d</label><input id="newUserName"></div>
+<div class="form-group"><label>\u5bc6\u7801</label><input id="newUserPass" type="password"></div>
+<div class="form-group"><label>\u89d2\u8272</label><select id="newUserRole"><option value="user">\u7528\u6237</option><option value="admin">\u7ba1\u7406\u5458</option><option value="boss">\u8001\u677f</option></select></div>
+<div class="modal-actions" style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
+<button class="btn btn-outline" onclick="closeModal(\'userModal\')">\u53d6\u6d88</button>
+<button class="btn btn-primary" onclick="createUser()">\u521b\u5efa</button></div></div></div>
+
+<div class="modal-overlay" id="materialModal"><div class="modal">
+<h3>\u4e0a\u4f20\u7d20\u6750</h3>
+<div class="form-group"><label>\u7d20\u6750\u540d\u79f0</label><input id="matName"></div>
+<div class="form-group"><label>\u7d20\u6750\u7c7b\u578b</label><select id="matType"><option value="image">\u56fe\u7247</option><option value="video">\u89c6\u9891</option><option value="text">\u6587\u6848</option></select></div>
+<div class="form-group"><label>\u7d20\u6750\u94fe\u63a5</label><input id="matUrl" placeholder="\u8f93\u5165\u7d20\u6750URL"></div>
+<div class="form-group"><label>\u5173\u8054\u8ba1\u5212ID (\u53ef\u9009)</label><input id="matPlanId" type="number" placeholder="0=\u4e0d\u5173\u8054"></div>
+<div class="modal-actions" style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
+<button class="btn btn-outline" onclick="closeModal(\'materialModal\')">\u53d6\u6d88</button>
+<button class="btn btn-primary" onclick="createMaterial()">\u4e0a\u4f20</button></div></div></div>
+""")
+
+print("HTML parts: %d, total len: %d" % (len(P), sum(len(p) for p in P)))
+
+# === JAVASCRIPT ===
+add("""<script async src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<script>
+var TOKEN = "";
+var USER = null;
+var trendChart = null;
+
+function api(method, path, body) {
+  var opts = {method:method, headers:{"Content-Type":"application/json"}};
+  if (TOKEN) opts.headers["Authorization"] = "Bearer " + TOKEN;
+  if (body) opts.body = JSON.stringify(body);
+  return fetch(path, opts).then(function(r){return r.json();});
+}
+function byId(id){return document.getElementById(id);}
+
+function updateTime(){
+  var n = new Date();
+  var s = n.toLocaleDateString("zh-CN",{timeZone:"Asia/Shanghai"}) + " " + n.toLocaleTimeString("zh-CN",{timeZone:"Asia/Shanghai",hour12:false});
+  byId("headerTime").textContent = "\\u23f0 " + s;
+}
+setInterval(updateTime,1000); updateTime();
+
+function loadCaptcha(){
+  var img = byId("captchaImg");
+  if(!img) return;
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET","/api/captcha/img?"+new Date().getTime(),true);
+  xhr.responseType = "blob";
+  xhr.onload = function(){
+    if(xhr.status===200){
+      var cid = xhr.getResponseHeader("X-Captcha-Id");
+      if(cid) window._captchaId = cid;
+      var blob = xhr.response;
+      byId("captchaImg").src = URL.createObjectURL(blob);
+    }
+  };
+  xhr.onerror = function(){setTimeout(loadCaptcha,1000);};
+  xhr.send();
+}
+loadCaptcha();
+byId("captchaImg").onclick = loadCaptcha;
+
+function doLogin(){
+  var u = byId("loginUser").value.trim();
+  var p = byId("loginPass").value;
+  var c = byId("loginCaptcha").value.trim();
+  var cid = window._captchaId;
+  if(!u||!p||!c){ byId("loginErr").textContent="\u8bf7\u586b\u5199\u5b8c\u6574\u4fe1\u606f"; byId("loginErr").style.display="block"; return; }
+  if(!cid){ byId("loginErr").textContent="\u9a8c\u8bc1\u7801\u5df2\u8fc7\u671f\uff0c\u8bf7\u5237\u65b0"; byId("loginErr").style.display="block"; loadCaptcha(); return; }
+  api("POST","/api/login",{username:u,password:p,captcha_id:cid,captcha_code:c}).then(function(r){
+    if(r.code===200){
+      TOKEN = r.data.token; USER = r.data.user;
+      byId("loginPage").style.display="none"; byId("appLayout").style.display="flex";
+      byId("navUsername").textContent = USER.username; byId("navRole").textContent = USER.role; byId("userInfo").style.display="block";
+      if(USER.role==="user"){ byId("navUsers").style.display="none"; if(byId("createUserBtn")) byId("createUserBtn").style.display="none"; }
+      if(USER.role==="admin"){
+        var sel = byId("newUserRole");
+        for(var i=0;i<sel.options.length;i++){ if(sel.options[i].value==="boss"||sel.options[i].value==="admin") sel.options[i].style.display="none"; }
+      }
+      initApp();
+    } else {
+      byId("loginErr").textContent=r.msg||"\u767b\u5f55\u5931\u8d25"; byId("loginErr").style.display="block"; loadCaptcha();
+    }
+  }).catch(function(){ byId("loginErr").textContent="\u7f51\u7edc\u9519\u8bef"; byId("loginErr").style.display="block"; });
+}
+function doLogout(){
+  TOKEN=""; USER=null; byId("appLayout").style.display="none"; byId("loginPage").style.display="flex";
+  byId("loginCaptcha").value=""; byId("loginPass").value=""; loadCaptcha();
+}
+""")
+
+# === PAGES ===
+add("""
+function showPage(name,el){
+  document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");});
+  document.querySelectorAll("#sidebarNav a").forEach(function(a){a.classList.remove("active");});
+  byId("page-"+name).classList.add("active");
+  if(el) el.classList.add("active");
+  var titles={dashboard:"\\u4eea\\u8868\\u76d8",plans:"\\u6295\\u653e\\u8ba1\\u5212",budget:"\\u9884\\u7b97\\u7ba1\\u7406",alerts:"\\u544a\\u8b66\\u4e2d\\u5fc3",materials:"\\u7d20\\u6750\\u7ba1\\u7406",chat:"AI\\u6295\\u653e\\u52a9\\u624b",users:"\\u8d26\\u6237\\u7ba1\\u7406",logs:"\\u64cd\\u4f5c\\u65e5\\u5fd7",decisions:"\\u51b3\\u7b56\\u8bb0\\u5f55",timeline:"\\u6d3b\\u52a8\\u65f6\\u95f4\\u8f74"};
+  byId("pageTitle").textContent = titles[name]||name;
+  document.getElementById("sidebar").classList.remove("open");
+  var loaders = {dashboard:loadDashboard,plans:loadPlans,budget:loadBudget,alerts:loadAlerts,materials:loadMaterials,chat:loadChatHistory,users:loadUsers,logs:loadLogs,decisions:loadDecisions,timeline:loadTimeline};
+  if(loaders[name]) setTimeout(loaders[name],50);
+}
+
+function fmtNum(n){ n=n||0; return n>=10000?(n/10000).toFixed(1)+"w":String(n); }
+
+function loadDashboard(){
+  api("GET","/api/dashboard").then(function(r){
+    if(r.code!==200) return;
+    var d=r.data;
+    var items=[
+      {l:"\\u603b\\u82b1\\u8d39",v:"\\u00a5"+d.total_cost,c:"red"},
+      {l:"\\u603b\\u9500\\u552e\\u989d",v:"\\u00a5"+d.total_sales,c:"green"},
+      {l:"\\u6574\\u4f53ROAS",v:d.roas,c:"blue"},
+      {l:"\\u5e73\\u5747CPC",v:"\\u00a5"+d.cpc,c:"orange"},
+      {l:"\\u603b\\u8ba2\\u5355",v:d.total_orders,c:"blue"},
+      {l:"\\u603b\\u66dd\\u5149",v:fmtNum(d.total_impressions),c:""},
+      {l:"\\u603b\\u70b9\\u51fb",v:fmtNum(d.total_clicks),c:""},
+      {l:"CPA",v:"\\u00a5"+d.cpa,c:"orange"}
+    ];
+    byId("dashStats").innerHTML = items.map(function(i){return '<div class=\"stat-card\"><div class=\"label\">'+i.l+'</div><div class=\"value '+i.c+'\">'+i.v+'</div></div>';}).join("");
+  });
+  loadTrend();
+}
+""")
+
+add("""
+function loadTrend(){
+  var days = parseInt(byId("trendDays").value)||7;
+  api("GET","/api/daily_reports?days="+days).then(function(r){
+    if(r.code!==200) return;
+    if(!trendChart) trendChart = echarts.init(byId("trendChart"));
+    var items = r.data;
+    var map = {};
+    items.forEach(function(item){
+      var d = item.report_date;
+      if(!map[d]) map[d] = {cost:0, sales:0, impressions:0};
+      map[d].cost += item.cost; map[d].sales += item.sales; map[d].impressions += item.impressions;
+    });
+    var dates = Object.keys(map).sort();
+    var costData = dates.map(function(d){return Math.round(map[d].cost*100)/100;});
+    var salesData = dates.map(function(d){return Math.round(map[d].sales*100)/100;});
+    var imprData = dates.map(function(d){return +(map[d].impressions/10000).toFixed(1);});
+    trendChart.setOption({
+      tooltip:{trigger:"axis"},
+      legend:{data:["\\u82b1\\u8d39","\\u9500\\u552e\\u989d","\\u66dd\\u5149(\\u4e07)"]},
+      grid:{left:50,right:20,bottom:30,top:40},
+      xAxis:{type:"category",data:dates,axisLabel:{rotate:30,fontSize:11}},
+      yAxis:{type:"value"},
+      series:[
+        {name:"\\u82b1\\u8d39",type:"line",data:costData,smooth:true,lineStyle:{color:"#ef4444"},itemStyle:{color:"#ef4444"}},
+        {name:"\\u9500\\u552e\\u989d",type:"line",data:salesData,smooth:true,lineStyle:{color:"#10b981"},itemStyle:{color:"#10b981"}},
+        {name:"\\u66dd\\u5149(\\u4e07)",type:"bar",data:imprData,itemStyle:{color:"rgba(26,109,255,0.5)"}}
+      ]
+    });
+  });
+}
+
+function loadPlans(){
+  api("GET","/api/plans").then(function(r){
+    if(r.code!==200) return;
+    var data = r.data.slice();
+    var kw = byId("planSearch").value.toLowerCase();
+    var pf = byId("planPlatformFilter").value;
+    var ps = byId("planStatusFilter").value;
+    if(kw) data = data.filter(function(p){return p.plan_name.toLowerCase().includes(kw);});
+    if(pf) data = data.filter(function(p){return p.platform===pf;});
+    if(ps) data = data.filter(function(p){return p.status===ps;});
+    if(byId("roasSort").checked) data.sort(function(a,b){var ra=a.sales&&a.cost?a.sales/a.cost:0;var rb=b.sales&&b.cost?b.sales/b.cost:0;return rb-ra;});
+    if(!data.length){byId("plansTableWrap").innerHTML="<div class=\\"empty-state\\"><div class=\\"icon\\">\\ud83d\\udccb</div><p>\\u6682\\u65e0\\u6295\\u653e\\u8ba1\\u5212</p></div>";return;}
+    var html="<table><thead><tr><th>\\u8ba1\\u5212\\u540d\\u79f0</th><th>\\u5e73\\u53f0</th><th>\\u65e5\\u9884\\u7b97</th><th>\\u72b6\\u6001</th><th>\\u5c55\\u793a</th><th>\\u70b9\\u51fb</th><th>\\u82b1\\u8d39</th><th>\\u9500\\u552e\\u989d</th><th>ROAS</th><th>\\u64cd\\u4f5c</th></tr></thead><tbody>";
+    data.forEach(function(p){
+      var roas = p.sales&&p.cost?(p.sales/p.cost).toFixed(2):"0.00";
+      html+="<tr><td>"+esc(p.plan_name)+"</td><td>"+esc(p.platform)+"</td><td>\\u00a5"+p.daily_budget+"</td><td><span class=\\"status-badge "+p.status+"\\">"+(p.status==="active"?"\\u6295\\u653e\\u4e2d":"\\u5df2\\u6682\\u505c")+"</span></td>"
+        +"<td>"+fmtNum(p.impressions||0)+"</td><td>"+(p.clicks||0)+"</td><td>\\u00a5"+(p.cost||0)+"</td><td>\\u00a5"+(p.sales||0)+"</td><td>"+roas+"</td>"
+        +"<td><div style=\\"display:flex;gap:4px\\"><button class=\\"btn btn-sm "+(p.status==="active"?"btn-warning":"btn-success")+"\\" onclick=\\"togglePlan("+p.id+")\\">"+(p.status==="active"?"\\u6682\\u505c":"\\u542f\\u7528")+"</button>"
+        +"<button class=\\"btn btn-sm btn-danger\\" onclick=\\"deletePlan("+p.id+")\\">\\u5220\\u9664</button></div></td></tr>";
+    });
+    html+="</tbody></table>";
+    byId("plansTableWrap").innerHTML=html;
+  });
+}
+
+function createPlan(){
+  var name = byId("planName").value.trim();
+  var plat = byId("planPlatform").value;
+  var bud = parseFloat(byId("planBudget").value)||0;
+  if(!name) return alert("\\u8bf7\\u8f93\\u5165\\u8ba1\\u5212\\u540d\\u79f0");
+  api("POST","/api/plans",{plan_name:name,platform:plat,daily_budget:bud}).then(function(r){
+    if(r.code===200){closeModal("planModal");byId("planName").value="";loadPlans();alert("\\u521b\\u5efa\\u6210\\u529f");}
+    else alert(r.msg||"\\u521b\\u5efa\\u5931\\u8d25");
+  });
+}
+function togglePlan(id){
+  api("POST","/api/plans/"+id+"/toggle").then(function(r){if(r.code===200) loadPlans(); else alert(r.msg||"\\u64cd\\u4f5c\\u5931\\u8d25");});
+}
+function deletePlan(id){
+  if(!confirm("\\u786e\\u5b9a\\u5220\\u9664\\u8be5\\u8ba1\\u5212?")) return;
+  api("DELETE","/api/plans/"+id).then(function(r){if(r.code===200) loadPlans(); else alert(r.msg);});
+}
+""")
+
+add("""
+function loadBudget(){
+  api("GET","/api/accounts").then(function(r){
+    if(r.code!==200) return;
+    var data = r.data;
+    if(!data.length){byId("budgetTableWrap").innerHTML="<div class=\\"empty-state\\"><div class=\\"icon\\">\\ud83d\\udcb0</div><p>\\u6682\\u65e0\\u8d26\\u6237\\u6570\\u636e</p></div>";return;}
+    var html="<table><thead><tr><th>\\u8d26\\u6237\\u540d\\u79f0</th><th>\\u5e73\\u53f0</th><th>\\u4f59\\u989d</th><th>\\u65e5\\u9884\\u7b97</th><th>\\u72b6\\u6001</th><th>\\u64cd\\u4f5c</th></tr></thead><tbody>";
+    data.forEach(function(a){
+      html+="<tr><td>"+esc(a.account_name)+"</td><td>"+esc(a.platform)+"</td><td>\\u00a5"+a.balance+"</td><td>\\u00a5"+a.daily_budget+"</td>"
+        +"<td><span class=\\"status-badge "+a.status+"\\">"+(a.status==="active"?"\\u6b63\\u5e38":"\\u505c\\u7528")+"</span></td>"
+        +"<td><button class=\\"btn btn-sm btn-outline\\" onclick=\\"editBudget("+a.id+",'"+esc(a.account_name)+"',"+a.daily_budget+")\\">\\u4fee\\u6539\\u9884\\u7b97</button></td></tr>";
+    });
+    html+="</tbody></table>";
+    byId("budgetTableWrap").innerHTML=html;
+  });
+}
+function editBudget(id,name,cur){
+  var nv = prompt("\\u4fee\\u6539\\u300c"+name+"\\u300d\\u65e5\\u9884\\u7b97 (\\u5f53\\u524d: \\u00a5"+cur+"):",cur);
+  if(nv===null) return;
+  var v = parseFloat(nv);
+  if(isNaN(v)||v<0) return alert("\\u8bf7\\u8f93\\u5165\\u6709\\u6548\\u91d1\\u989d");
+  api("PUT","/api/accounts/"+id+"/budget",{daily_budget:v}).then(function(r){
+    if(r.code===200) loadBudget(); else alert(r.msg||"\\u4fee\\u6539\\u5931\\u8d25");
+  });
+}
+
+
+function rechargeAccount(id,name,platform){
+  var amt = prompt("充值\u300c"+name+"\u300d ("+platform+"):\\n\u8bf7\u8f93\u5165\u5145\u503c\u91d1\u989d (\u5143)","1000");
+  if(amt===null) return;
+  var v = parseFloat(amt);
+  if(isNaN(v)||v<=0) return alert("\u8bf7\u8f93\u5165\u6709\u6548\u91d1\u989d");
+  api("POST","/api/accounts/"+id+"/recharge",{amount:v}).then(function(r){
+    if(r.code===200) loadBudget(); else alert(r.msg||"\u5145\u503c\u5931\u8d25");
+  });
+}
+function loadAlerts(){
+  api("GET","/api/alerts").then(function(r){
+    if(r.code!==200) return;
+    var data = r.data;
+    if(!data.length){byId("alertsWrap").innerHTML="<div class=\\"empty-state\\"><div class=\\"icon\\">\\ud83d\\udd14</div><p>\\u6682\\u65e0\\u544a\\u8b66</p></div>";return;}
+    var html="<table><thead><tr><th>\\u7c7b\\u578b</th><th>\\u6d88\\u606f</th><th>\\u7ea7\\u522b</th><th>\\u65f6\\u95f4</th><th>\\u64cd\\u4f5c</th></tr></thead><tbody>";
+    data.forEach(function(a){
+      html+="<tr style=\\""+(a.is_read?"":"background:#f0f7ff")+"\\"><td>"+esc(a.type)+"</td><td>"+esc(a.message)+"</td>"
+        +"<td><span class=\\"status-badge "+(a.level==="danger"?"danger":a.level==="warning"?"paused":"active")+"\\">"+(a.level==="danger"?"\\u5371\\u9669":a.level==="warning"?"\\u8b66\\u544a":"\\u4fe1\\u606f")+"</span></td>"
+        +"<td style=\\"font-size:12px;color:var(--text-light)\\">"+a.created_at+"</td>"
+        +"<td>"+(a.is_read?"<span style=\\"color:var(--text-light);font-size:12px\\">\\u5df2\\u8bfb</span>":'<button class=\\"btn btn-sm btn-outline\\" onclick=\\"markRead('+a.id+')\\">\\u6807\\u8bb0\\u5df2\\u8bfb</button>')+"</td></tr>";
+    });
+    html+="</tbody></table>";
+    byId("alertsWrap").innerHTML=html;
+  });
+}
+function markRead(id){ api("POST","/api/alerts/read",{alert_id:id}).then(function(r){if(r.code===200) loadAlerts();}); }
+function markAllRead(){ api("POST","/api/alerts/read",{}).then(function(r){if(r.code===200) loadAlerts();}); }
+
+function loadMaterials(){
+  api("GET","/api/materials").then(function(r){
+    if(r.code!==200) return;
+    var data = r.data;
+    if(!data.length){byId("materialsWrap").innerHTML="<div class=\\"empty-state\\"><div class=\\"icon\\">\\ud83d\\udcc1</div><p>\\u6682\\u65e0\\u7d20\\u6750</p></div>";return;}
+    var html="<table><thead><tr><th>\\u540d\\u79f0</th><th>\\u7c7b\\u578b</th><th>\\u94fe\\u63a5</th><th>\\u5173\\u8054\\u8ba1\\u5212</th><th>\\u72b6\\u6001</th><th>\\u521b\\u5efa\\u65f6\\u95f4</th></tr></thead><tbody>";
+    data.forEach(function(m){
+      html+="<tr><td>"+esc(m.name)+"</td><td>"+m.type+"</td><td style=\\"max-width:200px;overflow:hidden;text-overflow:ellipsis\\">"+esc(m.url)+"</td>"
+        +"<td>"+(m.plan_name||"-")+"</td><td><span class=\\"status-badge "+m.status+"\\">"+(m.status==="active"?"\\u542f\\u7528":"\\u505c\\u7528")+"</span></td><td style=\\"font-size:12px;color:var(--text-light)\\">"+m.created_at+"</td></tr>";
+    });
+    html+="</tbody></table>";
+    byId("materialsWrap").innerHTML=html;
+  });
+}
+function createMaterial(){
+  var name = byId("matName").value.trim();
+  var type = byId("matType").value;
+  var url = byId("matUrl").value.trim();
+  var pid = parseInt(byId("matPlanId").value)||0;
+  if(!name||!url) return alert("\\u8bf7\\u586b\\u5199\\u7d20\\u6750\\u540d\\u79f0\\u548c\\u94fe\\u63a5");
+  api("POST","/api/materials",{name:name,type:type,url:url,plan_id:pid}).then(function(r){
+    if(r.code===200){closeModal("materialModal");byId("matName").value="";byId("matUrl").value="";loadMaterials();alert("\\u4e0a\\u4f20\\u6210\\u529f");}
+    else alert(r.msg||"\\u4e0a\\u4f20\\u5931\\u8d25");
+  });
+}
+""")
+
+add("""
+function loadUsers(){
+  api("GET","/api/users").then(function(r){
+    if(r.code!==200) return;
+    var data = r.data;
+    var html="<table><thead><tr><th>ID</th><th>\\u7528\\u6237\\u540d</th><th>\\u89d2\\u8272</th><th>\\u521b\\u5efa\\u65f6\\u95f4</th></tr></thead><tbody>";
+    data.forEach(function(u){
+      var rl = u.role==="boss"?"\\u8001\\u677f":u.role==="admin"?"\\u7ba1\\u7406\\u5458":"\\u7528\\u6237";
+      html+="<tr><td>"+u.id+"</td><td>"+esc(u.username)+'</td><td><span class="role-'+u.role+'">'+rl+'</span></td><td style="font-size:12px;color:var(--text-light)">'+u.created_at+"</td></tr>";
+    });
+    html+="</tbody></table>";
+    byId("usersTableWrap").innerHTML=html;
+  });
+}
+function createUser(){
+  var u = byId("newUserName").value.trim();
+  var p = byId("newUserPass").value;
+  var r = byId("newUserRole").value;
+  if(!u||!p) return alert("\\u8bf7\\u586b\\u5199\\u7528\\u6237\\u540d\\u548c\\u5bc6\\u7801");
+  api("POST","/api/users",{username:u,password:p,role:r}).then(function(res){
+    if(res.code===200){closeModal("userModal");byId("newUserName").value="";byId("newUserPass").value="";loadUsers();alert("\\u521b\\u5efa\\u6210\\u529f");}
+    else alert(res.msg||"\\u521b\\u5efa\\u5931\\u8d25");
+  });
+}
+
+function loadChatHistory(){ api("GET","/api/chat/history").then(function(r){ if(r.code!==200) return; byId("chatMessages").innerHTML = r.data.map(function(m){return "<div class=\\"msg "+m.role+"\\">"+esc(m.content)+"</div>";}).join(""); byId("chatMessages").scrollTop = byId("chatMessages").scrollHeight; }); }
+function sendChat(){
+  var inp = byId("chatInput"); var msg = inp.value.trim(); if(!msg) return; inp.value="";
+  byId("chatMessages").innerHTML += "<div class=\\"msg user\\">"+esc(msg)+"</div>"; byId("chatMessages").scrollTop = byId("chatMessages").scrollHeight;
+  byId("chatThinking").style.display = "flex";
+  api("POST","/api/chat",{message:msg}).then(function(r){
+    byId("chatThinking").style.display = "none";
+    byId("chatMessages").innerHTML += "<div class=\\"msg assistant\\">"+esc(r.data?r.data.reply:r.msg||"\\u56de\\u590d\\u5931\\u8d25")+"</div>";
+    byId("chatMessages").scrollTop = byId("chatMessages").scrollHeight;
+  }).catch(function(){ byId("chatThinking").style.display="none"; byId("chatMessages").innerHTML += "<div class=\\"msg assistant\\" style=\\"color:var(--danger)\\">\\u7f51\\u7edc\\u9519\\u8bef</div>"; });
+}
+function sendSug(text){ byId("chatInput").value = text; sendChat(); }
+
+function loadLogs(){
+  api("GET","/api/logs").then(function(r){
+    if(r.code!==200) return;
+    var data = r.data;
+    if(!data.length){byId("logsWrap").innerHTML="<div class=\\"empty-state\\"><div class=\\"icon\\">\\ud83d\\udcdd</div><p>\\u6682\\u65e0\\u64cd\\u4f5c\\u65e5\\u5fd7</p></div>";return;}
+    var html="<table><thead><tr><th>\\u7528\\u6237</th><th>\\u64cd\\u4f5c</th><th>\\u8be6\\u60c5</th><th>\\u65f6\\u95f4</th></tr></thead><tbody>";
+    data.forEach(function(l){ html+="<tr><td>"+(l.username||"\\u672a\\u77e5")+"</td><td>"+esc(l.action)+"</td><td>"+esc(l.detail||"")+"</td><td style=\\"font-size:12px;color:var(--text-light)\\">"+l.created_at+"</td></tr>"; });
+    html+="</tbody></table>";
+    byId("logsWrap").innerHTML=html;
+  });
+}
+""")
+
+add("""
+function loadDecisions(){
+  api("GET","/api/decisions").then(function(r){
+    if(r.code!==200) return;
+    var data = r.data.verified || [];
+    if(!data.length){byId("decisionsWrap").innerHTML="<div class=\\"empty-state\\"><div class=\\"icon\\">\\ud83e\\udde0</div><p>\\u6682\\u65e0\\u51b3\\u7b56\\u8bb0\\u5f55</p></div>";return;}
+    var html="<table><thead><tr><th>\\u5206\\u7c7b</th><th>\\u5efa\\u8bae</th><th>\\u72b6\\u6001</th><th>\\u7ed3\\u679c</th><th>\\u65f6\\u95f4</th></tr></thead><tbody>";
+    data.forEach(function(d){
+      html+="<tr><td>"+esc(d.category)+"</td><td>"+esc(d.suggestion)+"</td><td><span class=\\"status-badge active\\">\\u5df2\\u9a8c\\u8bc1</span></td><td>"+esc(d.outcome||"-")+"</td><td style=\\"font-size:12px;color:var(--text-light)\\">"+(d.verified_at||d.created_at)+"</td></tr>";
+    });
+    html+="</tbody></table>";
+    byId("decisionsWrap").innerHTML=html;
+  });
+}
+
+function loadTimeline(){
+  api("GET","/api/timeline").then(function(r){
+    if(r.code!==200) return;
+    var data = r.data;
+    if(!data.plans||!data.plans.length){byId("timelineWrap").innerHTML="<div class=\\"empty-state\\"><div class=\\"icon\\">\\ud83d\\udcc5</div><p>\\u6682\\u65e0\\u6d3b\\u52a8\\u6570\\u636e</p></div>";return;}
+    var html="<table><thead><tr><th>\\u8ba1\\u5212\\u540d\\u79f0</th><th>\\u5e73\\u53f0</th><th>\\u72b6\\u6001</th><th>\\u65e5\\u9884\\u7b97</th><th>\\u5c55\\u793a\\u91cf</th><th>\\u82b1\\u8d39</th><th>\\u9500\\u552e\\u989d</th></tr></thead><tbody>";
+    data.plans.forEach(function(p){
+      html+="<tr><td>"+esc(p.plan_name)+"</td><td>"+esc(p.platform)+"</td><td><span class=\\"status-badge "+p.status+"\\">"+(p.status==="active"?"\\u6295\\u653e\\u4e2d":"\\u5df2\\u6682\\u505c")+"</span></td><td>\\u00a5"+p.daily_budget+"</td><td>"+fmtNum(p.impressions||0)+"</td><td>\\u00a5"+(p.cost||0)+"</td><td>\\u00a5"+(p.sales||0)+"</td></tr>";
+    });
+    html+="</tbody></table>";
+    byId("timelineWrap").innerHTML=html;
+  });
+}
+
+function showModal(id){ document.getElementById(id).classList.add("show"); }
+function closeModal(id){ document.getElementById(id).classList.remove("show"); }
+document.querySelectorAll(".modal-overlay").forEach(function(m){ m.addEventListener("click",function(e){if(e.target===m)m.classList.remove("show");}); });
+
+function esc(s){ if(!s) return ""; return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+function initApp(){ loadDashboard(); }
+
+byId("loginPass").addEventListener("keydown",function(e){if(e.key==="Enter")doLogin();});
+byId("loginCaptcha").addEventListener("keydown",function(e){if(e.key==="Enter")doLogin();});
+</script>
+</body>
+</html>
+""")
+
+# === 写入文件：把收集好的所有HTML片段写入index.html ===
+# 写入文件（UTF-8编码）
+    f.write("".join(P))  # 所有片段拼成一个大字符串写入
+# 打印生成结果 index.html: %d bytes, %d parts" % (os.path.getsize(OUT), len(P)))
