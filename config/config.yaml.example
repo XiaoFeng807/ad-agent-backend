@@ -1,0 +1,14 @@
+﻿# API 配置
+api_key: ""
+base_url: "https://api.deepseek.com"
+model: "deepseek-chat"
+
+# 服务器配置
+server:
+  host: "0.0.0.0"
+  port: 5000
+  debug: false
+
+# 数据库配置
+database:
+  path: "ad_agent.db"

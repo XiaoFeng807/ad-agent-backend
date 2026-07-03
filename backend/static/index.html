@@ -508,13 +508,51 @@ function createUser(){
 function loadChatHistory(){ api("GET","/api/chat/history").then(function(r){ if(r.code!==200) return; byId("chatMessages").innerHTML = r.data.map(function(m){return "<div class=\"msg "+m.role+"\">"+esc(m.content)+"</div>";}).join(""); byId("chatMessages").scrollTop = byId("chatMessages").scrollHeight; }); }
 function sendChat(){
   var inp = byId("chatInput"); var msg = inp.value.trim(); if(!msg) return; inp.value="";
-  byId("chatMessages").innerHTML += "<div class=\"msg user\">"+esc(msg)+"</div>"; byId("chatMessages").scrollTop = byId("chatMessages").scrollHeight;
+  byId("chatMessages").innerHTML += "<div class=\"msg user\">"+esc(msg)+"</div>";
+  byId("chatMessages").scrollTop = byId("chatMessages").scrollHeight;
+  var aiDiv = document.createElement("div"); aiDiv.className = "msg assistant"; aiDiv.id = "streamingMsg";
+  byId("chatMessages").appendChild(aiDiv);
   byId("chatThinking").style.display = "flex";
-  api("POST","/api/chat",{message:msg}).then(function(r){
-    byId("chatThinking").style.display = "none";
-    byId("chatMessages").innerHTML += "<div class=\"msg assistant\">"+esc(r.data?r.data.reply:r.msg||"\u56de\u590d\u5931\u8d25")+"</div>";
-    byId("chatMessages").scrollTop = byId("chatMessages").scrollHeight;
-  }).catch(function(){ byId("chatThinking").style.display="none"; byId("chatMessages").innerHTML += "<div class=\"msg assistant\" style=\"color:var(--danger)\">\u7f51\u7edc\u9519\u8bef</div>"; });
+  fetch("/api/chat/stream", {
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({message:msg})
+  }).then(function(resp){
+    var reader = resp.body.getReader(); var decoder = new TextDecoder(); var buffer = "";
+    function readStream(){
+      reader.read().then(function(pkt){
+        if(pkt.done){ byId("chatThinking").style.display="none"; return; }
+        buffer += decoder.decode(pkt.value, {stream:true});
+        var lines = buffer.split("\n"); buffer = lines.pop() || "";
+        for(var i=0;i<lines.length;i++){
+          var line = lines[i];
+          if(line.indexOf("data: ")===0){
+            try{
+              var data = JSON.parse(line.slice(6));
+              if(data.type==="text"){
+                var el = byId("streamingMsg");
+                if(el) el.innerHTML += esc(data.content);
+                byId("chatMessages").scrollTop = byId("chatMessages").scrollHeight;
+              }else if(data.type==="thinking"){
+                byId("chatThinking").style.display = "flex";
+              }else if(data.type==="done"){
+                byId("chatThinking").style.display = "none";
+                var el = byId("streamingMsg");
+                if(el) el.removeAttribute("id");
+              }else if(data.type==="error"){
+                byId("chatThinking").style.display = "none";
+                if(byId("streamingMsg")) byId("streamingMsg").innerHTML += "<br><span style=\"color:var(--danger)\">"+esc(data.content)+"</span>";
+              }
+            }catch(e){}
+          }
+        }
+        readStream();
+      });
+    }
+    readStream();
+  }).catch(function(){
+    byId("chatThinking").style.display="none";
+    byId("chatMessages").innerHTML += "<div class=\"msg assistant\" style=\"color:var(--danger)\">\u7f51\u7edc\u9519\u8bef</div>";
+  });
 }
 function sendSug(text){ byId("chatInput").value = text; sendChat(); }
 

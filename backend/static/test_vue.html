@@ -1,0 +1,41 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Vue 测试</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<body>
+    <div id="app">
+        <h1>{{ title }}</h1>
+        <p>当前用户: {{ username }}</p>
+        <button @click="getData">查仪表盘</button>
+        <div v-if="data">
+            <p>花费: {{ data.total_cost }}</p>
+            <p>ROAS: {{ data.roas }}</p>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue
+        createApp({
+            data() {
+                return {
+                    title: "智能广告投放助手",
+                    username: "boss",
+                    data: null
+                }
+            },
+            methods: {
+                async getData() {
+                    const r = await fetch("/api/dashboard", {
+                        headers: { "Authorization": "Bearer 你的token" }
+                    })
+                    const d = await r.json()
+                    this.data = d.data
+                }
+            }
+        }).mount("#app")
+    </script>
+</body>
+</html>
