@@ -65,6 +65,19 @@ def get_real_trends(keyword="AI 广告", user_id=None):
 
 
 
+# ==================== RAG 知识检索 ====================
+
+def search_knowledge(query, user_id=None):
+    """在广告知识库中搜索相关信息（向量检索RAG）"""
+    from backend.tools.vector_search import search as vector_search
+    result = vector_search(query)
+    if not result or not result.get("results"):
+        return {"query": query, "results": [], "total": 0, "message": "未找到相关信息"}
+    return result
+
+
+
+
 def get_dashboard_data(user_id=None):
     """获取仪表盘核心指标：总花费、销售额、ROAS等"""
     conn = get_db()
@@ -472,7 +485,8 @@ func_names = [
     "toggle_plan_status", "create_alert", "compare_periods", "detect_anomalies",
     "get_week_over_week", "record_suggestion", "report_execution", "report_outcome",
     "get_verified_suggestions", "get_decision_summary", "get_activity_timeline",
-    "get_hot_products","get_real_trends"
+    "get_hot_products","search_knowledge",
+    "get_real_trends"
 ]
 
 # 每个函数的中文描述（AI通过描述判断什么时候该调哪个函数）
@@ -499,6 +513,7 @@ func_descs = {
     "get_decision_summary": "决策统计",
     "get_activity_timeline": "活动时间轴",
     "get_hot_products": "查询当前市面上热销的产品",
+    "search_knowledge": "搜索广告知识库，获取行业标准、优化建议等参考信息（向量语义匹配）",
     "get_real_trends": "查指定关键词的中文搜索趋势（百度搜索估算）"
 }
 
