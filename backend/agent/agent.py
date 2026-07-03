@@ -1,4 +1,4 @@
-from openai import OpenAI
+from backend.agent.llm_provider import ProviderFactory
 import time  # 导入OpenAI库（DeepSeek兼容这个格式）
 import os, json, re
 from dotenv import load_dotenv  # 用来读取.env文件
@@ -31,11 +31,8 @@ class Agent:
 
     def __init__(self, tool_registry=None):
         """初始化：创建AI客户端，保存函数注册表"""
-        self.client = OpenAI(
-            api_key=os.getenv("API_KEY"),     # 从.env读API密钥
-            base_url=os.getenv("BASE_URL")     # 从.env读API地址
-        )
-        self.model = os.getenv("MODEL", "deepseek-chat")  # 模型名
+        self.provider = ProviderFactory.create()  # 从适配器工厂获取
+        self.client = self.provider  # 兼容旧代码
         self.tool_registry = tool_registry  # 保存函数注册表
 
     def chat(self, messages, user_id=None, **kwargs):
@@ -65,7 +62,7 @@ class Agent:
             # 3. 把消息 + 函数菜单发给DeepSeek
             _ai_start = time.time()
             resp = self.client.chat.completions.create(
-                model=self.model,
+                # model 由 provider 管理
                 messages=payload,
                 tools=tools_def if tools_def else None
             )
@@ -107,7 +104,7 @@ class Agent:
                 # 6. 把结果发给AI，让它组织语言回复用户
                 _ai_start2 = time.time()
                 final = self.client.chat.completions.create(
-                    model=self.model,
+                    # model 由 provider 管理
                     messages=payload,
                     temperature=0
                 )
@@ -138,7 +135,7 @@ class Agent:
 
             # 第一轮：检测是否需要调函数（非流式，但很快）
             resp = self.client.chat.completions.create(
-                model=self.model,
+                # model 由 provider 管理
                 messages=payload,
                 tools=tools_def if tools_def else None
             )
@@ -168,7 +165,7 @@ class Agent:
 
                 # 第二轮：流式输出AI的回答
                 stream = self.client.chat.completions.create(
-                    model=self.model,
+                    # model 由 provider 管理
                     messages=payload,
                     stream=True,
                     temperature=0
@@ -179,7 +176,7 @@ class Agent:
             else:
                 # 没调函数，直接流式输出
                 stream = self.client.chat.completions.create(
-                    model=self.model,
+                    # model 由 provider 管理
                     messages=payload,
                     stream=True
                 )

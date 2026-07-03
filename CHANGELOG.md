@@ -166,3 +166,16 @@
   - .dockerignore：排除缓存和敏感文件
   - requirements.txt：项目依赖清单
 - **DEPLOY.md 更新**：新增 Docker 部署章节（两种方式）
+
+## [17.0.0] - 2026-07-03
+
+### 新增
+- **LLM 适配器层**：backend/agent/llm_provider.py
+  - 抽象基类 LLMProvider：统一 chat() / chat_stream() 接口
+  - DeepSeekProvider：DeepSeek API 适配器（默认）
+  - OpenAIProvider：OpenAI API 适配器（备选）
+  - MockProvider：模拟模式，不调 API（测试用）
+  - ProviderFactory：根据 .env 配置自动选择 Provider
+- **agent.py 升级**：使用 ProviderFactory 替代硬编码 OpenAI 客户端
+- **.env.example 更新**：新增 LLM_PROVIDER、OPENAI_API_KEY、OPENAI_MODEL 配置项
+- **切换方式**：修改 .env 中 LLM_PROVIDER 即可切换底层模型，无需改代码
