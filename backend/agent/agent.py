@@ -2,6 +2,7 @@ from openai import OpenAI  # 导入OpenAI库（DeepSeek兼容这个格式）
 import os, json, re
 from dotenv import load_dotenv  # 用来读取.env文件
 from backend.memory.memory_manager import add_fact, get_compact_memory
+from backend.agent.context_window import get_optimized_context, estimate_tokens
 
 # 加载.env文件（项目根目录下的）
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", "..", ".env"))
@@ -56,7 +57,8 @@ class Agent:
                     task_context="无"
                 )
             sys_msg = {"role": "system", "content": system_content}
-            payload = [sys_msg] + messages[-15:]  # 最近15条 + 系统提示词
+            optimized = get_optimized_context(messages)
+            payload = [sys_msg] + optimized
 
             # 3. 把消息 + 函数菜单发给DeepSeek
             resp = self.client.chat.completions.create(
@@ -125,7 +127,8 @@ class Agent:
                 task_context=task_context or "无"
             )
             sys_msg = {"role": "system", "content": system_content}
-            payload = [sys_msg] + messages[-15:]
+            optimized = get_optimized_context(messages)
+            payload = [sys_msg] + optimized
 
             # 第一轮：检测是否需要调函数（非流式，但很快）
             resp = self.client.chat.completions.create(

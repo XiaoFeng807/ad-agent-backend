@@ -110,3 +110,13 @@
   - 提示词新增【当前任务】段落，AI 知道用户上一轮在做什么
   - chat() 和 chat_stream() 均支持 task_context 参数
 - **chat_routes.py 升级**：非流式/流式接口均接入任务追踪
+
+## [12.0.0] - 2026-07-03
+
+### 新增
+- **上下文窗口管理**：backend/agent/context_window.py
+  - 用 token 估算替代消息条数限制（中文1.5字/token，英文4字/token）
+  - 优先级保留：重要消息（priority≥2）优先保留，低优先级先丢弃
+  - 总窗口 32000 token（DeepSeek 上限），安全边距 4000 token
+- **agent.py 升级**：移除硬编码 messages[-15:]，改用 get_optimized_context()
+  - chat() 和 chat_stream() 均接入
