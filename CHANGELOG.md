@@ -145,3 +145,14 @@
 - **统一运行器**：run_tests.py，一条命令跑全部
 - **清理**：删除旧的根目录 tests/ 文件夹
 - **总计**：8个测试文件，30个测试用例，全部通过
+
+## [15.0.0] - 2026-07-03
+
+### 新增
+- **可观测性系统**：backend/observability.py
+  - API请求监控：记录每次请求的方法、路径、状态码、耗时
+  - AI调用统计：记录LLM调用次数、耗时
+  - 系统状态查询：get_system_status() 汇总所有数据
+- **请求中间件**：server.py 加入 before_request/after_request，自动记录所有API请求
+- **AI监控**：agent.py 每次调用 DeepSeek 时记录耗时
+- **健康检查升级**：/api/health 返回新增 observability 字段，包含请求统计和AI统计

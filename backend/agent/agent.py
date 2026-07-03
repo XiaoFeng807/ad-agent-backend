@@ -1,8 +1,10 @@
-from openai import OpenAI  # 导入OpenAI库（DeepSeek兼容这个格式）
+from openai import OpenAI
+import time  # 导入OpenAI库（DeepSeek兼容这个格式）
 import os, json, re
 from dotenv import load_dotenv  # 用来读取.env文件
 from backend.memory.memory_manager import add_fact, get_compact_memory
 from backend.agent.context_window import get_optimized_context, estimate_tokens
+from backend.observability import record_ai_call
 
 # 加载.env文件（项目根目录下的）
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", "..", ".env"))
@@ -61,11 +63,13 @@ class Agent:
             payload = [sys_msg] + optimized
 
             # 3. 把消息 + 函数菜单发给DeepSeek
+            _ai_start = time.time()
             resp = self.client.chat.completions.create(
                 model=self.model,
                 messages=payload,
                 tools=tools_def if tools_def else None
             )
+            record_ai_call(time.time() - _ai_start)
 
             # 4. 拿到AI的回复
             msg = resp.choices[0].message
@@ -101,11 +105,13 @@ class Agent:
                         })
 
                 # 6. 把结果发给AI，让它组织语言回复用户
+                _ai_start2 = time.time()
                 final = self.client.chat.completions.create(
                     model=self.model,
                     messages=payload,
                     temperature=0
                 )
+                record_ai_call(time.time() - _ai_start2)
                 return final.choices[0].message.content or ""
 
             # AI没调函数，直接返回文字回复

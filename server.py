@@ -1,12 +1,14 @@
 ﻿"""Ad Agent Backend Server - 服务入口"""
-import os, datetime
+import os, datetime, time
+from flask import request
 from flask import Flask
 
 # 导入各个模块
 from backend.config.config import Config            # 配置
 from backend.database.database import init_db, seed_data  # 数据库初始化
 from backend.auth.auth import Auth, set_auth_instance      # 认证
-from backend.agent.multi_agent import Coordinator                      # AI助手
+from backend.agent.multi_agent import Coordinator
+from backend.observability import record_request, get_system_status                      # AI助手
 from backend.di import ConfigProvider, DatabaseProvider, create_tool_registry  # 依赖注入
 from backend.routes import register_blueprints      # 路由注册
 from backend.routes.shared import init as init_shared  # 共享状态初始化
@@ -34,11 +36,19 @@ def create_app():
                 template_folder=os.path.join(os.path.dirname(__file__), "backend", "templates"))
 
     # === 跨域设置（允许前端从其他地址访问） ===
+    @app.before_request
+    def start_timer():
+        request._start_time = time.time()
+
     @app.after_request
-    def cors(resp):
+    def after(resp):
+        # CORS 头
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,DELETE,OPTIONS"
         resp.headers["Access-Control-Allow-Headers"] = "*"
+        # 请求监控
+        dt = time.time() - getattr(request, "_start_time", time.time())
+        record_request(request.method, request.path, resp.status_code, dt)
         return resp
 
     # === 首页路由 ===
