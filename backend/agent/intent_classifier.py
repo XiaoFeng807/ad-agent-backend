@@ -1,4 +1,71 @@
-﻿"""意图识别模块：先分类再处理，减少无效LLM调用"""
+﻿"""意图识别模块：先分类再处理，规则不够时LLM兜底"""
+
+from openai import OpenAI
+import os, json
+from dotenv import load_dotenv
+
+load_dotenv(os.path.join(os.path.dirname(__file__), "..", "..", ".env"))
+
+# ==================== LLM兜底客户端 ====================
+_llm_client = None
+_cache = {}  # 简单缓存，避免重复调用
+
+def _get_llm():
+    global _llm_client
+    if _llm_client is None:
+        _llm_client = OpenAI(
+            api_key=os.getenv("API_KEY"),
+            base_url=os.getenv("BASE_URL")
+        )
+    return _llm_client
+
+# LLM兜底提示词（极简，只有分类任务）
+LLM_CLASSIFY_PROMPT = """判断用户输入属于以下哪个类别，只返回类别名称：
+- query_dashboard: 查看仪表盘、总览数据
+- query_account: 查看账户余额、预算、广告账户信息
+- query_plan: 查看广告计划、计划对比
+- query_alert: 查看告警、异常提醒
+- query_trend: 查看搜索趋势、热度走势
+- query_report: 查看报表、环比同比对比
+- query_product: 查看热销产品、选品建议
+- query_knowledge: 查询广告行业知识、标准
+- sensitive_operation: 充值、加钱、改预算、切换计划等敏感操作
+- optimize_suggestion: 获取优化建议、策略
+- greeting: 打招呼、闲聊
+- other: 以上都不属于
+
+用户输入：{message}
+
+类别："""
+
+def classify_with_llm(message):
+    """LLM兜底：规则匹配不到的用LLM判断"""
+    try:
+        # 检查缓存
+        cache_key = message[:50]
+        if cache_key in _cache:
+            return _cache[cache_key]
+        
+        client = _get_llm()
+        prompt = LLM_CLASSIFY_PROMPT.format(message=message[:200])
+        
+        resp = client.chat.completions.create(
+            model=os.getenv("MODEL", "deepseek-chat"),
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0,
+            max_tokens=20  # 只要一个词，非常快
+        )
+        
+        result = resp.choices[0].message.content.strip().lower()
+        # 验证结果是有效意图
+        valid_intents = list(INTENT_CATEGORIES.keys()) + ["injection_attempt", "other"]
+        for intent in valid_intents:
+            if intent in result:
+                _cache[cache_key] = intent
+                return intent
+        return "unknown"
+    except Exception:
+        return "unknown"
 
 # ==================== 意图分类 ====================
 INTENT_CATEGORIES = {
@@ -17,7 +84,6 @@ INTENT_CATEGORIES = {
 }
 
 # ==================== 关键词规则 ====================
-# 每个意图的关键词列表，命中任意一个即匹配
 INTENT_KEYWORDS = {
     "query_dashboard": [
         "仪表盘", "总览", "今天数据", "昨天数据", "整体表现", "总花费",
@@ -52,7 +118,7 @@ INTENT_KEYWORDS = {
     ],
     "sensitive_operation": [
         "充值", "加钱", "加预算", "修改预算", "调预算",
-        "日预算改成", "存钱", "打钱", "付款"
+        "日预算改成", "存钱", "打钱", "付款", "转钱"
     ],
     "optimize_suggestion": [
         "优化建议", "建议", "怎么改", "如何优化", "提升效果",
@@ -73,8 +139,8 @@ INJECTION_PATTERNS = [
 ]
 
 
-def classify_intent(message):
-    """分类用户意图：先规则匹配，规则不明确则返回 unknown"""
+def classify_intent(message, use_llm_fallback=True):
+    """分类用户意图：先规则匹配，规则不明确用LLM兜底"""
     msg_lower = message.lower().strip()
     
     # 1. 注入检测优先
@@ -92,12 +158,20 @@ def classify_intent(message):
         if score > 0:
             scores[intent] = score
     
-    if not scores:
-        return "unknown"
+    if scores:
+        best_intent = max(scores, key=scores.get)
+        # 对于敏感操作，再走一遍LLM双确认（避免误拦）
+        if best_intent == "sensitive_operation" and use_llm_fallback:
+            llm_result = classify_with_llm(message)
+            if llm_result in ["query_dashboard", "query_account", "query_plan"]:
+                return llm_result
+        return best_intent
     
-    # 取得分最高的意图
-    best_intent = max(scores, key=scores.get)
-    return best_intent
+    # 3. 规则没有匹配到，用LLM兜底
+    if use_llm_fallback:
+        return classify_with_llm(message)
+    
+    return "unknown"
 
 
 def get_intent_description(intent):
