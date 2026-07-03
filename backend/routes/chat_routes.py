@@ -3,6 +3,7 @@ from backend.auth.auth import login_required
 from .blueprints import chat_bp
 from . import shared as _shared
 from backend.agent.intent_classifier import classify_intent, should_skip_llm, get_intent_description
+from backend.agent.task_tracker import track_message, get_task_context
 import json
 
 
@@ -28,9 +29,13 @@ def api_chat():
         reply = "涉及充值、修改预算等敏感操作，我无法直接执行。建议你前往后台【预算管理】页面手动操作。"
         return jsonify({"code": 200, "data": {"reply": reply}})
 
+    # 任务追踪
+    task_status, task_type, task_detail = track_message(intent, message)
+    task_context = get_task_context()
+
     _shared.agent.save_conversation(user_id, "user", message, priority=1)
     history = _shared.agent.get_history(user_id)
-    reply = _shared.agent.chat(history, user_id)
+    reply = _shared.agent.chat(history, user_id, task_context=task_context)
     _shared.agent.save_conversation(user_id, "assistant", reply, priority=1)
     return jsonify({"code": 200, "data": {"reply": reply}})
 
@@ -62,10 +67,12 @@ def api_chat_stream():
 
         try:
             yield "data: " + json.dumps({"type": "thinking"}) + "\n\n"
+            task_status, task_type, task_detail = track_message(intent, message)
+            task_context = get_task_context()
             _shared.agent.save_conversation(user_id, "user", message, priority=1)
             history = _shared.agent.get_history(user_id)
             full_reply = ""
-            for chunk in _shared.agent.chat_stream(history, user_id):
+            for chunk in _shared.agent.chat_stream(history, user_id, task_context=task_context):
                 full_reply += chunk
                 yield "data: " + json.dumps({"type": "text", "content": chunk}) + "\n\n"
             _shared.agent.save_conversation(user_id, "assistant", full_reply, priority=1)

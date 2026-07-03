@@ -17,6 +17,9 @@ SYSTEM_PROMPT_TPL = """你是智能投放助手，帮助用户管理和分析广
 
 【长期记忆】（该用户之前的关键操作记录）：
 {memory}
+
+【当前任务】
+{task_context}
 """
 
 
@@ -32,7 +35,7 @@ class Agent:
         self.model = os.getenv("MODEL", "deepseek-chat")  # 模型名
         self.tool_registry = tool_registry  # 保存函数注册表
 
-    def chat(self, messages, user_id=None):
+    def chat(self, messages, user_id=None, **kwargs):
         """核心方法：用户发消息 → AI思考 → 调函数 → 返回结果"""
         try:
             # 1. 获取函数菜单（告诉AI它能调哪些函数）
@@ -41,10 +44,17 @@ class Agent:
             # 2. 组装要发给AI的消息
             # 注入长期记忆
             memory_text = get_compact_memory(user_id) if user_id else ""
-            if memory_text:
-                system_content = SYSTEM_PROMPT_TPL.format(memory=memory_text)
+            task_context = kwargs.get("task_context", "")
+            if memory_text or task_context:
+                system_content = SYSTEM_PROMPT_TPL.format(
+                    memory=memory_text or "暂无历史记录",
+                    task_context=task_context or "无"
+                )
             else:
-                system_content = SYSTEM_PROMPT_TPL.format(memory="暂无历史记录")
+                system_content = SYSTEM_PROMPT_TPL.format(
+                    memory="暂无历史记录",
+                    task_context="无"
+                )
             sys_msg = {"role": "system", "content": system_content}
             payload = [sys_msg] + messages[-15:]  # 最近15条 + 系统提示词
 
@@ -104,12 +114,16 @@ class Agent:
             return "抱歉，我暂时无法处理这个请求。"
 
 
-    def chat_stream(self, messages, user_id=None):
+    def chat_stream(self, messages, user_id=None, **kwargs):
         """流式版：逐字返回AI的回复，前端实时显示"""
         try:
             tools_def = self.tool_registry.get_definitions() if self.tool_registry else []
             memory_text = get_compact_memory(user_id) if user_id else ""
-            system_content = SYSTEM_PROMPT_TPL.format(memory=memory_text or "暂无历史记录")
+            task_context = kwargs.get("task_context", "")
+            system_content = SYSTEM_PROMPT_TPL.format(
+                memory=memory_text or "暂无历史记录",
+                task_context=task_context or "无"
+            )
             sys_msg = {"role": "system", "content": system_content}
             payload = [sys_msg] + messages[-15:]
 

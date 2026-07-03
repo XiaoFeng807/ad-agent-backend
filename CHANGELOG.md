@@ -98,3 +98,15 @@
   - 注入攻击提前拦截（比之前更彻底）
   - 敏感操作直接拦截（不经过 LLM，更安全）
 - **chat_routes.py 升级**：非流式和流式接口都接入意图识别
+
+## [11.0.0] - 2026-07-03
+
+### 新增
+- **多轮任务追踪**：backend/agent/task_tracker.py
+  - 跨轮跟踪用户意图（started → continued → switched → completed）
+  - 9 种任务类型映射（仪表盘/账户/计划/告警/趋势/产品/建议/知识/敏感操作）
+  - 自动识别任务延续/切换/完成信号
+- **agent.py 升级**：支持 task_context 注入到系统提示词
+  - 提示词新增【当前任务】段落，AI 知道用户上一轮在做什么
+  - chat() 和 chat_stream() 均支持 task_context 参数
+- **chat_routes.py 升级**：非流式/流式接口均接入任务追踪
