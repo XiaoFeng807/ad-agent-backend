@@ -132,3 +132,16 @@
   - 每个子Agent有专属提示词，更精准
   - 敏感操作和注入攻击在协调者层拦截
 - **server.py 升级**：使用 Coordinator 替代单一 Agent，接口完全兼容
+
+## [14.0.0] - 2026-07-03
+
+### 测试补全
+- **新增5个测试文件**，从3个扩展到8个：
+  - backend/agent/tests/test_intent_classifier.py（7个测试用例）
+  - backend/agent/tests/test_context_window.py（6个测试用例）
+  - backend/agent/tests/test_task_tracker.py（7个测试用例）
+  - backend/agent/tests/test_multi_agent.py（7个测试用例）
+  - backend/captcha/tests/test_captcha.py（3个测试用例）
+- **统一运行器**：run_tests.py，一条命令跑全部
+- **清理**：删除旧的根目录 tests/ 文件夹
+- **总计**：8个测试文件，30个测试用例，全部通过
