@@ -2,7 +2,9 @@
 from backend.auth.auth import login_required
 from .blueprints import chat_bp
 from . import shared as _shared
-import json, os, sys, traceback
+from backend.agent.intent_classifier import classify_intent, should_skip_llm, get_intent_description
+import json
+
 
 @chat_bp.route("/api/chat", methods=["POST"])
 @login_required
@@ -14,15 +16,17 @@ def api_chat():
     if not message:
         return jsonify({"code": 400, "msg": "消息不能为空"}), 400
 
-    injection_patterns = [
-        "忽略之前的", "忽略所有", "忽略指令", "无视",
-        "你现在是", "你是一个", "扮演", "假装",
-        "system prompt", "system_message",
-        "不要遵守", "忘记", "reset"
-    ]
-    for pattern in injection_patterns:
-        if pattern in message.lower():
-            return jsonify({"code": 200, "data": {"reply": "我是智能投放助手，只能回答广告投放相关的问题。"}})
+    # 意图识别：先分类再处理
+    intent = classify_intent(message)
+
+    # 注入攻击 → 直接拦截
+    if intent == "injection_attempt":
+        return jsonify({"code": 200, "data": {"reply": "我是智能投放助手，只能回答广告投放相关的问题。"}})
+
+    # 敏感操作 → 只给建议不执行
+    if intent == "sensitive_operation":
+        reply = "涉及充值、修改预算等敏感操作，我无法直接执行。建议你前往后台【预算管理】页面手动操作。"
+        return jsonify({"code": 200, "data": {"reply": reply}})
 
     _shared.agent.save_conversation(user_id, "user", message, priority=1)
     history = _shared.agent.get_history(user_id)
@@ -41,34 +45,30 @@ def api_chat_stream():
     if not message:
         return jsonify({"code": 400, "msg": "消息不能为空"}), 400
 
-    injection_patterns = [
-        "忽略之前的", "忽略所有", "忽略指令", "无视",
-        "你现在是", "你是一个", "扮演", "假装",
-        "system prompt", "system_message",
-        "不要遵守", "忘记", "reset"
-    ]
-    for pattern in injection_patterns:
-        if pattern in message.lower():
-            def inject_block():
-                yield "data: " + json.dumps({"type": "done", "content": "我是智能投放助手，只能回答广告投放相关的问题。"}) + "\n\n"
-            return Response(inject_block(), mimetype="text/event-stream")
+    # 意图识别
+    intent = classify_intent(message)
 
-    import traceback
     def generate():
-        try:
-            # 先发"思考中"信号
-            yield "data: " + json.dumps({"type": "thinking"}) + "\n\n"
+        # 注入检测
+        if intent == "injection_attempt":
+            yield "data: " + json.dumps({"type": "done", "content": "我是智能投放助手，只能回答广告投放相关的问题。"}) + "\n\n"
+            return
 
+        # 敏感操作
+        if intent == "sensitive_operation":
+            yield "data: " + json.dumps({"type": "text", "content": "涉及充值、修改预算等敏感操作，我无法直接执行。建议你前往后台【预算管理】页面手动操作。"}) + "\n\n"
+            yield "data: " + json.dumps({"type": "done"}) + "\n\n"
+            return
+
+        try:
+            yield "data: " + json.dumps({"type": "thinking"}) + "\n\n"
             _shared.agent.save_conversation(user_id, "user", message, priority=1)
             history = _shared.agent.get_history(user_id)
             full_reply = ""
             for chunk in _shared.agent.chat_stream(history, user_id):
                 full_reply += chunk
                 yield "data: " + json.dumps({"type": "text", "content": chunk}) + "\n\n"
-
-            # 保存完整回复到数据库
             _shared.agent.save_conversation(user_id, "assistant", full_reply, priority=1)
-
             yield "data: " + json.dumps({"type": "done"}) + "\n\n"
         except Exception as e:
             yield "data: " + json.dumps({"type": "error", "content": str(e)[:200]}) + "\n\n"
@@ -77,10 +77,7 @@ def api_chat_stream():
     return Response(
         stream_with_context(generate()),
         mimetype="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "X-Accel-Buffering": "no",
-        }
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
     )
 
 

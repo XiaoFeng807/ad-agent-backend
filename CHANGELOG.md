@@ -87,3 +87,14 @@
 ### 测试结构优化
 - 测试放代码旁边：auth/tests/、tools/tests/、routes/tests/
 - 更规范的模块级测试组织
+
+## [10.0.0] - 2026-07-03
+
+### 新增
+- **API 接口文档**：API.md，列出全部 21 个接口的路径、参数、返回格式
+- **意图识别层**：backend/agent/intent_classifier.py
+  - 12 个意图分类（query_dashboard/account/plan/alert/trend/report/product/knowledge...）
+  - 91 个关键词规则，先规则匹配后 LLM 兜底
+  - 注入攻击提前拦截（比之前更彻底）
+  - 敏感操作直接拦截（不经过 LLM，更安全）
+- **chat_routes.py 升级**：非流式和流式接口都接入意图识别
