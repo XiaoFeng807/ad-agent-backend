@@ -28,3 +28,7 @@ _fix*.py
 _upd*.py
 _gen*.py
 *_test*.py
+
+# 个人文档（不上传 GitHub）
+学习计划.md
+简历项目描述.md
