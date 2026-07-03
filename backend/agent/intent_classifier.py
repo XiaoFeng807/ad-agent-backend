@@ -112,7 +112,3 @@ def should_skip_llm(intent):
         "query_alert", "query_trend", "query_product",
         "sensitive_operation", "injection_attempt"
     ]
-
-
-print(f"共 {len(INTENT_CATEGORIES)} 个意图分类")
-print(f"共 {sum(len(v) for v in INTENT_KEYWORDS.values())} 个关键词规则")

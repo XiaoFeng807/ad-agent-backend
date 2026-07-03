@@ -120,3 +120,15 @@
   - 总窗口 32000 token（DeepSeek 上限），安全边距 4000 token
 - **agent.py 升级**：移除硬编码 messages[-15:]，改用 get_optimized_context()
   - chat() 和 chat_stream() 均接入
+
+## [13.0.0] - 2026-07-03
+
+### 新增
+- **多Agent协同系统**：backend/agent/multi_agent.py
+  - 协调者(Coordinator)：判断意图，路由到对应子Agent
+  - 数据Agent：11个工具，专注查数据（仪表盘/账户/计划/告警）
+  - 分析Agent：4个工具，专注分析对比
+  - 知识Agent：2个工具，专注广告行业知识
+  - 每个子Agent有专属提示词，更精准
+  - 敏感操作和注入攻击在协调者层拦截
+- **server.py 升级**：使用 Coordinator 替代单一 Agent，接口完全兼容

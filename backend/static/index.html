@@ -514,7 +514,7 @@ function sendChat(){
   byId("chatMessages").appendChild(aiDiv);
   byId("chatThinking").style.display = "flex";
   fetch("/api/chat/stream", {
-    method:"POST", headers:{"Content-Type":"application/json"},
+    method:"POST", headers:{"Content-Type":"application/json","Authorization":"Bearer "+TOKEN},
     body:JSON.stringify({message:msg})
   }).then(function(resp){
     var reader = resp.body.getReader(); var decoder = new TextDecoder(); var buffer = "";
