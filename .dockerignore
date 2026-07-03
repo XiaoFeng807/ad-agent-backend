@@ -1,0 +1,12 @@
+﻿.git
+.gitignore
+__pycache__/
+*.pyc
+*.pyo
+.env
+*.db
+chroma_db/
+.user_memory/
+node_modules/
+.vscode/
+.idea/

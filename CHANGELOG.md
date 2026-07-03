@@ -156,3 +156,13 @@
 - **请求中间件**：server.py 加入 before_request/after_request，自动记录所有API请求
 - **AI监控**：agent.py 每次调用 DeepSeek 时记录耗时
 - **健康检查升级**：/api/health 返回新增 observability 字段，包含请求统计和AI统计
+
+## [16.0.0] - 2026-07-03
+
+### 新增
+- **Docker 部署**：
+  - Dockerfile：基于 python:3.12-slim，健康检查，暴露 5000 端口
+  - docker-compose.yml：一键构建+启动，.env 只读挂载，数据持久化
+  - .dockerignore：排除缓存和敏感文件
+  - requirements.txt：项目依赖清单
+- **DEPLOY.md 更新**：新增 Docker 部署章节（两种方式）

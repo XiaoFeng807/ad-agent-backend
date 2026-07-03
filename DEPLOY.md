@@ -1,4 +1,4 @@
-# 部署文档 — 智能广告投放助手
+﻿# 部署文档 — 智能广告投放助手
 
 ## 环境要求
 
@@ -292,7 +292,55 @@ python server.py
 
 ---
 
-## 九、运行单元测试
+## 九、
+---
+
+## 十、Docker 部署
+
+### 前提条件
+- 安装 Docker: https://docs.docker.com/get-docker/
+- 配置 .env 文件（API_KEY 等）
+
+### 方式一：使用 docker-compose（推荐）
+
+`ash
+# 1. 确保 .env 已配置
+# 2. 构建并启动
+docker-compose up -d
+
+# 3. 查看日志
+docker-compose logs -f
+
+# 4. 停止
+docker-compose down
+`
+
+### 方式二：使用 Docker 命令行
+
+`ash
+# 1. 构建镜像
+docker build -t ad-agent .
+
+# 2. 运行容器
+docker run -d \\
+  --name ad-agent \\
+  -p 5000:5000 \\
+  -v ./.env:/app/.env:ro \\
+  -v ./data:/app/data \\
+  ad-agent
+
+# 3. 查看日志
+docker logs -f ad-agent
+`
+
+### 访问
+浏览器打开 http://localhost:5000
+
+### 目录挂载说明
+| 挂载路径 | 说明 |
+|---------|------|
+| ./.env:/app/.env:ro | API Key 配置（只读） |
+| ./data:/app/data | 数据库持久化（容器重启不丢失） |
 
 项目包含 3 个测试文件，覆盖核心功能：
 

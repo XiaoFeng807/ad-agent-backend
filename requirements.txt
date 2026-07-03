@@ -1,0 +1,7 @@
+﻿flask>=3.0
+openai>=1.0
+python-dotenv>=1.0
+pyjwt>=2.0
+pillow>=10.0
+chromadb>=1.5
+scikit-learn>=1.0
