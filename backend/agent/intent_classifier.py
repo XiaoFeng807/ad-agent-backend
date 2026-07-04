@@ -118,7 +118,11 @@ INTENT_KEYWORDS = {
     ],
     "sensitive_operation": [
         "充值", "加钱", "加预算", "修改预算", "调预算",
-        "日预算改成", "存钱", "打钱", "付款", "转钱"
+        "日预算改成", "存钱", "打钱", "付款", "转钱",
+        "预算改成", "改预算", "增加预算", "减少预算", "预算改到",
+        "删除计划", "移除计划", "暂停计划", "关闭计划",
+        "加余额", "加金额", "充钱",
+        "块钱", "加元", "加金",
     ],
     "optimize_suggestion": [
         "优化建议", "建议", "怎么改", "如何优化", "提升效果",
@@ -148,9 +152,23 @@ def classify_intent(message, use_llm_fallback=True):
         if pattern in msg_lower:
             return "injection_attempt"
     
-    # 2. 关键词匹配
+    # 2. 敏感操作优先检测（高优先级）
+    sensitive_kws = INTENT_KEYWORDS.get("sensitive_operation", [])
+    for kw in sensitive_kws:
+        if kw in msg_lower:
+            # LLM双确认：只有明确是打招呼/无关才覆盖
+            if use_llm_fallback:
+                llm_result = classify_with_llm(message)
+                # 仅当LLM明确说是打招呼时覆盖，unknown/other都不覆盖（宁愿误拦也不能放行敏感操作）
+                if llm_result == "greeting":
+                    return llm_result
+            return "sensitive_operation"
+    
+    # 3. 其他关键词匹配
     scores = {}
     for intent, keywords in INTENT_KEYWORDS.items():
+        if intent == "sensitive_operation":
+            continue  # 已处理
         score = 0
         for kw in keywords:
             if kw in msg_lower:
@@ -159,15 +177,9 @@ def classify_intent(message, use_llm_fallback=True):
             scores[intent] = score
     
     if scores:
-        best_intent = max(scores, key=scores.get)
-        # 对于敏感操作，再走一遍LLM双确认（避免误拦）
-        if best_intent == "sensitive_operation" and use_llm_fallback:
-            llm_result = classify_with_llm(message)
-            if llm_result in ["query_dashboard", "query_account", "query_plan"]:
-                return llm_result
-        return best_intent
+        return max(scores, key=scores.get)
     
-    # 3. 规则没有匹配到，用LLM兜底
+    # 4. 规则没有匹配到，用LLM兜底
     if use_llm_fallback:
         return classify_with_llm(message)
     

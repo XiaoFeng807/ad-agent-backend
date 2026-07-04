@@ -103,26 +103,40 @@ class OpenAIProvider(LLMProvider):
 
 
 # ==================== Mock 适配器（测试用） ====================
+class _MockCompletions:
+    """Mock 的 chat.completions 对象，模拟 OpenAI SDK 接口"""
+    class _Completions:
+        def create(self, **kwargs):
+            import time
+            from backend.agent.llm_provider import MockProvider
+            # 直接用 MockProvider 的 mock 方法
+            mp = MockProvider()
+            return mp._chat(kwargs.get('messages', []), 
+                                kwargs.get('tools'),
+                                kwargs.get('stream', False))
+    def __init__(self):
+        self.completions = self._Completions()
+
+
 class MockProvider(LLMProvider):
     """Mock 适配器：不调 API，返回固定回复（用于测试）"""
     
     def __init__(self):
         self._call_count = 0
+        self._mock_completions = _MockCompletions()
+    
+    @property
+    def chat(self):
+        """兼容 Agent.chat() 的 self.client.chat.completions.create 调用方式"""
+        return self._mock_completions
     
     @property
     def name(self):
         return "Mock(测试用)"
     
-    def chat(self, messages, tools=None, stream=False, temperature=0):
+    def _chat(self, messages, tools=None, stream=False, temperature=0):
         self._call_count += 1
-        # 从消息中提取最后一条用户消息
-        last_user = ""
-        for m in reversed(messages):
-            if m.get("role") == "user":
-                last_user = m.get("content", "")
-                break
         
-        # 模拟回复
         class MockChoice:
             def __init__(self, text):
                 class Msg:
@@ -132,6 +146,7 @@ class MockProvider(LLMProvider):
                 self.message = Msg(text)
                 self.delta = Msg(text)
                 self.finish_reason = "stop"
+                self.choices = [self]
         
         class MockResp:
             def __init__(self, text):
@@ -139,10 +154,61 @@ class MockProvider(LLMProvider):
             def __iter__(self):
                 return iter(self.choices)
         
-        return MockResp(f"[Mock回复] 你刚才说: {last_user[:30]}...")
+        # 提取用户消息
+        last_user = ""
+        for m in reversed(messages):
+            if m.get("role") == "user":
+                last_user = m.get("content", "")
+                break
+        
+        # 模拟LLM决策：如果有关键词且工具有效，模拟工具调用
+        query_keywords = ["数据", "今天", "昨天", "趋势", "计划", "账户", "花费", "roas", "dashboard"]
+        need_data = any(kw in last_user.lower() for kw in query_keywords)
+        
+        if need_data and tools:
+            import json
+            tool_name = tools[0]["function"]["name"]
+            
+            # 模拟 tool_calls
+            class FuncStub:
+                def __init__(self, n):
+                    self.name = n
+                    self.arguments = json.dumps({})
+            class ToolCallItem:
+                def __init__(self):
+                    self.id = "mock_call_001"
+                    self.function = FuncStub(tool_name)
+            
+            choice = MockChoice("")
+            choice.message.tool_calls = [ToolCallItem()]
+            resp = MockResp("")
+            resp.choices = [choice]
+            return resp
+        
+        # 没有工具调用：检查是否有工具执行结果
+        tool_results = []
+        for m in messages:
+            if m.get("role") == "tool":
+                data = m.get("content", "")
+                tool_results.append(data[:200])
+        
+        if tool_results:
+            # 有工具执行结果，格式化为摘要
+            summary = "[Mock数据摘要] 查询结果如下：\n"
+            for r in tool_results:
+                summary += r + "\n"
+            resp = MockResp(summary)
+        else:
+            resp = MockResp("[Mock提示] 请问你想查询什么数据？可以试试问：'今天数据怎么样'")
+        if stream:
+            def gen():
+                for c in resp.choices:
+                    yield c
+            return gen()
+        return resp
     
     def chat_stream(self, messages, tools=None):
-        yield self.chat(messages, tools).choices[0]
+        yield self._chat(messages, tools).choices[0]
 
 
 # ==================== Provider 工厂 ====================
