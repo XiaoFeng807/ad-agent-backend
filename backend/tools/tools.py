@@ -1,4 +1,4 @@
-"""工具函数模块：所有AI可以调用的函数都写在这里"""
+﻿"""工具函数模块：所有AI可以调用的函数都写在这里"""
 import pandas as pd
 from backend.database.database import get_db
 
@@ -68,16 +68,33 @@ def get_real_trends(keyword="AI 广告", user_id=None):
 # ==================== RAG 知识检索 ====================
 
 def search_knowledge(query, user_id=None):
-    """在广告知识库中搜索相关信息（向量检索RAG）"""
-    from backend.tools.vector_search import search as vector_search
-    result = vector_search(query)
-    if not result or not result.get("results"):
-        return {"query": query, "results": [], "total": 0, "message": "未找到相关信息"}
-    return result
+    """RAG检索: 先查本地知识库，查不到联网搜索"""
+    from backend.tools.vector_search import search as vs
+    r = vs(query)
+    if r and r.get("results"):
+        return r
+    w = search_web(query, user_id)
+    if w.get("success") and w.get("results"):
+        return {"query": query, "results": w["results"], "total": len(w["results"]), "source": "web", "message": "来自联网搜索"}
+    return {"query": query, "results": [], "total": 0, "message": "未找到相关信息"}
 
-
-
-
+def search_web(query, user_id=None):
+    """???????????RAG ???????"""
+    import requests
+    headers = {"User-Agent": "Mozilla/5.0"}
+    url = "https://www.baidu.com/s?wd=" + requests.utils.quote(query)
+    try:
+        r = requests.get(url, headers=headers, timeout=5)
+        if r.status_code != 200:
+            return {"success": False, "error": "????"}
+        results = []
+        for item in _re.findall(r"<h3[^>]*>(.*?)</h3>", r.text, _re.DOTALL)[:5]:
+            title = _re.sub(r"<[^>]+>", "", item).strip()
+            if title:
+                results.append({"title": title, "abstract": ""})
+        return {"success": True, "query": query, "results": results, "source": "baidu"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 def get_dashboard_data(user_id=None):
     """获取仪表盘核心指标：总花费、销售额、ROAS等"""
     conn = get_db()
@@ -90,7 +107,22 @@ def get_dashboard_data(user_id=None):
     avg_order_value = 50
     estimated_orders = int(sales / avg_order_value) if sales > 0 else 0
     estimated_cpa = round(cost / estimated_orders, 2) if estimated_orders > 0 else 0
-
+    # ===== 结果校验 =====
+    data_quality = "正常"
+    data_warnings = []
+    
+    if cost == 0 and sales == 0:
+        data_quality = "无数据"
+        data_warnings.append("当前没有任何投放数据，可能账户为新开户或未开始投放")
+    elif sales / cost < 0.5 if cost > 0 else False:
+        data_quality = "偏低"
+        data_warnings.append("ROAS偏低，建议检查投放策略")
+    elif sales / cost > 10 if cost > 0 else False:
+        data_quality = "异常"
+        data_warnings.append("ROAS异常偏高，请核实数据是否准确")
+    
+    if imp == 0 and clicks > 0:
+        data_warnings.append("有点击无展现，数据可能存在异常")
     return {
         "total_cost": round(cost, 2),
         "total_sales": round(sales, 2),
@@ -101,6 +133,8 @@ def get_dashboard_data(user_id=None):
         "cpc": round(cost / clicks, 2) if clicks > 0 else 0,
         "total_orders": estimated_orders,
         "cpa": estimated_cpa,
+        "data_quality": data_quality,
+        "data_warnings": data_warnings
     }
 
 def get_daily_trend(days=7, user_id=None):

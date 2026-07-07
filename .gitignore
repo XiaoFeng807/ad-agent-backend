@@ -25,3 +25,6 @@ fixed_backend
 fix_indent.py
 update_docs.py
 langchain_study.md
+
+_fix_*.py
+_test_*.py
