@@ -1,7 +1,7 @@
 ﻿# 智能广告投放助手
 
 ## 项目概述
-基于 Flask + DeepSeek API 的广告投放管理平台，支持多账户权限管理、数据看板、AI 智能分析等功能。
+基于 FastAPI + DeepSeek API 的广告投放管理平台，支持多账户权限管理、数据看板、AI 智能分析等功能。
 
 部署文档：[DEPLOY.md](./DEPLOY.md)
 
@@ -10,10 +10,10 @@
 ```bash
 cd ad_agent_backend
 pip install flask pyjwt pillow python-dotenv openai
-python server.py
+python fast_server.py
 ```
 
-访问 http://localhost:5000
+访问 http://localhost:5001
 
 ## 预设账户
 
@@ -28,7 +28,7 @@ python server.py
 
 ```
 ad_agent_backend/
-├── server.py                   # Flask 服务入口 + 蓝图注册
+├── fast_server.py                   # FastAPI 服务入口 + 蓝图注册
 ├── gen_all.py                  # 前端 HTML 生成器(输出到static/)
 ├── .env                        # 环境配置 (API Key等)
 ├── ad_agent.db                 # SQLite 数据库
@@ -41,7 +41,7 @@ ad_agent_backend/
 │   │   ├── css/
 │   │   ├── js/
 │   │   └── img/
-│   ├── templates/              # Flask 模板目录
+│   ├── templates/              # FastAPI 模板目录
 │   ├── routes/                 # 模块化路由蓝图
 │   │   ├── __init__.py         # 蓝图注册入口
 │   │   ├── shared.py           # 蓝图共享状态
@@ -69,7 +69,7 @@ ad_agent_backend/
 
 ## 解耦架构说明
 
-### 后端模块化（Flask Blueprints）
+### 后端模块化（FastAPI Blueprints）
 所有 API 路由已拆分为独立的蓝图文件，每个文件只负责一类功能：
 
 | 文件 | 路由前缀 | 功能 |
@@ -124,21 +124,21 @@ ad_agent_backend/
 
 ### 第5版修复 - 登录500错误修复
 - **修复循环导入**：将蓝图定义移到独立文件 lueprints.py，避免 __init__.py 与路由文件之间的循环依赖
-- **禁用Flask重载器**：use_reloader=False 防止服务器重启过程中请求500错误
+- **禁用FastAPI重载器**：use_reloader=False 防止服务器重启过程中请求500错误
 - **清除旧文件**：删除根目录旧 index.html，避免新旧文件冲突
 
 ### 第5版 - 项目解耦模块化（防崩溃）- **修复循环导入**：将蓝图定义移到独立 lueprints.py 文件，避免循环依赖
-- **禁用Flask重载器**：use_reloader=False 防止服务器重启时请求500错误
+- **禁用FastAPI重载器**：use_reloader=False 防止服务器重启时请求500错误
 - **清除旧文件**：删除根目录旧 index.html，避免新旧文件冲突
 - **新增 ackend/routes/blueprints.py**：集中管理所有Blueprint对象
 - **更新 
 outes/__init__.py**：从 lueprints.py 统一导入并注册
-- **server.py**：添加 use_reloader=False 参数
-- **后端路由解耦**：将 `server.py` 中31条API路由拆分为11个独立的Flask蓝图文件
+- **fast_server.py**：添加 use_reloader=False 参数
+- **后端路由解耦**：将 `fast_server.py` 中31条API路由拆分为11个独立的FastAPI蓝图文件
   - 创建 `backend/routes/` 目录，每个功能一个文件
   - 通过 `routes/shared.py` 集中管理共享状态
   - 通过 `routes/__init__.py` 统一注册蓝图
-- **server.py瘦身**：从356行减少到60行，只保留初始化、CORS和入口
+- **fast_server.py瘦身**：从356行减少到60行，只保留初始化、CORS和入口
 - **静态文件分离**：`index.html` 输出到 `backend/static/` 目录
 - **错误隔离**：单个路由蓝图的崩溃不会影响其他功能模块
 - **扩展友好**：新增功能只需新建蓝图文件 + 在__init__.py注册

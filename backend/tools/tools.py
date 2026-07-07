@@ -202,6 +202,28 @@ def compare_plans(plan_id_1, plan_id_2, user_id=None):
 
 
 def get_daily_report_by_date(start_date, end_date, user_id=None):
+    """按日期范围查询报表（约束：日期格式校验 + 最多查90天）"""
+    # ===== ① 参数校验 =====
+    import re
+    # 检查日期格式：必须是 YYYY-MM-DD
+    date_pattern = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+    if not date_pattern.match(str(start_date)):
+        return {"success": False, "error": f"日期格式错误: {start_date}，正确格式: YYYY-MM-DD"}
+    if not date_pattern.match(str(end_date)):
+        return {"success": False, "error": f"日期格式错误: {end_date}，正确格式: YYYY-MM-DD"}
+    
+    # 检查日期范围：最多查90天
+    from datetime import datetime
+    try:
+        s = datetime.strptime(start_date, "%Y-%m-%d")
+        e = datetime.strptime(end_date, "%Y-%m-%d")
+    except:
+        return {"success": False, "error": "日期不合法"}
+    if (e - s).days > 90:
+        return {"success": False, "error": "查询范围不能超过90天，请缩小日期范围"}
+    if e < s:
+        return {"success": False, "error": "结束日期不能早于开始日期"}
+    
     """按日期范围查询报表"""
     conn = get_db()
     c = conn.cursor()
@@ -230,12 +252,37 @@ def optimize_accounts(user_id=None):
 
 
 def update_daily_budget(account_id, amount, user_id=None):
-    """修改预算（敏感操作,只给建议不执行）"""
+    """修改预算（约束：仅老板和管理员可操作，金额范围校验）"""
+    # ===== ① 权限校验 =====
+    if not user_id:
+        return {"success": False, "error": "未登录，无法操作"}
+    
+    # 查用户角色
+    conn = get_db()
+    user = conn.execute("SELECT role FROM users WHERE id=?", (user_id,)).fetchone()
+    conn.close()
+    if not user:
+        return {"success": False, "error": "用户不存在"}
+    
+    allowed_roles = ["boss", "admin"]
+    if user["role"] not in allowed_roles:
+        return {"success": False, "error": "权限不足，仅管理员可修改预算"}
+    
+    # ===== ② 金额校验 =====
+    try:
+        amount = float(amount)
+    except:
+        return {"success": False, "error": "金额格式错误"}
+    if amount <= 0:
+        return {"success": False, "error": "预算金额必须大于0"}
+    if amount > 100000:
+        return {"success": False, "error": "单次修改金额不能超过10万"}
+    
+    # ===== ③ 执行操作 =====
     return {
         "success": True, "message": "suggestion_only", "action": "update_budget",
-        "suggestion": "建议在后台手动调整预算至: " + str(amount)
+        "suggestion": f"建议在后台手动调整预算至: {amount}"
     }
-
 
 def toggle_plan_status(plan_id, user_id=None):
     """切换计划状态（敏感操作,只给建议不执行）"""
@@ -256,7 +303,7 @@ def create_alert(type, message, level="warning", user_id=None):
     return {"success": True}
 
 
-# ==================== 数据分析类函数 ====================
+# ==================== 数据分析类函数 ====================#
 
 def compare_periods(user_id=None, current_days=7):
     """对比本期与上期的数据变化"""

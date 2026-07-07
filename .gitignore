@@ -21,3 +21,7 @@ server_pid.txt
 fix_endpoints.py
 fixed_backend
 
+
+fix_indent.py
+update_docs.py
+langchain_study.md

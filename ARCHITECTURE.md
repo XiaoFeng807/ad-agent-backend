@@ -1,7 +1,7 @@
 # 智能广告投放助手 — 系统架构
-
-> 文档版本：2026-07-03
-> 技术栈：Flask + DeepSeek API + SQLite + 原生前端
+> 文档版本：2026-07-07
+> 技术栈：FastAPI + DeepSeek API + SQLite + WebSocket + 原生前端
+> 技术栈：FastAPI + DeepSeek API + SQLite + 原生前端
 
 ---
 
@@ -11,12 +11,12 @@
 ┌─────────────────────────────────────────────────────────────┐
 │                        浏览器 (前端)                         │
 │             原生 HTML + CSS + JavaScript + ECharts           │
-│                    http://localhost:5000                     │
+│                    http://localhost:5001                     │
 └──────────────────────────┬──────────────────────────────────┘
                            │ HTTP / JSON
                            ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                      Flask 后端 (server.py)                  │
+│                      FastAPI 后端 (server.py)                  │
 │                                                             │
 │  ┌──────────────────────────────────────────────────────┐   │
 │  │                  路由层 (11个 Blueprints)              │   │
@@ -253,7 +253,7 @@ ad_agent_backend/
 
 | 分类 | 技术 | 用途 |
 |------|------|------|
-| 后端框架 | Flask 3.x | HTTP服务 + 路由 |
+| 后端框架 | FastAPI 3.x | HTTP服务 + 路由 |
 | AI 接口 | DeepSeek API (OpenAI SDK) | LLM 推理 + Function Calling |
 | 数据库 | SQLite | 结构化数据存储 |
 | 向量检索 | scikit-learn (TF-IDF) | RAG 语义检索 |
