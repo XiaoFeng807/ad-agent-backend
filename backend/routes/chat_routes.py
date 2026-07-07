@@ -76,6 +76,9 @@ def api_chat_stream():
                 full_reply += chunk
                 yield "data: " + json.dumps({"type": "text", "content": chunk}) + "\n\n"
             _shared.agent.save_conversation(user_id, "assistant", full_reply, priority=1)
+            # 对话摘要：保存关键信息供后续参考
+            from backend.memory.memory_manager import store_conversation_summary
+            store_conversation_summary(user_id, message, full_reply)
             yield "data: " + json.dumps({"type": "done"}) + "\n\n"
         except Exception as e:
             yield "data: " + json.dumps({"type": "error", "content": str(e)[:200]}) + "\n\n"

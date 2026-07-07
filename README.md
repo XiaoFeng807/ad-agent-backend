@@ -177,6 +177,16 @@ outes/__init__.py**：从 lueprints.py 统一导入并注册
 - **单元测试**：创建 tests/ 目录，3个文件14个用例覆盖仪表盘/登录/工具函数
 - **新增字段**：后端返回 total_orders 和 cpa，修复前端显示 ¥undefined
 
+### 第8版 - 对话摘要记忆 + 多Agent优化（2026-07-04）
+- **对话摘要记忆**：每次对话后自动提取关键信息（用户问题+AI结论），最多保留10条
+- **历史摘要注入**：下次对话时自动注入摘要到Prompt，AI可参考之前聊过什么
+- **多Agent流水线容错**：Pipeline.run() 加入 try/except，单阶段失败不影响后续
+- **Prompt全面升级**：从"禁止规则"改为"说话风格指南"，加入好/差回答示例（Few-shot）
+- **前端表格渲染**：AI回复中的markdown表格自动转为HTML表格
+- **修复model参数缺失**：chat_stream() 中7处 missing model 参数导致API调用失败
+- **修复.env BOM头**：load_dotenv 无法读取带BOM的配置文件
+- **Provider切换支持**：.env 中 LLM_PROVIDER 可选 deepseek/mock/openai
+
 ### 第7版 - 树状记忆系统（2026-07-01）
 - **树状记忆**：创建 backend/memory/memory_manager.py，按4个分支（平台账户/最近操作/关注偏好/告警与问题）存储用户操作记录
 - **自动学习偏好**：统计用户操作频率，累计3次自动推导偏好，写入【用户偏好】分支

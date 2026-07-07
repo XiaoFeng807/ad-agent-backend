@@ -76,6 +76,12 @@ BASE_URL=https://api.deepseek.com
 MODEL=deepseek-chat
 
 # === 服务配置 ===
+
+# LLM Provider 切换（deepseek / mock / openai）
+# deepseek=真实调用, mock=模拟回复(免API), openai=OpenAI
+LLM_PROVIDER=deepseek
+
+# === 服务配置 ===
 PORT=5000
 HOST=0.0.0.0
 DEBUG=True

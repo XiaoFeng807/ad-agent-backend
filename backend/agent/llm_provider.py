@@ -35,7 +35,7 @@ class DeepSeekProvider(LLMProvider):
     def __init__(self):
         from openai import OpenAI
         self._client = OpenAI(
-            api_key=os.getenv("API_KEY"),
+            api_key=os.getenv("API_KEY") or os.getenv("DEEPSEEK_API_KEY") or "",
             base_url=os.getenv("BASE_URL", "https://api.deepseek.com")
         )
         self._model = os.getenv("MODEL", "deepseek-chat")

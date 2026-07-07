@@ -11,3 +11,13 @@ update_agent.py
 backend/memory/user_memory/
 学习计划.md
 简历项目描述.md
+
+# 临时文件
+server_*.log
+server_*.txt
+check_db.py
+fix_provider.py
+server_pid.txt
+fix_endpoints.py
+fixed_backend
+

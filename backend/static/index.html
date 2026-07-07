@@ -249,19 +249,12 @@ setInterval(updateTime,1000); updateTime();
 function loadCaptcha(){
   var img = byId("captchaImg");
   if(!img) return;
-  var xhr = new XMLHttpRequest();
-  xhr.open("GET","/api/captcha/img?"+new Date().getTime(),true);
-  xhr.responseType = "blob";
-  xhr.onload = function(){
-    if(xhr.status===200){
-      var cid = xhr.getResponseHeader("X-Captcha-Id");
-      if(cid) window._captchaId = cid;
-      var blob = xhr.response;
-      byId("captchaImg").src = URL.createObjectURL(blob);
+  fetch("/api/captcha?"+new Date().getTime()).then(function(r){return r.json();}).then(function(d){
+    if(d.code===200){
+      window._captchaId = d.captcha_id;
+      img.src = "data:image/png;base64,"+d.image;
     }
-  };
-  xhr.onerror = function(){setTimeout(loadCaptcha,1000);};
-  xhr.send();
+  }).catch(function(){setTimeout(loadCaptcha,1000);});
 }
 loadCaptcha();
 byId("captchaImg").onclick = loadCaptcha;
@@ -273,7 +266,7 @@ function doLogin(){
   var cid = window._captchaId;
   if(!u||!p||!c){ byId("loginErr").textContent="请填写完整信息"; byId("loginErr").style.display="block"; return; }
   if(!cid){ byId("loginErr").textContent="验证码已过期，请刷新"; byId("loginErr").style.display="block"; loadCaptcha(); return; }
-  api("POST","/api/login",{username:u,password:p,captcha_id:cid,captcha_code:c}).then(function(r){
+  api("POST","/api/login",{username:u,password:p,captcha_id:cid,captcha_text:c}).then(function(r){
     if(r.code===200){
       TOKEN = r.data.token; USER = r.data.user;
       byId("loginPage").style.display="none"; byId("appLayout").style.display="flex";
@@ -506,6 +499,34 @@ function createUser(){
 }
 
 function loadChatHistory(){ api("GET","/api/chat/history").then(function(r){ if(r.code!==200) return; byId("chatMessages").innerHTML = r.data.map(function(m){return "<div class=\"msg "+m.role+"\">"+esc(m.content)+"</div>";}).join(""); byId("chatMessages").scrollTop = byId("chatMessages").scrollHeight; }); }
+function formatAI(text){
+  var lines = text.split(String.fromCharCode(10));
+  var result = []; var inTable = false; var tableRows = [];
+  for(var i=0;i<lines.length;i++){
+    var l = lines[i].trim();
+    if(l.indexOf('|')===0 && l.lastIndexOf('|')===l.length-1){
+      var cells = l.split('|').filter(function(c){return c.trim()!=='';});
+      if(cells.length>0 && cells[0].indexOf('-')>=0 && cells.join('').replace(/-/g,'').trim()==='') continue;
+      if(!inTable){ inTable=true; tableRows=[]; }
+      tableRows.push(cells);
+    }else{
+      if(inTable && tableRows.length>0){ result.push(makeTable(tableRows)); inTable=false; tableRows=[]; }
+      result.push(l);
+    }
+  }
+  if(inTable && tableRows.length>0) result.push(makeTable(tableRows));
+  return result.join(String.fromCharCode(10));
+  function makeTable(rows){
+    var h='<table style="border-collapse:collapse;width:100%;margin:8px 0;font-size:13px">';
+    for(var r=0;r<rows.length;r++){
+      var tag=r===0?'th':'td';
+      h+='<tr>';
+      for(var c=0;c<rows[r].length;c++) h+='<'+tag+' style="border:1px solid #ddd;padding:6px 10px">'+esc(rows[r][c].trim())+'</'+tag+'>';
+      h+='</tr>';
+    }
+    return h+'</table>';
+  }
+}
 function sendChat(){
   var inp = byId("chatInput"); var msg = inp.value.trim(); if(!msg) return; inp.value="";
   byId("chatMessages").innerHTML += "<div class=\"msg user\">"+esc(msg)+"</div>";
@@ -530,7 +551,7 @@ function sendChat(){
               var data = JSON.parse(line.slice(6));
               if(data.type==="text"){
                 var el = byId("streamingMsg");
-                if(el) el.innerHTML += esc(data.content);
+                if(el) el.innerHTML += formatAI(data.content);
                 byId("chatMessages").scrollTop = byId("chatMessages").scrollHeight;
               }else if(data.type==="thinking"){
                 byId("chatThinking").style.display = "flex";

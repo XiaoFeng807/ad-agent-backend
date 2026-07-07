@@ -265,3 +265,38 @@ def get_compact_memory(user_id):
         parts.append("【阶段总结】" + " | ".join(summaries))
 
     return "\n".join(parts)
+
+
+def store_conversation_summary(user_id, user_msg, ai_reply):
+    """对话结束后，自动生成一段简短的摘要存起来"""
+    memory = load_memory(user_id)
+    tree = memory["tree"]
+    from datetime import datetime
+    now = datetime.now().strftime("%m-%d %H:%M")
+    
+    # 从用户消息中提取核心意图
+    core_question = user_msg.strip()[:40]
+    # 从AI回复中提取关键结论
+    key_result = ai_reply.strip()[:60].replace("\n", " ")
+    
+    summary = f"[{now}] 问:{core_question} -> 答:{key_result}"
+    
+    summaries = tree.setdefault("对话摘要", [])
+    summaries.append(summary)
+    
+    # 最多保留10条
+    if len(summaries) > 10:
+        tree["对话摘要"] = summaries[-10:]
+    
+    save_memory(user_id, memory)
+    return summary
+
+def get_conversation_summaries(user_id):
+    """获取最近的对话摘要"""
+    memory = load_memory(user_id)
+    tree = memory["tree"]
+    summaries = tree.get("对话摘要", [])
+    if not summaries:
+        return ""
+    recent = summaries[-5:]
+    return "\n".join(recent)
