@@ -1,4 +1,4 @@
-﻿from flask import request, jsonify, Response, stream_with_context
+from flask import request, jsonify, Response, stream_with_context
 from backend.auth.auth import login_required
 from .blueprints import chat_bp
 from . import shared as _shared
@@ -34,7 +34,7 @@ def api_chat():
     task_context = get_task_context()
 
     _shared.agent.save_conversation(user_id, "user", message, priority=1)
-    history = _shared.agent.get_history(user_id)
+    history, _ = _shared.agent.get_optimized_context(user_id)
     reply = _shared.agent.chat(history, user_id, task_context=task_context)
     _shared.agent.save_conversation(user_id, "assistant", reply, priority=1)
     return jsonify({"code": 200, "data": {"reply": reply}})
@@ -70,7 +70,7 @@ def api_chat_stream():
             task_status, task_type, task_detail = track_message(intent, message)
             task_context = get_task_context()
             _shared.agent.save_conversation(user_id, "user", message, priority=1)
-            history = _shared.agent.get_history(user_id)
+            history, _ = _shared.agent.get_optimized_context(user_id)
             full_reply = ""
             for chunk in _shared.agent.chat_stream(history, user_id, task_context=task_context):
                 full_reply += chunk
@@ -95,5 +95,5 @@ def api_chat_stream():
 @login_required
 def api_chat_history():
     """获取聊天历史记录"""
-    history = _shared.agent.get_history(request.current_user["user_id"])
+    history, _ = _shared.agent.get_optimized_context(request.current_user["user_id"])
     return jsonify({"code": 200, "data": history})

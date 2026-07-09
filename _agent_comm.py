@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """多 Agent 协同系统 — Orchestrator + ReAct + 自我反思"""
 
-import json, os, re
+import json, os
 from backend.agent.agent import Agent
 from backend.agent.llm_provider import ProviderFactory
 from backend.prompts.data_agent import DATA_AGENT_PROMPT
@@ -58,12 +58,6 @@ class SubAgent(Agent):
         super().__init__(tool_registry=registry)
         self.name = name
         self.system_prompt = system_prompt
-        self.peers = {}
-    def call_peer(self, peer_name, question, user_id=None):
-        if peer_name not in self.peers:
-            return "Agent " + peer_name + " not found, available: " + str(list(self.peers.keys()))
-        peer = self.peers[peer_name]
-        return peer.chat([{"role": "user", "content": question}], user_id)
     def chat(self, messages, user_id=None, **kwargs):
         from backend.memory.memory_manager import get_compact_memory
         memory_text = get_compact_memory(user_id) if user_id else ""
@@ -73,41 +67,19 @@ class SubAgent(Agent):
             memory=memory_text or "暂无历史记录",
             task_context=task_context or "无"
         )
-        if self.peers:
-            peer_info = "\n[可调用的同事] 你可以直接问以下同事获取信息:\n"
-            for name, peer in self.peers.items():
-                peer_info += "- " + name + ": " + peer.name + "\n"
-            peer_info += "调用方式: 使用 call_peer 工具，传入同事名称和你的问题"
-            SYSTEM_PROMPT += peer_info
         # 注入 Blackboard 共享上下文
         if blackboard:
             board_summary = blackboard.summary_for_prompt()
             if board_summary:
                 SYSTEM_PROMPT += "\n\n" + board_summary
         sys_msg = {"role": "system", "content": SYSTEM_PROMPT}
-        from backend.agent.context_window import optimize_context as get_optimized_context
-        optimized, _ = get_optimized_context(messages)
+        from backend.agent.context_window import get_optimized_context
+        optimized = get_optimized_context(messages)
         payload = [sys_msg] + optimized
-        base_tools = self.tool_registry.get_definitions() if self.tool_registry else []
-        call_peer_tool = {
-            "type": "function",
-            "function": {
-                "name": "call_peer",
-                "description": "向另一个同事Agent提问，获取它的专业帮助",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "peer_name": {"type": "string", "description": "同事名称, 如 query_data / analyze_data / query_knowledge_base"},
-                        "question": {"type": "string", "description": "你要问的问题"}
-                    },
-                    "required": ["peer_name", "question"]
-                }
-            }
-        }
-        all_tools = base_tools + [call_peer_tool] if self.peers else base_tools
+        tools_def = self.tool_registry.get_definitions() if self.tool_registry else []
         resp = self.client.chat.completions.create(
             model=self.model, messages=payload,
-            tools=all_tools if all_tools else None
+            tools=tools_def if tools_def else None
         )
         msg = resp.choices[0].message
         if msg.tool_calls:
@@ -118,23 +90,13 @@ class SubAgent(Agent):
                     args = json.loads(tc.function.arguments)
                 except:
                     args = {}
-                if fn_name == "call_peer":
-                    peer_name = args.get("peer_name", "")
-                    question = args.get("question", "")
-                    result = self.call_peer(peer_name, question, user_id)
-                else:
-                    func = self.tool_registry.get_tool(fn_name)
-                    if func:
-                        if user_id:
-                            import inspect
-                            sig = inspect.signature(func)
-                            if "user_id" in sig.parameters:
-                                args["user_id"] = user_id
-                        result = func(**args)
-                        if user_id:
-                            add_fact(user_id, fn_name, args, result)
-                    else:
-                        result = "工具 " + fn_name + " 不存在"
+                func = self.tool_registry.get_tool(fn_name)
+                if func:
+                    if user_id:
+                        args["user_id"] = user_id
+                    result = func(**args)
+                    if user_id:
+                        add_fact(user_id, fn_name, args, result)
                     payload.append({"role": "assistant", "content": None, "tool_calls": [tc]})
                     payload.append({
                         "role": "tool", "tool_call_id": tc.id,
@@ -143,17 +105,8 @@ class SubAgent(Agent):
             final = self.client.chat.completions.create(
                 model=self.model, messages=payload, temperature=0
             )
-            result_text = final.choices[0].message.content or ""
-            result_text = re.sub(r'<invoke name="[^"]+">.*?</invoke>', '', result_text, flags=re.DOTALL)
-            result_text = re.sub(r'<tool_calls>.*?</tool_calls>', '', result_text, flags=re.DOTALL)
-            result_text = re.sub(r'<parameter[^>]*>.*?</parameter>', '', result_text, flags=re.DOTALL)
-            result_text = re.sub(r'\\n{3,}', '\\n\\n', result_text).strip()
-            return result_text
-        msg_content = msg.content or ""
-        msg_content = re.sub(r'<invoke name="[^"]+">.*?</invoke>', '', msg_content, flags=re.DOTALL)
-        msg_content = re.sub(r'<parameter[^>]*>.*?</parameter>', '', msg_content, flags=re.DOTALL)
-        msg_content = re.sub(r'\\n{3,}', '\\n\\n', msg_content).strip()
-        return msg_content
+            return final.choices[0].message.content or ""
+        return msg.content or ""
 
 
 class OrchestratorAgent:
@@ -164,14 +117,6 @@ class OrchestratorAgent:
         self.data_agent = SubAgent("数据助手", DATA_AGENT_PROMPT, DATA_TOOLS)
         self.analysis_agent = SubAgent("分析助手", ANALYSIS_AGENT_PROMPT, ANALYSIS_TOOLS)
         self.knowledge_agent = SubAgent("知识助手", KNOWLEDGE_AGENT_PROMPT, KNOWLEDGE_TOOLS)
-        # Agent 互相注册
-        agent_map = {
-            "query_data": self.data_agent,
-            "analyze_data": self.analysis_agent,
-            "query_knowledge_base": self.knowledge_agent,
-        }
-        for name, agent in agent_map.items():
-            agent.peers = {k: v for k, v in agent_map.items() if k != name}
         self.sub_agent_tools = [
             {"type": "function", "function": {
                 "name": "query_data",
@@ -234,8 +179,6 @@ class OrchestratorAgent:
         if blackboard:
             blackboard.set(tool_name, result, agent_name=tool_name)
         return result
-    def get_optimized_context(self, user_id):
-        return self.data_agent.optimize_context(user_id)
     def _create_plan(self, user_msg):
         """动态任务拆解: 分析用户意图, 制定执行计划"""
         try:
@@ -451,8 +394,6 @@ class PipelineCoordinator:
             (self.orchestrator.knowledge_agent, "基于分析结果给出专业优化建议。要求：建议分优先级"),
         ])
         return pipeline.run(user_msg, user_id)
-    def get_optimized_context(self, user_id):
-        return self.orchestrator.get_optimized_context(user_id)
     def save_conversation(self, user_id, role, content, priority=1):
         self.orchestrator.save_conversation(user_id, role, content, priority)
     def get_history(self, user_id):

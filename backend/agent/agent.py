@@ -1,9 +1,9 @@
-﻿from backend.agent.llm_provider import ProviderFactory
+from backend.agent.llm_provider import ProviderFactory
 import time  # 导入OpenAI库（DeepSeek兼容这个格式）
 import os, json, re
 from dotenv import load_dotenv  # 用来读取.env文件
 from backend.memory.memory_manager import add_fact, get_compact_memory
-from backend.agent.context_window import get_optimized_context, estimate_tokens
+from backend.agent.context_window import optimize_context, estimate_tokens
 from backend.observability import record_ai_call, start_trace, add_trace_step, end_trace, record_function_call, record_error
 from backend.agent.fault_tolerance import with_retry, safe_execute, validate_result
 
@@ -56,7 +56,7 @@ class Agent:
                     task_context="无"
                 )
             sys_msg = {"role": "system", "content": system_content}
-            optimized = get_optimized_context(messages)
+            optimized = optimize_context(messages)
             payload = [sys_msg] + optimized
 
             # 3. 把消息 + 函数菜单发给DeepSeek
@@ -182,7 +182,7 @@ class Agent:
                 task_context=task_context or "无"
             )
             sys_msg = {"role": "system", "content": system_content}
-            optimized = get_optimized_context(messages)
+            optimized = optimize_context(messages)
             payload = [sys_msg] + optimized
 
             # 第一轮：检测是否需要调函数
@@ -298,37 +298,35 @@ class Agent:
         conn.close()
 
     def get_history(self, user_id, max_messages=15):
-        """智能截断：优先保留重要对话，再用最近消息补满"""
+        """获取历史消息(兼容旧接口)，走 context_window 优化"""
+        msgs, _ = self.optimize_context(user_id)
+        return msgs
+
+    def optimize_context(self, user_id):
+        """获取优化后的上下文: 返回 (messages, summary_text)"""
         from backend.database.database import get_db
         conn = get_db()
-        # 1. 先拿最近 30 条
         rows = conn.execute(
-            "SELECT id, role, content, priority FROM conversations WHERE user_id=? ORDER BY id DESC LIMIT 30",
+            "SELECT id, role, content, priority FROM conversations WHERE user_id=? ORDER BY id DESC LIMIT 50",
             (user_id,)
         ).fetchall()
         conn.close()
 
         if not rows:
-            return []
+            return [], ""
 
-        # 2. 按优先级排序：先保留 priority=2 的重要消息
-        important = []
-        recent = []
+        messages = []
         seen_ids = set()
         for r in reversed(rows):
             if r["id"] in seen_ids:
                 continue
             seen_ids.add(r["id"])
-            msg = {"role": r["role"], "content": r["content"]}
-            if r["priority"] == 2:
-                important.append(msg)
-            else:
-                recent.append(msg)
+            messages.append({
+                "role": r["role"],
+                "content": r["content"],
+                "priority": r["priority"]
+            })
 
-        # 3. 重要消息全保留，再用最近的普通消息补满 max_messages
-        result = important[:]
-        remaining = max_messages - len(result)
-        if remaining > 0:
-            result.extend(recent[-remaining:])
-
-        return result
+        from backend.agent.context_window import optimize_context
+        optimized_msgs, summary_text = optimize_context(messages, user_id)
+        return optimized_msgs, summary_text

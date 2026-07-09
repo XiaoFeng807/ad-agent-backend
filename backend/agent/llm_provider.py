@@ -1,4 +1,4 @@
-﻿"""LLM 适配器层：统一接口，支持多 Provider 切换"""
+"""LLM 适配器层：统一接口，支持多 Provider 切换"""
 
 from abc import ABC, abstractmethod
 import os, json, time
@@ -164,6 +164,25 @@ class MockProvider(LLMProvider):
         # 模拟LLM决策：如果有关键词且工具有效，模拟工具调用
         query_keywords = ["数据", "今天", "昨天", "趋势", "计划", "账户", "花费", "roas", "dashboard"]
         need_data = any(kw in last_user.lower() for kw in query_keywords)
+        
+        # 先检查是否已有工具执行结果（避免无限循环）
+        has_tool_results = any(m.get("role") == "tool" for m in messages)
+        if has_tool_results:
+            tool_results_list = []
+            for m in messages:
+                if m.get("role") == "tool":
+                    data = m.get("content", "")
+                    tool_results_list.append(data[:200])
+            summary = "[Mock数据摘要] 查询结果如下：\n"
+            for r in tool_results_list:
+                summary += r + "\n"
+            resp = MockResp(summary)
+            if stream:
+                def gen_summary():
+                    for c in resp.choices:
+                        yield c
+                return gen_summary()
+            return resp
         
         if need_data and tools:
             import json

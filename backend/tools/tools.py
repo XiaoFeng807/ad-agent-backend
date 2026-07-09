@@ -575,7 +575,7 @@ func_names = [
     "get_week_over_week", "record_suggestion", "report_execution", "report_outcome",
     "get_verified_suggestions", "get_decision_summary", "get_activity_timeline",
     "get_hot_products","search_knowledge",
-    "get_real_trends","search_knowledge"
+    "get_real_trends"
 ]
 
 # 每个函数的中文描述（AI通过描述判断什么时候该调哪个函数）
@@ -606,15 +606,49 @@ func_descs = {
     "search_knowledge": "搜索知识库，获取广告投放相关的参考资料（平台介绍、ROAS定义、优化策略等）",
 }
 
+def gen_params_from_func(func):
+    """从函数签名自动生成 parameters 定义（给 LLM 看的）"""
+    import inspect
+    sig = inspect.signature(func)
+    props = {}
+    required = []
+    for name, param in sig.parameters.items():
+        if name == "user_id" or name == "self":
+            continue  # user_id 由系统自动注入，不需要 LLM 传
+        default = param.default
+        param_type = "string"
+        if default is not inspect.Parameter.empty and isinstance(default, bool):
+            param_type = "boolean"
+        elif default is not inspect.Parameter.empty and isinstance(default, int):
+            param_type = "integer"
+        elif default is not inspect.Parameter.empty and isinstance(default, float):
+            param_type = "number"
+        description = func_descs.get(func.__name__, "")
+        # 从函数 docstring 提取参数说明
+        if func.__doc__:
+            import re
+            for line in func.__doc__.split("\n"):
+                line = line.strip()
+                if line.startswith(name + ":"):
+                    description = line[len(name)+1:].strip()
+                    break
+        props[name] = {"type": param_type, "description": description or f"{name} 参数"}
+        if default is inspect.Parameter.empty:
+            required.append(name)
+    return {"type": "object", "properties": props, "required": required}
+
+
 # 组装成OpenAI要求的函数描述格式
 tools_definition = []
 for fn in func_names:
+    func = globals().get(fn)
+    params = gen_params_from_func(func) if func else {"type": "object", "properties": {}}
     tools_definition.append({
         "type": "function",
         "function": {
             "name": fn,
             "description": func_descs.get(fn, ""),
-            "parameters": {"type": "object", "properties": {}}
+            "parameters": params
         }
     })
 

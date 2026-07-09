@@ -436,7 +436,10 @@ async def websocket_chat(websocket: WebSocket):
         await websocket.send_json({"type": "thinking", "content": "🤔 思考中..."})
         
         # 4. 保存用户消息
-        agent.save_conversation(user_id, "user", message, priority=1)
+        data_keywords = ["数据", "今天", "报告", "ROAS", "花费", "点击", "转化", "趋势", "对比", "分析", "计划", "广告", "预算", "效果", "查看", "多少", "怎么样"]
+        is_data_query = any(kw in message for kw in data_keywords)
+        msg_priority = 2 if is_data_query else 1
+        agent.save_conversation(user_id, "user", message, priority=msg_priority)
         history = agent.get_history(user_id)
         
         # 5. 获取 AI 回复（流式）
@@ -501,8 +504,14 @@ async def chat_stream_sse(request: Request):
     async def gen():
         full_reply = ""
         try:
-            agent.save_conversation(user_id, "user", message, priority=1)
-            history = agent.get_history(user_id)
+            # 智能优先级：数据查询类 = 重要，闲聊 = 普通
+            data_keywords = ["数据", "今天", "报告", "ROAS", "花费", "点击", "转化", "趋势", "对比", "分析", "计划", "广告", "预算", "效果", "查看", "多少", "怎么样"]
+            is_data_query = any(kw in message for kw in data_keywords)
+            msg_priority = 2 if is_data_query else 1
+            agent.save_conversation(user_id, "user", message, priority=msg_priority)
+            history, context_summary = agent.get_optimized_context(user_id)
+            if context_summary:
+                history.insert(0, {"role": "system", "content": context_summary})
             yield "data: " + json.dumps({"type": "thinking", "content": "🤔 思考中..."}) + "\n\n"
             for chunk in agent.chat_stream(history, user_id):
                 # 如果 chunk 已经是 JSON 格式，直接透传
@@ -520,7 +529,8 @@ async def chat_stream_sse(request: Request):
                 # 普通文本
                 full_reply += chunk
                 yield "data: " + json.dumps({"type": "text", "content": chunk}) + "\n\n"
-            agent.save_conversation(user_id, "assistant", full_reply, priority=1)
+            reply_priority = 2 if any(kw in full_reply for kw in ["元", "ROAS", "点击", "转化", "%", "数据"]) else 1
+            agent.save_conversation(user_id, "assistant", full_reply, priority=reply_priority)
             try:
                 store_conversation_summary(user_id, message, full_reply)
             except:
