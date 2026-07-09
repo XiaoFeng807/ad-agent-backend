@@ -536,7 +536,7 @@ function sendChat(){
   byId("chatMessages").scrollTop = byId("chatMessages").scrollHeight;
   var aiDiv = document.createElement("div"); aiDiv.className = "msg assistant"; aiDiv.id = "streamingMsg";
   byId("chatMessages").appendChild(aiDiv);
-  byId("chatThinking").style.display = "flex";
+  byId("chatThinking").style.display = "flex"; byId("chatThinking").innerHTML = "🤔 思考中...";
   fetch("/api/chat/stream", {
     method:"POST", headers:{"Content-Type":"application/json","Authorization":"Bearer "+TOKEN},
     body:JSON.stringify({message:msg})

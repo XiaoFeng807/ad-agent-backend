@@ -189,22 +189,30 @@ class OrchestratorAgent:
                 )
                 msg = resp.choices[0].message
                 if msg.tool_calls:
-                    tc = msg.tool_calls[0]
-                    fn_name = tc.function.name
-                    try:
-                        args = json.loads(tc.function.arguments)
-                    except:
-                        args = {}
-                    result = self._execute_sub_agent(fn_name, args, user_id)
-                    tool_label = {"query_data": "查询数据", "analyze_data": "分析数据", "query_knowledge_base": "查询知识"}.get(fn_name, fn_name)
-                    react_trace.append(tool_label)
-                    orchestrator_msgs.append({
-                        "role": "assistant", "content": None, "tool_calls": [tc]
-                    })
-                    orchestrator_msgs.append({
-                        "role": "tool", "tool_call_id": tc.id,
-                        "content": json.dumps({"result": result}, ensure_ascii=False)
-                    })
+                    # 并行执行 LLM 返回的多个工具调用
+                    from concurrent.futures import ThreadPoolExecutor, as_completed
+                    with ThreadPoolExecutor(max_workers=3) as executor:
+                        futures = {}
+                        for tc in msg.tool_calls:
+                            fn_name = tc.function.name
+                            try:
+                                args = json.loads(tc.function.arguments)
+                            except:
+                                args = {}
+                            future = executor.submit(self._execute_sub_agent, fn_name, args, user_id)
+                            futures[future] = (tc, fn_name)
+                        for future in as_completed(futures):
+                            tc, fn_name = futures[future]
+                            result = future.result()
+                            tool_label = {"query_data": "查询数据", "analyze_data": "分析数据", "query_knowledge_base": "查询知识"}.get(fn_name, fn_name)
+                            react_trace.append(tool_label)
+                            orchestrator_msgs.append({
+                                "role": "assistant", "content": None, "tool_calls": [tc]
+                            })
+                            orchestrator_msgs.append({
+                                "role": "tool", "tool_call_id": tc.id,
+                                "content": json.dumps({"result": result}, ensure_ascii=False)
+                            })
                 else:
                     return msg.content or ""
 
@@ -234,9 +242,31 @@ class OrchestratorAgent:
             except Exception:
                 pass
 
+            # 质量评分
+            quality_text = ""
+            try:
+                from backend.prompts.quality import QUALITY_SCORE_PROMPT
+                score_msgs = [
+                    {"role": "system", "content": QUALITY_SCORE_PROMPT},
+                    {"role": "user", "content": "请评分：\n\n" + reply_text}
+                ]
+                score_resp = self.client.chat.completions.create(
+                    model=self.model, messages=score_msgs, temperature=0, max_tokens=200
+                )
+                score_result = score_resp.choices[0].message.content or ""
+                import json as _json
+                try:
+                    parsed = _json.loads(score_result)
+                    if "total" in parsed:
+                        quality_text = "\n[质量: 数据{data_score} 完整{completeness_score} 可读{readability_score} 总分{total}]".format(**parsed)
+                except:
+                    pass
+            except Exception:
+                pass
+
             if react_trace:
-                trace_text = "\n\n---\n[思考轨迹: " + " > ".join(react_trace) + "]"
-                return reply_text + trace_text
+                trace_text = "\n\n---\n[思考轨迹: " + " > ".join(react_trace) + "]\n"
+                return reply_text + quality_text + trace_text
             return reply_text
 
         except Exception as e:
@@ -247,8 +277,8 @@ class OrchestratorAgent:
                 return "抱歉，系统暂时无法处理您的请求，请稍后再试。"
 
     def chat_stream(self, messages, user_id=None, **kwargs):
+        """流式聊天"""
         try:
-            yield json.dumps({"type": "thinking", "content": "思考中..."}, ensure_ascii=False)
             full_reply = self.chat(messages, user_id, **kwargs)
             yield json.dumps({"type": "text", "content": full_reply}, ensure_ascii=False)
             yield json.dumps({"type": "done"})
@@ -260,7 +290,6 @@ class OrchestratorAgent:
             except:
                 yield json.dumps({"type": "text", "content": "抱歉，系统暂时无法处理您的请求，请稍后再试。"}, ensure_ascii=False)
                 yield json.dumps({"type": "done"})
-
     def save_conversation(self, user_id, role, content, priority=1):
         self.data_agent.save_conversation(user_id, role, content, priority)
     def get_history(self, user_id):

@@ -287,6 +287,7 @@ async def alerts_read(request: Request):
 
 @app.get("/api/accounts")
 async def accounts(request: Request):
+    """获取所有广告账户"""
     token = get_token_from_request(request)
     payload = verify_token(token)
     
@@ -319,6 +320,7 @@ async def create_plan(request: Request):
 
 @app.get("/api/plans")
 async def plans(request: Request):
+    """获取所有广告计划"""
     token = get_token_from_request(request)
     verify_token(token)
     from backend.tools.tools import get_plans_summary
@@ -327,6 +329,7 @@ async def plans(request: Request):
 
 @app.get("/api/materials")
 async def materials(request: Request):
+    """获取广告素材列表"""
     token = get_token_from_request(request)
     verify_token(token)
     conn = db_provider.get_connection()
@@ -336,6 +339,7 @@ async def materials(request: Request):
 
 @app.get("/api/users")
 async def users(request: Request):
+    """获取用户列表（管理员）"""
     token = get_token_from_request(request)
     verify_token(token)
     conn = db_provider.get_connection()
@@ -345,6 +349,7 @@ async def users(request: Request):
 
 @app.get("/api/logs")
 async def logs(request: Request):
+    """获取操作日志"""
     token = get_token_from_request(request)
     payload = verify_token(token)
     role = payload.get("role", "user")
@@ -361,6 +366,7 @@ async def logs(request: Request):
 
 @app.get("/api/decisions")
 async def decisions(request: Request):
+    """获取决策记录"""
     token = get_token_from_request(request)
     verify_token(token)
     conn = db_provider.get_connection()
@@ -370,6 +376,7 @@ async def decisions(request: Request):
 
 @app.get("/api/timeline")
 async def timeline(request: Request):
+    """获取活动时间线"""
     token = get_token_from_request(request)
     verify_token(token)
     from backend.tools.tools import get_activity_timeline
@@ -378,6 +385,7 @@ async def timeline(request: Request):
 
 @app.get("/api/chat/history")
 async def chat_history(request: Request):
+    """获取聊天历史记录"""
     token = get_token_from_request(request)
     payload = verify_token(token)
     history = agent.get_history(payload.get("user_id", 0))
@@ -385,6 +393,7 @@ async def chat_history(request: Request):
 
 @app.get("/api/health")
 async def health():
+    """健康检查接口"""
     return {"code": 200, "data": {"status": "ok", "uptime": "fastapi", "version": "3.0.0"}}
 
 
@@ -480,6 +489,7 @@ async def _stream_chat(messages, user_id):
 # ===== 聊天 SSE 端点(WebSocket降级备用) =====
 @app.post("/api/chat/stream")
 async def chat_stream_sse(request: Request):
+    """AI 聊天流式接口（SSE），支持 ReAct 思考可视化和流式输出"""
     token = get_token_from_request(request)
     payload = verify_token(token)
     body = await request.json()
@@ -489,6 +499,7 @@ async def chat_stream_sse(request: Request):
     user_id = payload.get("user_id", 0)
     from backend.memory.memory_manager import store_conversation_summary
     async def gen():
+        full_reply = ""
         try:
             agent.save_conversation(user_id, "user", message, priority=1)
             history = agent.get_history(user_id)
