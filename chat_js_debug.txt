@@ -1,0 +1,119 @@
+
+
+=== sendChat at 13060 ===
+sendChat()">
+<button class="btn btn-primary" onclick="sendChat()">发送</button>
+</div></div></div></div>
+
+<!-- Users -->
+<div class="page" id="page-users">
+<div class="card">
+<div class="card-header"><h3>账户管理</h3><button class="btn btn-primary btn-sm" id="createUserBtn" onclick="showModal('userModal')">+ 创建账户</button></div>
+<div id="usersTableWrap"></div></div></div>
+
+<!-- Logs -->
+<div class="page" id="page-logs"><div class="card"><div class="card-header"><h3>操作日志</h3></div><div id="logsWrap"></div></div></div>
+
+<!-- Decisions -->
+<div class="page" id="page-decisions"><div class="card"><div class="card-header"><h3>决策记录</h3></div><div id="decisionsWrap"></div></div></div>
+
+<!-- Timeline -->
+<div class="page" id="page-timeline"><div class="card"><div class="card-header"><h3>活动时间轴</h3></div><div id="timelineWrap"></div></div></div>
+
+</div></div></div>
+<div class="modal-overlay" id="planModal"><div class="modal">
+<h3>新建投放计划</h3>
+<div class="form-group"><label>计划名称</label><input id="planName"></div>
+<div class="form-group"><label>平台</label><select id="planPlatform"><option>Google Ads</option><option>Meta Ads</option><option>TikTok Ads</option></select></div>
+<div class="form-group"><label>日预算 (元)</label><input id="planBudget" type="number" value="300"></div>
+<div class="modal-actions" style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
+<button class="btn btn-outline" onclick="closeModal('planModal')">取消</button>
+<button class="btn btn-primary" onclick="createPlan()">创建</button></div></div></div>
+
+<div class="modal-overlay" id="userModal"><div class="modal">
+<h3>创建账户</h3>
+<div class="form-group"><label>用户名</label><input id="newUserName"></div>
+<div class="form-group"><label>密码</label><input id="newUserPass" type="password"></div>
+<div class="form-group"><label>角色</label><select id="newUserRole"><option value="user">用户</option><option value="admin">管理员</option><option value="boss">老板</option></select></div>
+<div class="modal-actions" style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
+<button class="btn btn-outline" onclick="closeModal('userModal')">取消</button>
+<button class="btn btn-primary" onclick="createUser()">创建</button></div></div></div>
+
+<div class="modal-overlay" id="materialModal"><div class="modal">
+<h3>上传素材</h3>
+<div class="form-group"><label>素材名称</label><input id="matName"></div>
+<div class="form-group"><label>素材类型</label><select id="matType"><option value="image">图片</option><option value="video">视频</option><option value="text">文案</option></select></div>
+<div class="form-group"><label>素材链接</label><input id="matUrl" placeholder="输入素材URL"></div>
+<div class="form-group"><label>关联计划ID (可选)</label><input id="matPlanId" type="number" placeholder="0=不关联"></div>
+<div class="modal-actions" style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
+<button class="btn btn-outline" onclick="closeModal('materialModal')">取消</button>
+<button class="btn btn-primary" onclick="createMaterial()">上传</button></div></div></div>
+<script defer src="/static/echarts.min.js"></script>
+<script>
+var TOKEN = "";
+var USER = null;
+var trendChart = null;
+
+function api(method, path, body) {
+  var opts = {method:method, headers:{"Content-Type":"application/json"}};
+  if (TOKEN) opts.headers["Authorization"] = "Bearer " + TOKEN;
+  if (body) opts.body = JSON.stringify(body);
+  return fetch(path, opts).then(function(r){return r.json();});
+}
+function byId(id){return document.getElementById(id);}
+
+function updateTime(){
+  var n = new Date();
+  var s = n.toLocaleDateString("zh-CN",{timeZone:"Asia/Shanghai"}) + " " + n.toLocaleTimeString("zh-CN",{timeZone:"Asia/Shanghai",hour12:false});
+  byId("headerTime").textContent = "\u23f0 " + s;
+}
+setInterval(updateTime,1000); updateTime();
+
+function loadCaptcha(){
+  var img = byId("captchaImg");
+  if(!img) return;
+  fetch("/api/captcha?"+new Date().getTime()).then(function(r){return r.json();}).then(function(d){
+    if(d.code===200){
+      window._captchaId = d.captcha_id;
+      img.src = "data:image/png;base64,"+d.image;
+    }
+  }).catch(function(){setTimeout(loadCaptcha,1000);});
+}
+loadCaptcha();
+byId("captchaImg").onclick = loadCaptcha;
+
+function doLogin(){
+  var u = byId("loginUser").value.trim();
+  var p = byId("loginPass").value;
+  var c = byId("loginCaptcha").value.trim();
+  var cid = window._captchaId;
+  if(!u||!p||!c){ byId("loginErr").textContent="请填写完整信息"; byId("loginErr").style.display="block"; return; }
+  if(!cid){ byId("loginErr").textContent="验证码已过期，请刷新"; byId("loginErr").style.display="block"; loadCaptcha(); return; }
+  api("POST","/api/login",{username:u,password:p,captcha_id:cid,captcha_text:c}).then(function(r){
+    if(r.code===200){
+      TOKEN = r.data.token; USER = r.data.user;
+      byId("loginPage").style.display="none"; byId("appLayout").style.display="flex";
+      byId("navUsername").textContent = USER.username; byId("navRole").textContent = USER.role; byId("userInfo").style.display="block";
+      if(USER.role==="user"){ byId("navUsers").style.display="none"; if(byId("createUserBtn")) byId("createUserBtn").style.display="none"; }
+      if(USER.role==="admin"){
+        var sel = byId("newUserRole");
+        for(var i=0;i<sel.options.length;i++){ if(sel.options[i].value==="boss"||sel.options[i].value==="admin") sel.options[i].style.display="none"; }
+      }
+      initApp();
+    } else {
+      byId("loginErr").textContent=r.msg||"登录失败"; byId("loginErr").style.display="block"; loadCaptcha();
+    }
+  }).catch(function(){ byId("loginErr").textContent="网络错误"; byId("loginErr").style.display="block"; });
+}
+function doLogout(){
+  TOKEN=""; USER=null; byId("appLayout").style.display="none"; byId("loginPage").style.display="flex";
+  byId("loginCaptcha").value=""; byId("loginPass").value=""; loadCaptcha();
+}
+
+
+
+=== loadChatHistory at 19902 ===
+loadChatHistory,users:loadUsers,logs:loadLogs,decisions:loadDecisions,timeline:loadTimeline};
+  if(loaders[name]) setTimeout(loaders[name],50);
+}
+

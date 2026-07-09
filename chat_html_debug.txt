@@ -1,0 +1,24 @@
+page-chat">
+<div class="chat-layout">
+<div class="chat-sidebar">
+<button onclick="sendSug('帮我查看今天的数据怎么样')">📊 今天数据怎么样</button>
+<button onclick="sendSug('哪个计划的ROAS最高')">🏆 哪个计划ROAS最高</button>
+<button onclick="sendSug('有没有异常的计划')">⚠️ 有没有异常计划</button>
+<button onclick="sendSug('帮我分析一下近期的投放趋势')">📈 分析投放趋势</button>
+<button onclick="sendSug('策略建议绑定')">💡 策略建议</button>
+<button onclick="sendSug('对比本周与上周的数据')">📊 本周与上周对比</button>
+<button onclick="sendSug('哪些计划可以优化')">🔧 优化建议</button>
+</div>
+<div class="chat-main">
+<div class="chat-msgs" id="chatMessages"></div>
+<div class="thinking-indicator" id="chatThinking" style="display:none">
+<span>AI正在思考</span>
+<span class="dot-pulse"><span></span><span></span><span></span></span>
+</div>
+<div class="chat-input-row">
+<input id="chatInput" placeholder="请输入您的问题..." onkeydown="if(event.key==='Enter')sendChat()">
+<button class="btn btn-primary" onclick="sendChat()">发送</button>
+</div></div></div></div>
+
+<!-- Users -->
+<div class="page" id="

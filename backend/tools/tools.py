@@ -130,8 +130,8 @@ def get_daily_trend(days=7, user_id=None):
     c = conn.cursor()
     w = "" if user_id is None else " AND user_id=" + str(user_id)
     rows = c.execute(
-        "SELECT report_date, cost, impressions, clicks, sales FROM daily_reports "
-        "WHERE 1=1" + w + " ORDER BY report_date DESC LIMIT ?", (days,)
+        "SELECT report_date, SUM(cost) AS cost, SUM(impressions) AS impressions, SUM(clicks) AS clicks, SUM(sales) AS sales FROM daily_reports "
+        "WHERE 1=1" + w + " GROUP BY report_date ORDER BY report_date DESC LIMIT ?", (days,)
     ).fetchall()
     conn.close()
     return [dict(r) for r in rows]
@@ -306,11 +306,20 @@ def update_daily_budget(account_id, amount, user_id=None):
     }
 
 def toggle_plan_status(plan_id, user_id=None):
-    """切换计划状态（敏感操作,只给建议不执行）"""
-    return {
-        "success": True, "message": "suggestion_only", "action": "toggle_status",
-        "suggestion": "建议在后台手动切换计划状态"
-    }
+    """切换计划状态（暂停/启用）"""
+    from backend.database.database import get_db
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT status FROM ad_plans WHERE id=?", (plan_id,))
+    row = cur.fetchone()
+    if not row:
+        conn.close()
+        return {"success": False, "message": "计划不存在"}
+    new_status = "paused" if row["status"] == "active" else "active"
+    cur.execute("UPDATE ad_plans SET status=? WHERE id=?", (new_status, plan_id))
+    conn.commit()
+    conn.close()
+    return {"success": True, "message": "ok", "new_status": new_status}
 
 
 def create_alert(type, message, level="warning", user_id=None):

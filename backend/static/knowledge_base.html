@@ -1,0 +1,337 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📚 广告知识库 - 智能投放助手</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+  background: #f0f4f8;
+  color: #1a1a2e;
+  min-height: 100vh;
+}
+/* 顶部导航 */
+.header {
+  background: linear-gradient(135deg,#0F1E32 0%,#1a3a5c 100%);
+  color: #fff;
+  padding: 20px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.header h1 { font-size: 22px; }
+.header h1 span { color: #4a9eff; }
+.header .stats { font-size: 14px; color: rgba(255,255,255,0.7); }
+/* 主体 */
+.container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+/* 搜索区 */
+.search-box {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  margin-bottom: 24px;
+}
+.search-box h2 { font-size: 16px; margin-bottom: 12px; color: #333; }
+.search-row { display: flex; gap: 12px; }
+.search-row input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.search-row input:focus { border-color: #1A6DFF; }
+.search-row button {
+  padding: 12px 28px;
+  background: #1A6DFF;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.search-row button:hover { background: #1557D4; }
+.search-row button:disabled { background: #93b8f7; cursor: not-allowed; }
+/* 搜索结果 */
+.result-area { margin-top: 16px; display: none; }
+.result-area.show { display: block; }
+.source-tags { margin-bottom: 8px; }
+.source-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  background: #e8f4fd;
+  color: #1976d2;
+  margin-right: 6px;
+  margin-bottom: 4px;
+}
+.result-card {
+  background: #f8fafc;
+  border-left: 4px solid #1A6DFF;
+  padding: 16px;
+  border-radius: 0 8px 8px 0;
+  margin-bottom: 12px;
+  font-size: 14px;
+  line-height: 1.8;
+  color: #444;
+}
+.result-card .highlight { background: #fff8e1; padding: 0 2px; }
+/* 知识列表 */
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 32px 0 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #1A6DFF;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.kb-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+}
+.kb-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+}
+.kb-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+.kb-card .source {
+  font-size: 11px;
+  color: #1A6DFF;
+  background: #e8f4fd;
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+.kb-card .text {
+  font-size: 13px;
+  line-height: 1.7;
+  color: #555;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.kb-card .preview-full { display: none; }
+.kb-card.expanded .text { -webkit-line-clamp: unset; }
+/* 统计卡片 */
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.stat-item {
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.stat-item .num {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1A6DFF;
+}
+.stat-item .label {
+  font-size: 13px;
+  color: #888;
+  margin-top: 4px;
+}
+/* 加载动画 */
+.loading { text-align: center; padding: 40px; color: #888; }
+.loading::after {
+  content: "";
+  display: inline-block;
+  width: 24px; height: 24px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #1A6DFF;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.empty { text-align: center; padding: 40px; color: #aaa; font-size: 14px; }
+/* 分类标签 */
+.category-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.category-tab {
+  padding: 6px 16px;
+  border-radius: 16px;
+  font-size: 13px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #666;
+}
+.category-tab:hover { border-color: #1A6DFF; color: #1A6DFF; }
+.category-tab.active { background: #1A6DFF; color: #fff; border-color: #1A6DFF; }
+/* 响应式 */
+@media (max-width: 768px) {
+  .header { padding: 16px 20px; flex-direction: column; gap: 8px; text-align: center; }
+  .kb-grid { grid-template-columns: 1fr; }
+  .search-row { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📚 <span>广告知识库</span></h1>
+  <div class="stats">Powered by RAG + ChromaDB</div>
+</div>
+
+<div class="container">
+
+  <!-- 统计 -->
+  <div class="stat-row" id="statsRow">
+    <div class="stat-item"><div class="num" id="totalCount">-</div><div class="label">知识总数</div></div>
+    <div class="stat-item"><div class="num" id="sourceCount">-</div><div class="label">来源数</div></div>
+    <div class="stat-item"><div class="num" id="categoryCount">-</div><div class="label">分类数</div></div>
+  </div>
+
+  <!-- 搜索 -->
+  <div class="search-box">
+    <h2>🔍 搜索知识库</h2>
+    <div class="search-row">
+      <input type="text" id="searchInput" placeholder="输入问题，例如：ROAS怎么算？Google Ads怎么优化？" onkeydown="if(event.key==='Enter') search()">
+      <button id="searchBtn" onclick="search()">搜索</button>
+    </div>
+    <div class="result-area" id="resultArea">
+      <div id="sourceTags" class="source-tags"></div>
+      <div id="resultContent"></div>
+    </div>
+  </div>
+
+  <!-- 分类标签 -->
+  <div class="section-title">📖 全部知识</div>
+  <div class="category-tabs" id="categoryTabs"></div>
+  <div id="kbGrid" class="kb-grid"></div>
+
+</div>
+
+<script>
+let allData = [];
+
+async function loadStats() {
+  try {
+    const resp = await fetch("/api/knowledge/stats");
+    const data = await resp.json();
+    document.getElementById("totalCount").textContent = data.total || 0;
+    document.getElementById("sourceCount").textContent = data.sources || 0;
+    document.getElementById("categoryCount").textContent = data.categories || 0;
+  } catch(e) {
+    document.getElementById("totalCount").textContent = "?";
+  }
+}
+
+async function loadKnowledge() {
+  const grid = document.getElementById("kbGrid");
+  grid.innerHTML = '<div class="loading">加载中</div>';
+  try {
+    const resp = await fetch("/api/knowledge/all");
+    const data = await resp.json();
+    allData = data.items || [];
+    
+    // 提取分类
+    const cats = [...new Set(allData.map(d => d.category).filter(Boolean))];
+    renderCategoryTabs(cats);
+    renderGrid(allData);
+  } catch(e) {
+    grid.innerHTML = '<div class="empty">加载失败，请确认服务已启动</div>';
+  }
+}
+
+function renderCategoryTabs(cats) {
+  const container = document.getElementById("categoryTabs");
+  container.innerHTML = '<span class="category-tab active" onclick="filterCategory(\'all\',this)">全部</span>';
+  cats.forEach(c => {
+    container.innerHTML += `<span class="category-tab" onclick="filterCategory('${c}',this)">${c}</span>`;
+  });
+}
+
+function filterCategory(cat, el) {
+  document.querySelectorAll(".category-tab").forEach(t => t.classList.remove("active"));
+  el.classList.add("active");
+  if (cat === "all") renderGrid(allData);
+  else renderGrid(allData.filter(d => d.category === cat));
+}
+
+function renderGrid(items) {
+  const grid = document.getElementById("kbGrid");
+  if (!items.length) { grid.innerHTML = '<div class="empty">暂无知识</div>'; return; }
+  
+  grid.innerHTML = items.map(item => `
+    <div class="kb-card" onclick="this.classList.toggle('expanded')">
+      <div class="source">${item.source || "未知来源"}</div>
+      <div class="text">${escapeHtml(item.text || "")}</div>
+    </div>
+  `).join("");
+}
+
+async function search() {
+  const query = document.getElementById("searchInput").value.trim();
+  if (!query) return;
+  
+  const btn = document.getElementById("searchBtn");
+  const area = document.getElementById("resultArea");
+  const tags = document.getElementById("sourceTags");
+  const content = document.getElementById("resultContent");
+  
+  btn.disabled = true;
+  btn.textContent = "搜索中...";
+  area.classList.add("show");
+  content.innerHTML = '<div class="loading">思考中</div>';
+  
+  try {
+    const resp = await fetch(`/api/knowledge/search?q=${encodeURIComponent(query)}`);
+    const data = await resp.json();
+    
+    tags.innerHTML = (data.sources || []).map(s => `<span class="source-tag">${s}</span>`).join("");
+    
+    if (data.results && data.results.length) {
+      content.innerHTML = data.results.map(r => `
+        <div class="result-card">${escapeHtml(r)}</div>
+      `).join("");
+    } else {
+      content.innerHTML = '<div class="empty">未找到相关结果</div>';
+    }
+  } catch(e) {
+    content.innerHTML = '<div class="empty">搜索出错，请重试</div>';
+  }
+  
+  btn.disabled = false;
+  btn.textContent = "搜索";
+}
+
+function escapeHtml(text) {
+  const d = document.createElement("div");
+  d.textContent = text;
+  return d.innerHTML;
+}
+
+loadStats();
+loadKnowledge();
+</script>
+</body>
+</html>

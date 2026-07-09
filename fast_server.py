@@ -154,6 +154,71 @@ async def dashboard(request: Request):
     from backend.tools.tools import get_dashboard_data
     data = get_dashboard_data(user_id=payload.get("user_id", 1))
     return {"code": 200, "data": data}
+# ===== 知识库 API =====
+
+@app.get("/api/knowledge/stats")
+async def knowledge_stats():
+    """知识库统计"""
+    from backend.rag.rag_knowledge import RAGKnowledge
+    try:
+        rag = RAGKnowledge()
+        data = rag.collection.get()
+        docs = data["documents"] if data and data["documents"] else []
+        metas = data["metadatas"] if data and data["metadatas"] else []
+        sources = set()
+        categories = set()
+        for m in metas:
+            if m:
+                if m.get("source"): sources.add(m["source"])
+                if m.get("category"): categories.add(m["category"])
+        return {"total": len(docs), "sources": len(sources), "categories": len(categories)}
+    except:
+        return {"total": 0, "sources": 0, "categories": 0}
+
+@app.get("/api/knowledge/all")
+async def knowledge_all():
+    """获取所有知识条目"""
+    from backend.rag.rag_knowledge import RAGKnowledge
+    try:
+        rag = RAGKnowledge()
+        data = rag.collection.get()
+        items = []
+        if data and data["documents"]:
+            for i, doc in enumerate(data["documents"]):
+                meta = data["metadatas"][i] if data["metadatas"] and i < len(data["metadatas"]) else {}
+                items.append({
+                    "text": doc[:300] + ("..." if len(doc) > 300 else ""),
+                    "source": meta.get("source", "未知来源"),
+                    "category": meta.get("category", "未分类")
+                })
+        return {"items": items}
+    except:
+        return {"items": []}
+
+@app.get("/api/knowledge/search")
+async def knowledge_search(q: str = ""):
+    """搜索知识库"""
+    if not q:
+        return {"results": [], "sources": []}
+    from backend.rag.rag_knowledge import RAGKnowledge
+    try:
+        rag = RAGKnowledge()
+        result = rag.generate(q, top_k=5)
+        if result and result.get("context"):
+            blocks = result["context"].split("\n\n---\n\n")
+            return {"results": blocks, "sources": result.get("sources", [])}
+        return {"results": [], "sources": []}
+    except Exception as e:
+        return {"results": [], "sources": [], "error": str(e)}
+
+@app.get("/knowledge")
+async def serve_knowledge_page():
+    """知识库前端页面"""
+    static_dir = os.path.join(os.path.dirname(__file__), "backend", "static")
+    kb_path = os.path.join(static_dir, "knowledge_base.html")
+    if os.path.exists(kb_path):
+        return FileResponse(kb_path)
+    return {"msg": "页面未找到"}
 
 
 @app.get("/api/daily_reports")
@@ -174,6 +239,30 @@ async def alerts(request: Request):
     from backend.tools.tools import get_alerts
     data = get_alerts(user_id=payload.get("user_id", 0))
     return {"code": 200, "data": data}
+
+
+@app.post("/api/plans/{plan_id}/toggle")
+async def toggle_plan(plan_id: int, request: Request):
+    """切换计划状态（暂停/启用）"""
+    token = get_token_from_request(request)
+    verify_token(token)
+    from backend.tools.tools import toggle_plan_status
+    result = toggle_plan_status(plan_id)
+    return {"code": 200, "data": result}
+
+
+@app.delete("/api/plans/{plan_id}")
+async def delete_plan(plan_id: int, request: Request):
+    """删除计划"""
+    token = get_token_from_request(request)
+    verify_token(token)
+    from backend.database.database import get_db
+    conn = get_db()
+    conn.execute("DELETE FROM ad_plans WHERE id=?", (plan_id,))
+    conn.commit()
+    conn.close()
+    return {"code": 200, "msg": "已删除"}
+
 
 @app.post("/api/alerts/read")
 async def alerts_read(request: Request):
@@ -206,6 +295,27 @@ async def accounts(request: Request):
     db_provider.close(conn)
     data = [dict(r) for r in rows]
     return {"code": 200, "data": data}
+
+@app.post("/api/plans")
+async def create_plan(request: Request):
+    """创建新投放计划"""
+    body = await request.json()
+    name = body.get("plan_name", "").strip()
+    platform = body.get("platform", "Google Ads")
+    budget = float(body.get("daily_budget", 300))
+    if not name:
+        return {"code": 400, "msg": "请输入计划名称"}
+    from backend.database.database import get_db
+    conn = get_db()
+    import datetime
+    conn.execute(
+        "INSERT INTO ad_plans (plan_name, platform, daily_budget, status, user_id, created_at) VALUES (?,?,?,?,?,?)",
+        (name, platform, budget, "active", 1, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    )
+    conn.commit()
+    conn.close()
+    return {"code": 200, "msg": "创建成功"}
+
 
 @app.get("/api/plans")
 async def plans(request: Request):

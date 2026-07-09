@@ -1,0 +1,29 @@
+
+
+=== function sendChat ===
+function sendChat(){
+  var inp = byId("chatInput"); var msg = inp.value.trim(); if(!msg) return; inp.value="";
+  byId("chatMessages").innerHTML += "<div class=\"msg user\">"+esc(msg)+"</div>";
+  byId("chatMessages").scrollTop = byId("chatMessages").scrollHeight;
+  var aiDiv = document.createElement("div"); aiDiv.className = "msg assistant"; aiDiv.id = "streamingMsg";
+  byId("chatMessages").appendChild(aiDiv);
+  byId("chatThinking").style.display = "flex";
+  fetch("/api/chat/stream", {
+    method:"POST", headers:{"Content-Type":"application/json","Authorization":"Bearer "+TOKEN},
+    body:JSON.stringify({message:msg})
+  }).then(function(resp){
+    var reader = resp.body.getReader(); var decoder = new TextDecoder(); var buffer = "";
+    
+
+=== function loadChatHistory ===
+function loadChatHistory(){ api("GET","/api/chat/history").then(function(r){ if(r.code!==200) return; byId("chatMessages").innerHTML = r.data.map(function(m){return "<div class=\"msg "+m.role+"\">"+esc(m.content)+"</div>";}).join(""); byId("chatMessages").scrollTop = byId("chatMessages").scrollHeight; }); }
+
+
+=== function sendSug ===
+function sendSug(text){ byId("chatInput").value = text; sendChat(); }
+
+
+
+=== function initApp ===
+function initApp(){ loadDashboard(); startAutoRefresh(); }
+var refreshTimers={};
