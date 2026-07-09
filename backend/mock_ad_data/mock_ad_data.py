@@ -34,7 +34,7 @@ def generate_mock_plans(c):
     for user_id, plans in plans_data.items():
         for name, plat, budget, status, imp, clicks, cost, sales in plans:
             c.execute(
-                "INSERT INTO ad_plans (plan_name, platform, daily_budget, status, "
+                "INSERT OR IGNORE INTO ad_plans (plan_name, platform, daily_budget, status, "
                 "impressions, clicks, cost, sales, user_id) VALUES (?,?,?,?,?,?,?,?,?)",
                 (name, plat, budget, status, imp, clicks, cost, sales, user_id)
             )
@@ -54,7 +54,7 @@ def generate_mock_alerts(c):
     for user_id in range(1, 5):
         for t, msg, level in alerts_templates:
             c.execute(
-                "INSERT INTO alerts (type, message, level, user_id, is_read) VALUES (?,?,?,?,?)",
+                "INSERT OR IGNORE INTO alerts (type, message, level, user_id, is_read) VALUES (?,?,?,?,?)",
                 (t, msg, level, user_id, random.choice([0, 0, 0, 1]))  # 部分已读
             )
 
@@ -79,7 +79,7 @@ def generate_mock_daily_reports(c):
             sales = base_sales + random.randint(-500, 500)
 
             c.execute(
-                "INSERT INTO daily_reports (report_date, cost, impressions, clicks, sales, user_id) "
+                "INSERT OR IGNORE INTO daily_reports (report_date, cost, impressions, clicks, sales, user_id) "
                 "VALUES (?,?,?,?,?,?)",
                 (date, max(0, cost), max(0, imp), max(0, clicks), max(0, sales), user_id)
             )

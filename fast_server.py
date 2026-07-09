@@ -48,6 +48,13 @@ async def lifespan(app: FastAPI):
     """应用生命周期：启动时初始化数据库"""
     init_db()
     seed_data()
+
+    from backend.mock_ad_data.mock_ad_data import generate_mock_daily_reports as gdr
+    _conn=db_provider.get_connection()
+    gdr(_conn.cursor())
+    _conn.commit()
+    db_provider.close(_conn)
+    print(" [data] daily reports updated")
     print("FastAPI server started with WebSocket support")
     yield
 
@@ -420,4 +427,6 @@ if __name__ == "__main__":
     print(f"API docs (Swagger): http://127.0.0.1:{port}/docs")
     print(f"Login accounts: boss/admin123 | admin/admin123 | zhangsan/user123 | lisi/user123")
     uvicorn.run(app, host="0.0.0.0", port=port)
+
+
 

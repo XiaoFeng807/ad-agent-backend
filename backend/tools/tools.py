@@ -60,26 +60,13 @@ def get_real_trends(keyword="AI 广告", user_id=None):
 
 
 
-
-
-
-
-
 # ==================== RAG 知识检索 ====================
 
-def search_knowledge(query, user_id=None):
-    """RAG检索: 先查本地知识库，查不到联网搜索"""
-    from backend.tools.vector_search import search as vs
-    r = vs(query)
-    if r and r.get("results"):
-        return r
-    w = search_web(query, user_id)
-    if w.get("success") and w.get("results"):
-        return {"query": query, "results": w["results"], "total": len(w["results"]), "source": "web", "message": "来自联网搜索"}
-    return {"query": query, "results": [], "total": 0, "message": "未找到相关信息"}
+
+
 
 def search_web(query, user_id=None):
-    """???????????RAG ???????"""
+    """联网搜索：爬百度搜索结果"""
     import requests
     headers = {"User-Agent": "Mozilla/5.0"}
     url = "https://www.baidu.com/s?wd=" + requests.utils.quote(query)
@@ -555,6 +542,18 @@ def get_hot_products(category="all", user_id=None):
 
     return {"products": products, "total": len(products)}
 
+def search_knowledge(query: str):
+    """搜索广告知识库，返回相关参考资料"""
+    from backend.rag.rag_knowledge import RAGKnowledge
+    import json
+    rag = RAGKnowledge()
+    result = rag.generate(query)
+    if result:
+        return json.dumps({
+            "context": result["context"],
+            "sources": result["sources"]
+        }, ensure_ascii=False)
+    return json.dumps({"context": "", "sources": []}, ensure_ascii=False)
 
 # ==================== 函数注册（给AI发"菜单"） ====================
 
@@ -567,7 +566,7 @@ func_names = [
     "get_week_over_week", "record_suggestion", "report_execution", "report_outcome",
     "get_verified_suggestions", "get_decision_summary", "get_activity_timeline",
     "get_hot_products","search_knowledge",
-    "get_real_trends"
+    "get_real_trends","search_knowledge"
 ]
 
 # 每个函数的中文描述（AI通过描述判断什么时候该调哪个函数）
@@ -594,8 +593,8 @@ func_descs = {
     "get_decision_summary": "决策统计",
     "get_activity_timeline": "活动时间轴",
     "get_hot_products": "查询当前市面上热销的产品",
-    "search_knowledge": "搜索广告知识库，获取行业标准、优化建议等参考信息（向量语义匹配）",
-    "get_real_trends": "查指定关键词的中文搜索趋势（百度搜索估算）"
+    "get_real_trends": "查指定关键词的中文搜索趋势（百度搜索估算）",
+    "search_knowledge": "搜索知识库，获取广告投放相关的参考资料（平台介绍、ROAS定义、优化策略等）",
 }
 
 # 组装成OpenAI要求的函数描述格式

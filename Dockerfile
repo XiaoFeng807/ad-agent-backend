@@ -25,11 +25,12 @@ COPY . .
 RUN mkdir -p /app/data && chmod -R 755 /app/data
 
 # 暴露端口
-EXPOSE 5000
+EXPOSE 5001
 
 # 健康检查
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:5000/api/health || exit 1
+    CMD curl -f http://localhost:5001/api/health || exit 1
 
 # 启动服务
-CMD ["python", "server.py"]
+CMD ["python", "fast_server.py"]
+

@@ -623,7 +623,12 @@ document.querySelectorAll(".modal-overlay").forEach(function(m){ m.addEventListe
 
 function esc(s){ if(!s) return ""; return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 
-function initApp(){ loadDashboard(); }
+function initApp(){ loadDashboard(); startAutoRefresh(); }
+var refreshTimers={};
+function startAutoRefresh(){
+  refreshTimers.dashboard=setInterval(loadDashboard,30000);
+  refreshTimers.alerts=setInterval(loadAlerts,60000);
+}
 
 byId("loginPass").addEventListener("keydown",function(e){if(e.key==="Enter")doLogin();});
 byId("loginCaptcha").addEventListener("keydown",function(e){if(e.key==="Enter")doLogin();});
