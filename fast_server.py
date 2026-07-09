@@ -1,4 +1,4 @@
-﻿"""
+"""
 FastAPI 服务入口 — 支持 REST API + WebSocket 聊天
 替代旧的 Flask server.py（向后兼容）
 
@@ -25,7 +25,7 @@ import uvicorn
 from backend.config.config import Config
 from backend.database.database import init_db, seed_data
 from backend.auth.auth import Auth, set_auth_instance
-from backend.agent.multi_agent import Coordinator, PipelineCoordinator
+from backend.agent.multi_agent import OrchestratorAgent, PipelineCoordinator
 from backend.di import ConfigProvider, DatabaseProvider, create_tool_registry
 from backend.routes.shared import init as init_shared
 from backend.observability import record_request, get_system_status
@@ -36,7 +36,7 @@ db_provider = DatabaseProvider()
 tool_registry = create_tool_registry(db_provider)
 auth_instance = Auth(db_provider)
 set_auth_instance(auth_instance)
-agent = PipelineCoordinator(Coordinator())
+agent = PipelineCoordinator(OrchestratorAgent())
 captcha_store = {}
 app_start_time = datetime.datetime.now()
 
@@ -424,7 +424,7 @@ async def websocket_chat(websocket: WebSocket):
         user_id = payload.get("user_id", 0)
         
         # 3. 发送思考状态
-        await websocket.send_json({"type": "thinking"})
+        await websocket.send_json({"type": "thinking", "content": "🤔 思考中..."})
         
         # 4. 保存用户消息
         agent.save_conversation(user_id, "user", message, priority=1)
@@ -492,9 +492,21 @@ async def chat_stream_sse(request: Request):
         try:
             agent.save_conversation(user_id, "user", message, priority=1)
             history = agent.get_history(user_id)
-            yield "data: " + json.dumps({"type": "thinking"}) + "\n\n"
-            full_reply = ""
+            yield "data: " + json.dumps({"type": "thinking", "content": "🤔 思考中..."}) + "\n\n"
             for chunk in agent.chat_stream(history, user_id):
+                # 如果 chunk 已经是 JSON 格式，直接透传
+                try:
+                    parsed = json.loads(chunk)
+                    if isinstance(parsed, dict) and 'type' in parsed:
+                        yield "data: " + chunk + "\n\n"
+                        if parsed.get('type') == 'text':
+                            full_reply += parsed.get('content', '')
+                        elif parsed.get('type') == 'done':
+                            break
+                        continue
+                except:
+                    pass
+                # 普通文本
                 full_reply += chunk
                 yield "data: " + json.dumps({"type": "text", "content": chunk}) + "\n\n"
             agent.save_conversation(user_id, "assistant", full_reply, priority=1)
@@ -505,7 +517,6 @@ async def chat_stream_sse(request: Request):
             yield "data: " + json.dumps({"type": "done"}) + "\n\n"
         except Exception as e:
             yield "data: " + json.dumps({"type": "error", "content": str(e)[:200]}) + "\n\n"
-            yield "data: " + json.dumps({"type": "done"}) + "\n\n"
     from fastapi.responses import StreamingResponse
     return StreamingResponse(gen(), media_type="text/event-stream",
                              headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})

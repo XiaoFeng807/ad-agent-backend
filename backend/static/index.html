@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>智能广告投放助手</title><style>
+﻿<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>智能广告投放助手</title><style>
 :root{--navy:#0F1E32;--blue:#1A6DFF;--blue-hover:#1557D4;--card-shadow:0 2px 10px rgba(0,0,0,0.08);--text:#1a1a2e;--text-light:#6b7280;--bg:#f0f4f8;--white:#fff;--danger:#ef4444;--success:#10b981;--warning:#f59e0b;--border:#e5e7eb;--radius:8px;--sidebar-w:220px;--header-h:56px}
 *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
 body{background:var(--bg);color:var(--text);overflow-y:auto;overflow-x:hidden;min-height:100vh}
@@ -31,7 +31,7 @@ body{background:var(--bg);color:var(--text);overflow-y:auto;overflow-x:hidden;mi
 .stat-card .value{font-size:22px;font-weight:700;color:var(--navy)}
 .stat-card .value.green{color:var(--success)}.stat-card .value.red{color:var(--danger)}
 .stat-card .value.orange{color:var(--warning)}.stat-card .value.blue{color:var(--blue)}
-.chat-container{display:flex;flex-direction:column;height:calc(100vh - 56px - 40px);background:#fff;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,0.06)}.chat-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #eee;background:#fafbfc}.chat-header-info{display:flex;align-items:center;gap:10px}.chat-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#1A6DFF,#764ba2);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff}.chat-agent-name{font-weight:600;font-size:14px;color:#1a1a2e}.chat-agent-status{font-size:11px;color:#10b981}.chat-clear-btn{background:none;border:none;font-size:15px;cursor:pointer;padding:4px 8px;border-radius:6px;color:#bbb}.chat-clear-btn:hover{background:#f0f0f0}.chat-messages{flex:1;overflow-y:auto;padding:16px 20px}.chat-messages::after{content:'';display:block;clear:both}.chat-messages .msg{display:inline-block;padding:10px 16px;margin-bottom:10px;border-radius:12px;font-size:13px;line-height:1.7;max-width:70%;word-break:break-word;white-space:pre-wrap;clear:both}.chat-messages .msg.user{background:#1A6DFF;color:#fff;float:right;border-bottom-right-radius:4px}.chat-messages .msg.assistant{background:#f0f4f8;color:#333;border:1px solid #e5e7eb;float:left;border-bottom-left-radius:4px}.chat-thinking{display:none;padding:8px 20px;font-size:13px;color:#999}.chat-suggestions{display:flex;gap:6px;padding:8px 20px;flex-wrap:wrap;border-top:1px solid #f5f5f5}.sug-btn{padding:4px 12px;border-radius:12px;border:1px solid #e5e7eb;background:#fff;font-size:12px;cursor:pointer;color:#555}.sug-btn:hover{border-color:#1A6DFF;color:#1A6DFF}.chat-input-area{display:flex;gap:8px;padding:12px 20px;border-top:1px solid #eee}.chat-input{flex:1;padding:10px 14px;border:1px solid #e5e7eb;border-radius:20px;font-size:13px;outline:none}.chat-input:focus{border-color:#1A6DFF}.chat-send-btn{padding:10px 20px;background:#1A6DFF;color:#fff;border:none;border-radius:20px;font-size:13px;cursor:pointer}.chat-send-btn:hover{background:#1557D4}.chart-box{height:360px;width:100%}
+.chat-container{display:flex;flex-direction:column;height:calc(100vh - 56px - 40px);background:#fff;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,0.06)}.chat-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #eee;background:#fafbfc}.chat-header-info{display:flex;align-items:center;gap:10px}.chat-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#1A6DFF,#764ba2);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff}.chat-agent-name{font-weight:600;font-size:14px;color:#1a1a2e}.chat-agent-status{font-size:11px;color:#10b981}.chat-clear-btn{background:none;border:none;font-size:15px;cursor:pointer;padding:4px 8px;border-radius:6px;color:#bbb}.chat-clear-btn:hover{background:#f0f0f0}.chat-messages{flex:1;overflow-y:auto;padding:16px 20px}.chat-messages::after{content:'';display:block;clear:both}.chat-messages .msg{display:inline-block;padding:10px 16px;margin-bottom:10px;border-radius:12px;font-size:13px;line-height:1.7;max-width:70%;word-break:break-word;white-space:pre-wrap;clear:both}.chat-messages .msg.user{background:#1A6DFF;color:#fff;float:right;border-bottom-right-radius:4px}.chat-messages .msg.assistant{background:#f0f4f8;color:#333;border:1px solid #e5e7eb;float:left;border-bottom-left-radius:4px}..chat-thinking{display:none;padding:10px 20px;font-size:13px;color:#666;background:#f8f9fb;border-top:1px solid #eee;font-family:monospace;line-height:1.8}.chat-suggestions{display:flex;gap:6px;padding:8px 20px;flex-wrap:wrap;border-top:1px solid #f5f5f5}.sug-btn{padding:4px 12px;border-radius:12px;border:1px solid #e5e7eb;background:#fff;font-size:12px;cursor:pointer;color:#555}.sug-btn:hover{border-color:#1A6DFF;color:#1A6DFF}.chat-input-area{display:flex;gap:8px;padding:12px 20px;border-top:1px solid #eee}.chat-input{flex:1;padding:10px 14px;border:1px solid #e5e7eb;border-radius:20px;font-size:13px;outline:none}.chat-input:focus{border-color:#1A6DFF}.chat-send-btn{padding:10px 20px;background:#1A6DFF;color:#fff;border:none;border-radius:20px;font-size:13px;cursor:pointer}.chat-send-btn:hover{background:#1557D4}.chart-box{height:360px;width:100%}
 table{width:100%;border-collapse:collapse;font-size:14px}
 th{text-align:left;padding:10px 12px;background:#f9fafb;border-bottom:2px solid var(--border);font-weight:600;color:var(--text-light);font-size:13px}
 td{padding:10px 12px;border-bottom:1px solid var(--border)}tr:hover{background:#f8faff}
@@ -54,7 +54,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
 .chat-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
 .chat-msgs .msg{max-width:80%;padding:12px 16px;border-radius:12px;line-height:1.6;font-size:14px;word-wrap:break-word;white-space:pre-wrap}
 .chat-msgs .msg.user{background:var(--blue);color:#fff;align-self:flex-end}
-.chat-msgs .msg.assistant{background:#f0f4f8;color:var(--text);align-self:flex-start}
+.chat-msgs .msg.assistant{background:#f0f4f8;color:var(--text);align-self:flex-start}.chat-msgs .msg table{width:100%;border-collapse:collapse;margin:6px 0;font-size:12px}.chat-msgs .msg th,.chat-msgs .msg td{padding:5px 8px;border:1px solid #ddd;text-align:left}.chat-msgs .msg th{background:#f5f7fa;font-weight:600}.chat-msgs .msg code{background:#f4f4f4;padding:1px 5px;border-radius:3px;font-size:12px;color:#d63384}.md-table-wrap{overflow-x:auto;margin:8px 0;border-radius:8px;border:1px solid #e8ecf0;box-shadow:0 1px 4px rgba(0,0,0,0.04)}.md-table{width:100%;border-collapse:collapse;font-size:13px;background:#fff}.md-table thead{position:sticky;top:0;z-index:1}.md-table th{padding:8px 12px;background:#f0f4f8;font-weight:600;text-align:left;font-size:12px;color:#1a1a2e;border-bottom:2px solid #dde3e9;letter-spacing:0.3px}.md-table td{padding:7px 12px;border-bottom:1px solid #f0f2f5;font-size:13px;color:#333;transition:background 0.15s}.md-table tbody tr{transition:background 0.15s}.md-table tbody tr:hover{background:#eef3ff}.md-table tbody tr:last-child td{border-bottom:none}.md-table tbody tr:nth-child(even){background:#fafbfc}.md-table tbody tr:nth-child(even):hover{background:#eef3ff}.md-table .row-best{background:#f0fdf4!important}.md-table .row-best:hover{background:#dcfce7!important}.md-table .row-worst{background:#fef2f2!important}.md-table .row-worst:hover{background:#fee2e2!important}.md-table .val-good{color:#059669;font-weight:600}.md-table .val-bad{color:#dc2626;font-weight:600}.md-code{background:#f4f4f4;padding:2px 6px;border-radius:4px;font-size:12px;color:#d63384;font-family:monospace}.msg.assistant b,.msg.assistant strong{color:#1a1a2e}
 .chat-input-row{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--border)}
 .chat-input-row input{flex:1}
 .thinking-indicator{padding:8px 16px;color:var(--text-light);font-size:13px;display:none;align-items:center;gap:8px}
@@ -501,7 +501,7 @@ function createUser(){
   });
 }
 
-function loadChatHistory(){ api("GET","/api/chat/history").then(function(r){ if(r.code!==200) return; byId("chatMessages").innerHTML = r.data.map(function(m){return "<div class=\"msg "+m.role+"\">"+esc(m.content)+"</div>";}).join(""); byId("chatMessages").scrollTop = byId("chatMessages").scrollHeight; }); }
+function loadChatHistory(){ api("GET","/api/chat/history").then(function(r){ if(r.code!==200) return; byId("chatMessages").innerHTML = r.data.map(function(m){return "<div class=\"msg "+m.role+"\">"+(m.role==="assistant"?renderMarkdown(m.content):esc(m.content))+"</div>";}).join(""); byId("chatMessages").scrollTop = byId("chatMessages").scrollHeight; }); }
 function formatAI(text){
   var lines = text.split(String.fromCharCode(10));
   var result = []; var inTable = false; var tableRows = [];
@@ -554,10 +554,14 @@ function sendChat(){
               var data = JSON.parse(line.slice(6));
               if(data.type==="text"){
                 var el = byId("streamingMsg");
-                if(el) el.innerHTML += formatAI(data.content);
+                if(el) el.innerHTML += renderMarkdown(data.content);
                 byId("chatMessages").scrollTop = byId("chatMessages").scrollHeight;
               }else if(data.type==="thinking"){
-                byId("chatThinking").style.display = "flex";
+                var el = byId("chatThinking");
+                if(el) {
+                  el.style.display = "flex";
+                  el.innerHTML = data.content;
+                }
               }else if(data.type==="done"){
                 byId("chatThinking").style.display = "none";
                 var el = byId("streamingMsg");
@@ -635,6 +639,84 @@ function startAutoRefresh(){
 
 byId("loginPass").addEventListener("keydown",function(e){if(e.key==="Enter")doLogin();});
 byId("loginCaptcha").addEventListener("keydown",function(e){if(e.key==="Enter")doLogin();});
-</script>
+
+// ====== Markdown 渲染器（支持表格、加粗、列表） ======
+function renderMarkdown(text) {
+    // 1. 先处理 <b> </b>（AI有时返回HTML标签）
+    text = text.replace(/<b\s*\/?>/gi, '<strong>');
+    text = text.replace(/<\/b\s*>/gi, '</strong>');
+    text = text.replace(/<i\s*\/?>/gi, '<em>');
+    text = text.replace(/<\/i\s*>/gi, '</em>');
+    
+    // 2. 处理表格（加交互样式）
+    text = text.replace(/((?:\|.*?\|[\n]*)+)/g, function(match) {
+        var rows = match.trim().split('\n').filter(function(r){return r.trim()!=='';});
+        if (rows.length < 2) return match;
+        var headerDone = false;
+        var hasContent = false;
+        var html = '<div class="md-table-wrap"><table class="md-table"><thead>';
+        rows.forEach(function(row) {
+            if (row.match(/^\|[\s:-]+\|/)) return;
+            var cells = row.split('|').filter(function(c){return c.trim()!=='';});
+            if (cells.length < 2) return;
+            hasContent = true;
+            if (!headerDone) {
+                html += '<tr>';
+                cells.forEach(function(c){ html += '<th>'+c.trim()+'</th>'; });
+                html += '</tr></thead><tbody>';
+                headerDone = true;
+            } else {
+                var rowClass = '';
+                var rowText = cells.map(function(c){return c.trim();}).join(' ');
+                if (rowText.indexOf('\u2705') >= 0) rowClass = ' row-best';
+                else if (rowText.indexOf('\u274c') >= 0 || rowText.indexOf('\u2716') >= 0) rowClass = ' row-worst';
+                html += '<tr class="' + rowClass + '">';
+                cells.forEach(function(c){
+                    var val = c.trim();
+                    // 给数值加样式
+                    if (val.match(/^\d+\.?\d*$/) && parseFloat(val) > 3) val = '<span class="val-good">' + val + '</span>';
+                    else if (val.match(/^\d+\.?\d*$/) && parseFloat(val) < 1.5) val = '<span class="val-bad">' + val + '</span>';
+                    html += '<td>' + val + '</td>';
+                });
+                html += '</tr>';
+            }
+        });
+        html += '</tbody></table></div>';
+        return hasContent ? html : match;
+    });
+    
+    // 3. **加粗**
+    text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    
+    // 4. *斜体*
+    text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    
+    // 5. 行内代码
+    text = text.replace(/`([^`]+)`/g, '<code class="md-code">$1</code>');
+    
+    // 6. ✅ ❌ 图标保留
+    // 7. 换行
+    text = text.replace(/\n/g, '<br>');
+    
+    return text;
+}
+
+// 重写 formatAI 使用 markdown 渲染
+var _origFormatAI = formatAI;
+formatAI = function(text) {
+    return renderMarkdown(text);
+};</script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+

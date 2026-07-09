@@ -7,7 +7,7 @@ from flask import Flask
 from backend.config.config import Config            # 配置
 from backend.database.database import init_db, seed_data  # 数据库初始化
 from backend.auth.auth import Auth, set_auth_instance      # 认证
-from backend.agent.multi_agent import Coordinator, PipelineCoordinator
+from backend.agent.multi_agent import OrchestratorAgent, PipelineCoordinator
 from backend.observability import record_request, get_system_status                      # AI助手
 from backend.di import ConfigProvider, DatabaseProvider, create_tool_registry  # 依赖注入
 from backend.routes import register_blueprints      # 路由注册
@@ -22,7 +22,7 @@ def create_app():
     tool_registry = create_tool_registry(db_provider)  # 函数注册表
     auth_instance = Auth(db_provider)           # 认证实例
     set_auth_instance(auth_instance)            # 保存到全局（给装饰器用）
-    agent = PipelineCoordinator(Coordinator())                # AI助手实例
+    agent = PipelineCoordinator(OrchestratorAgent())                # AI助手实例
     captcha_store = {}                          # 验证码存储（临时存内存里）
     app_start_time = datetime.datetime.now()    # 记录启动时间
 

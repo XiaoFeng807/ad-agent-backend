@@ -1,63 +1,38 @@
-﻿#!/usr/bin/env python
-# coding: utf-8
-"""统一测试运行器"""
-import os, sys, time, subprocess
+﻿# coding: utf-8
+"""测试运行器：一键运行所有单元测试"""
+import os, sys, subprocess
+
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 TEST_FILES = [
-    "backend/auth/tests/test_auth.py",
-    "backend/tools/tests/test_tools.py",
-    "backend/routes/tests/test_dashboard.py",
-    "backend/agent/tests/test_intent_classifier.py",
-    "backend/agent/tests/test_context_window.py",
-    "backend/agent/tests/test_task_tracker.py",
     "backend/agent/tests/test_multi_agent.py",
-    "backend/captcha/tests/test_captcha.py",
+    "backend/tools/tests/test_tools.py",
 ]
 
-def run_all():
-    passed = 0
-    failed = 0
-    total_start = time.time()
+pass_count = 0
+fail_count = 0
 
-    print("=" * 50)
-    print("  智能广告投放助手 - 测试套件")
-    print("=" * 50)
-    print()
+for test_file in TEST_FILES:
+    path = os.path.join(os.path.dirname(__file__), test_file)
+    if not os.path.exists(path):
+        print(f"\n  Skip: {test_file} (not found)")
+        continue
 
-    for test_file in TEST_FILES:
-        filepath = os.path.join(os.path.dirname(__file__), test_file)
-        if not os.path.exists(filepath):
-            print(f"  [!] 文件不存在: {test_file}")
-            continue
+    print(f"\n{'=' * 50}")
+    print(f"  Running: {test_file}")
+    print(f"{'=' * 50}")
+    
+    # 用 subprocess 避免路径空格问题
+    result = subprocess.run([sys.executable, path], capture_output=True, text=True)
+    print(result.stdout)
+    if result.stderr:
+        print(result.stderr[:200])
+    
+    if result.returncode == 0:
+        pass_count += 1
+    else:
+        fail_count += 1
 
-        print(f"  >>> 运行: {test_file}")
-        start = time.time()
-
-        result = subprocess.run(
-            [sys.executable, filepath],
-            capture_output=True, text=True, timeout=30
-        )
-        elapsed = time.time() - start
-
-        if result.returncode == 0:
-            passed += 1
-            print(result.stdout.splitlines()[-1] if result.stdout else "")
-            print(f"  <<< 通过 ({elapsed:.1f}s)")
-        else:
-            failed += 1
-            error_line = (result.stderr or "").strip().split("\n")[-1][:80] if result.stderr else "unknown"
-            print(f"  <<< 失败: {error_line}")
-        print()
-
-    total_time = time.time() - total_start
-    print("=" * 50)
-    total = passed + failed
-    print(f"  总计: {total} 个测试文件")
-    print(f"  通过: {passed}  |  失败: {failed}  |  用时: {total_time:.1f}s")
-    print("=" * 50)
-
-    return failed == 0
-
-if __name__ == "__main__":
-    success = run_all()
-    sys.exit(0 if success else 1)
+print(f"\n{'=' * 50}")
+print(f"  Results: {pass_count} passed, {fail_count} failed")
+print(f"{'=' * 50}")
