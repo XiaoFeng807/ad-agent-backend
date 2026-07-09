@@ -141,6 +141,24 @@ LLM_PROVIDER=deepseek
 | **SSE 流式** | `POST /api/chat/stream` | 前端轮询，兼容性好 |
 | **WebSocket** | `ws://host/ws/chat` | 实时双向通信，推荐 |
 
+### Agent 间通信
+```
+数据Agent 查完数据发现CPC异常
+    → 主动调用 call_peer(analyze_data, "CPC涨了15%，帮我分析原因")
+    → 分析Agent 收到请求，分析原因
+    → 返回分析结果给 数据Agent
+    → 数据Agent 继续组织最终回复
+```
+
+### 共享工作区 (Blackboard)
+```
+所有 Agent 共享的"黑板":
+[query_data] raw_data: {"cost":5000, "sales":15000}
+[analyze_data] analysis: CPC上涨15%，建议优化
+[query_knowledge] knowledge: 行业ROAS基准: 2.5-3.5
+每个 Agent 都能读写，不是串行传递
+```
+
 ### 三种 LLM Provider
 
 | Provider | 命令 | 需要 API Key | 特点 |

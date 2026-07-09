@@ -22,6 +22,21 @@
 - 知识库涵盖广告投放核心概念（ROAS、CPC、CTR 等）
 - 向量检索失败时自动降级为 TF-IDF 检索
 
+### 🤝 Agent 间直接通信
+- 每个 Agent 持有关联 Agent 的引用，可通过 `call_peer` 直接对话
+- 数据 Agent 发现异常后，可直接询问分析 Agent，无需 Orchestrator 中转
+- 知识 Agent 可同时读取数据和分析结果，给出更精准的建议
+
+### 🧠 共享工作区（Blackboard）
+- 所有 Agent 通过 Blackboard 读写共享上下文
+- 每个 Agent 都能看到其他 Agent 做了什么、发现了什么
+- 完整的决策追溯链，方便调试和优化
+
+### 📋 动态任务拆解
+- LLM 先分析用户意图，自动制定执行计划
+- 根据问题复杂程度动态选择 Agent 组合
+- 如 `"为什么ROAS下降"` → 自动拆解为: 查数据 → 分析原因 → 查知识
+
 ### 🔄 三种 LLM Provider 一键切换
 | Provider | 需要 API Key | 说明 |
 |----------|-------------|------|
@@ -149,6 +164,22 @@ ad_agent_backend/
            返回自然语言回复
 ```
 
+### 数据流: Blackboard 共享工作区
+```
+用户: "为什么ROAS下降了?"
+    ↓
+Orchestrator 创建共享工作区 (Blackboard)
+    ↓ 动态规划: query_data → analyze_data → query_knowledge_base
+    ↓
+query_data 查数据 → 写入 Blackboard: {raw_data: {...}}
+    ↓ 读取 Blackboard
+analyze_data 分析原因 → 写入 Blackboard: {analysis: "CPC上涨15%..."}
+    ↓ 读取 Blackboard (raw_data + analysis)
+query_knowledge 查建议 → 写入 Blackboard: {knowledge: "建议优化关键词..."}
+    ↓
+Orchestrator 读取完整 Blackboard → 生成最终回答
+```
+
 ### 对话方式
 | 方式 | 端点 | 说明 |
 |------|------|------|
@@ -163,6 +194,7 @@ ad_agent_backend/
 |------|------|------|
 | POST | `/api/login` | 登录获取 Token |
 | POST | `/api/chat/stream` | AI 流式对话（SSE） |
+| WS | `/ws/chat` | AI 实时对话（WebSocket） |
 | WS | `/ws/chat` | AI 实时对话（WebSocket） |
 | GET | `/api/dashboard` | 仪表盘核心指标 |
 | GET | `/api/daily_reports` | 每日报告 |
@@ -215,7 +247,7 @@ docker-compose logs -f
 | 后端框架 | FastAPI + Uvicorn |
 | 前端 | 原生 HTML + CSS + JavaScript |
 | AI 接口 | DeepSeek API / OpenAI |
-| Agent 架构 | Orchestrator + ReAct + 多 Agent 协同 |
+| Agent 架构 | Orchestrator + ReAct + Agent间通信 + Blackboard 共享工作区 |
 | 向量数据库 | ChromaDB |
 | RAG 检索 | 语义向量检索 + TF-IDF 回退 |
 | 数据库 | SQLite |
