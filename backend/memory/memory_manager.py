@@ -349,5 +349,8 @@ def get_conversation_summaries(user_id):
     """保持旧接口兼容"""
     return get_short_term(user_id)
 # ===== 兼容旧接口 =====
-add_fact = update_profile
+def add_fact(user_id, action_name, action_args=None, action_result=None):
+    """记录用户行为事实，兼容 4 参数调用"""
+    data = {"args": action_args, "result": action_result} if action_result else action_args
+    update_profile(user_id, action_name, data)
 

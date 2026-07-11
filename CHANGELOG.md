@@ -61,7 +61,8 @@
   - 全局单例模式，避免重复加载
 - **升级 rag_knowledge.py → v7**：
   - ChromaDB 使用 BGEEmbedding 作为正式 embedding 函数
-  - 新增 ecall() 方法（向量+BM25+RRF 多路召回），供 causal_reasoning 使用
+  - 新增 
+ecall() 方法（向量+BM25+RRF 多路召回），供 causal_reasoning 使用
   - 新增 _rrf_fusion() RRF 融合算法
   - BM25 使用 sklearn TfidfVectorizer，支持中文分词 + bigram
 - **修复兼容性**：
@@ -76,3 +77,11 @@
 - 语义检索质量大幅提升：bge-small-zh-v1.5 在中文语义相似度任务上 SOTA
 - BM25 关键词检索补充向量检索的盲区
 - RRF 融合两路结果，召回更全面
+
+
+## v23.1.0 (2026-07-11) — Bug 修复
+
+### 修复
+- **memory_manager.py**：build_important_window 未导入导致 NameError，添加 from backend.memory.importance import build_important_window
+- **agent.py**：optimize_context() 改为返回 (msgs, summary) 元组，chat() 和 chat_stream() 仍当列表拼接引发 TypeError。改为解包 optimized_msgs, _ = optimize_context(messages)
+- **orchestrator.py**：TOOL_DEFINITION 被错误放入 query_data 的 required 数组，导致 DeepSeek API 400 Invalid schema。移出 required 并作为独立工具加入 sub_agent_tools
