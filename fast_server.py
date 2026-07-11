@@ -22,10 +22,10 @@ from pydantic import BaseModel
 import uvicorn
 
 # ===== 导入项目模块 =====
-from backend.config.config import Config
+from backend.config.config import settings
 from backend.database.database import init_db, seed_data
 from backend.auth.auth import Auth, set_auth_instance
-from backend.agent.multi_agent import OrchestratorAgent, PipelineCoordinator
+from backend.agent.multi_agent import OrchestratorAgent, PipelineCoordinator, AgentPool
 from backend.di import ConfigProvider, DatabaseProvider, create_tool_registry
 from backend.routes.shared import init as init_shared
 from backend.observability import record_request, get_system_status
@@ -36,9 +36,10 @@ db_provider = DatabaseProvider()
 tool_registry = create_tool_registry(db_provider)
 auth_instance = Auth(db_provider)
 set_auth_instance(auth_instance)
-agent = PipelineCoordinator(OrchestratorAgent())
+agent_pool = AgentPool(min_size=2, max_size=10)
 captcha_store = {}
 app_start_time = datetime.datetime.now()
+agent = agent_pool.acquire()  # 给旧接口留一个默认 agent
 
 init_shared(db_provider, auth_instance, agent, captcha_store, app_start_time)
 
@@ -105,7 +106,17 @@ def verify_token(token: str = ""):
         raise HTTPException(status_code=401, detail="未登录")
     try:
         payload = jwt.decode(token, SECRET, algorithms=["HS256"])
+        user_id = payload.get("user_id")
+        if user_id:
+            from backend.database.database import get_db
+            conn = get_db()
+            row = conn.execute("SELECT token FROM sessions WHERE user_id=?", (user_id,)).fetchone()
+            conn.close()
+            if row and row["token"] != token:
+                raise HTTPException(status_code=401, detail="账号已在其他地方登录")
         return payload
+    except HTTPException:
+        raise
     except:
         raise HTTPException(status_code=401, detail="Token 无效或已过期")
 
@@ -439,8 +450,9 @@ async def websocket_chat(websocket: WebSocket):
         data_keywords = ["数据", "今天", "报告", "ROAS", "花费", "点击", "转化", "趋势", "对比", "分析", "计划", "广告", "预算", "效果", "查看", "多少", "怎么样"]
         is_data_query = any(kw in message for kw in data_keywords)
         msg_priority = 2 if is_data_query else 1
-        agent.save_conversation(user_id, "user", message, priority=msg_priority)
-        history = agent.get_history(user_id)
+        ws_agent = agent_pool.acquire()
+        ws_agent.save_conversation(user_id, "user", message, priority=msg_priority)
+        history = ws_agent.get_history(user_id)
         
         # 5. 获取 AI 回复（流式）
         full_reply = ""
@@ -449,7 +461,7 @@ async def websocket_chat(websocket: WebSocket):
             await websocket.send_json({"type": "text", "content": chunk})
         
         # 6. 保存 AI 回复
-        agent.save_conversation(user_id, "assistant", full_reply, priority=1)
+        ws_agent.save_conversation(user_id, "assistant", full_reply, priority=1)
         
         # 7. 保存对话摘要
         try:
@@ -464,6 +476,8 @@ async def websocket_chat(websocket: WebSocket):
         print("  [WS] 客户端断开连接")
     except Exception as e:
         print(f"  [WS] 错误: {type(e).__name__}: {e}")
+        if ws_agent:
+            agent_pool.release(ws_agent)
         try:
             await websocket.send_json({"type": "error", "content": "系统繁忙，请稍后再试"})
             await websocket.send_json({"type": "done"})
@@ -503,17 +517,19 @@ async def chat_stream_sse(request: Request):
     from backend.memory.memory_manager import store_conversation_summary
     async def gen():
         full_reply = ""
+        sess_agent = None
         try:
+            sess_agent = agent_pool.acquire()
             # 智能优先级：数据查询类 = 重要，闲聊 = 普通
             data_keywords = ["数据", "今天", "报告", "ROAS", "花费", "点击", "转化", "趋势", "对比", "分析", "计划", "广告", "预算", "效果", "查看", "多少", "怎么样"]
             is_data_query = any(kw in message for kw in data_keywords)
             msg_priority = 2 if is_data_query else 1
-            agent.save_conversation(user_id, "user", message, priority=msg_priority)
-            history, context_summary = agent.get_optimized_context(user_id)
+            sess_agent.save_conversation(user_id, "user", message, priority=msg_priority)
+            history, context_summary = sess_agent.get_optimized_context(user_id)
             if context_summary:
                 history.insert(0, {"role": "system", "content": context_summary})
             yield "data: " + json.dumps({"type": "thinking", "content": "🤔 思考中..."}) + "\n\n"
-            for chunk in agent.chat_stream(history, user_id):
+            for chunk in sess_agent.chat_stream(history, user_id):
                 # 如果 chunk 已经是 JSON 格式，直接透传
                 try:
                     parsed = json.loads(chunk)
@@ -530,7 +546,7 @@ async def chat_stream_sse(request: Request):
                 full_reply += chunk
                 yield "data: " + json.dumps({"type": "text", "content": chunk}) + "\n\n"
             reply_priority = 2 if any(kw in full_reply for kw in ["元", "ROAS", "点击", "转化", "%", "数据"]) else 1
-            agent.save_conversation(user_id, "assistant", full_reply, priority=reply_priority)
+            sess_agent.save_conversation(user_id, "assistant", full_reply, priority=reply_priority)
             try:
                 store_conversation_summary(user_id, message, full_reply)
             except:
@@ -538,6 +554,9 @@ async def chat_stream_sse(request: Request):
             yield "data: " + json.dumps({"type": "done"}) + "\n\n"
         except Exception as e:
             yield "data: " + json.dumps({"type": "error", "content": str(e)[:200]}) + "\n\n"
+        finally:
+            if sess_agent:
+                agent_pool.release(sess_agent)
     from fastapi.responses import StreamingResponse
     return StreamingResponse(gen(), media_type="text/event-stream",
                              headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
@@ -563,7 +582,7 @@ async def index():
 
 # ===== 启动入口 =====
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", "5010"))
+    port = int(settings.PORT)
     print(f"FastAPI server starting on http://0.0.0.0:{port}")
     print(f"WebSocket chat endpoint: ws://127.0.0.1:{port}/ws/chat")
     print(f"API docs (Swagger): http://127.0.0.1:{port}/docs")

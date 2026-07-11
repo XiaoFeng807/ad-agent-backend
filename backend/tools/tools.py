@@ -1,4 +1,4 @@
-﻿"""工具函数模块：所有AI可以调用的函数都写在这里"""
+"""工具函数模块：所有AI可以调用的函数都写在这里"""
 import pandas as pd
 from backend.database.database import get_db
 

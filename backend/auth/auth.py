@@ -1,10 +1,12 @@
-﻿"""认证模块：登录验证、JWT Token生成与验证、登录检查装饰器"""
+"""认证模块：登录验证、JWT Token生成与验证、登录检查装饰器"""
 import jwt, datetime
 from functools import wraps
 from flask import request, jsonify
 
 # JWT加密密钥（实际项目应该放在.env里）
-SECRET = "ad_agent_secret_key_2026"
+import os
+from backend.config.config import settings
+SECRET = settings.JWT_SECRET
 
 
 class Auth:
@@ -25,8 +27,13 @@ class Auth:
             "user_id": user["id"],
             "username": user["username"],
             "role": user["role"],
-            "exp": datetime.datetime.utcnow() + datetime.timedelta(days=7)
+            "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=24)
         }, SECRET, algorithm="HS256")
+        # 记录当前 token，旧 token 自动失效
+        conn = self.db.get_connection()
+        conn.execute("INSERT OR REPLACE INTO sessions (user_id, token, created_at) VALUES (?, ?, datetime('now'))",
+                     (user["id"], token))
+        self.db.close(conn)
         return {"token": token, "user": {"user_id": user["id"], "username": user["username"], "role": user["role"]}}
 
     def validate_token(self, token):

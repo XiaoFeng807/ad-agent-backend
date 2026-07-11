@@ -1,4 +1,4 @@
-﻿"""依赖注入模块：管理各个组件的创建和共享"""
+"""依赖注入模块：管理各个组件的创建和共享"""
 import os
 from dotenv import load_dotenv
 

@@ -1,4 +1,4 @@
-﻿"""向量检索模块 v2：优先 Chroma，不可用时回退 TF-IDF"""
+"""向量检索模块 v2：优先 Chroma，不可用时回退 TF-IDF"""
 import os, json
 
 CHROMA_DIR = os.path.join(os.path.dirname(__file__), "..", "chroma_db")

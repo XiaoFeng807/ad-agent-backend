@@ -1,4 +1,4 @@
-﻿"""
+"""
 爬取网页内容 → 自动分块 → 存入 RAG 知识库
 """
 import sys, os, re, json, hashlib, time

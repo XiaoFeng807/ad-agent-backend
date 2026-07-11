@@ -1,4 +1,4 @@
-﻿"""验证码生成模块：用PIL生成随机验证码图片"""
+"""验证码生成模块：用PIL生成随机验证码图片"""
 import random, string
 from PIL import Image, ImageDraw, ImageFont
 

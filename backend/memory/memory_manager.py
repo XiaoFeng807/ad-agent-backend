@@ -1,20 +1,14 @@
-﻿# coding: utf-8
-"""树状记忆系统 v3：添加时间衰减遗忘机制"""
+"""四层记忆系统 v4: 滑动窗口 + 短期/长期/业务记忆"""
 import os, json
 from datetime import datetime, timedelta
-from collections import Counter
 
 MEMORY_DIR = os.path.join(os.path.dirname(__file__), "user_memory")
-# 默认保留天数
-# 每积累 N 条新操作，自动生成一次阶段总结
-SUMMARY_TRIGGER = 5
 
-MAX_AGE_DAYS = {
-    "最近操作": 3,
-    "告警与问题": 7,
-    "关注偏好": 14,
-    "平台账户": 30,
-    "阶段总结": 30
+# ── 分层配置 ──
+LAYER_CONFIG = {
+    "short_term": {"max_items": 20, "ttl_minutes": 30},
+    "long_term_profile": {"max_items": 30, "ttl_days": 30},
+    "business_memory": {"max_items": 50, "ttl_days": 90},
 }
 
 
@@ -23,280 +17,335 @@ def _get_path(user_id):
     return os.path.join(MEMORY_DIR, f"user_{user_id}.json")
 
 
-def _parse_date(text):
-    """从文本开头的 [MM-DD] 提取日期，返回 datetime 对象"""
-    if text.startswith("[") and "]" in text:
-        try:
-            date_str = text[1:text.index("]")]
-            month, day = date_str.split("-")
-            now = datetime.now()
-            return datetime(now.year, int(month), int(day))
-        except:
-            pass
-    return None
+def _now():
+    return datetime.now()
+
+
+def _now_str():
+    return _now().strftime("%m-%d %H:%M")
+
+
+# ==================== 持久化 ====================
+
 
 
 def _apply_decay(memory):
-    """时间衰减：删除超过保留天数的旧记录"""
-    tree = memory["tree"]
-    now = datetime.now()
+    """时间衰减：删除超过保留期限的旧记录"""
+    now = _now()
+    cutoff_short = now - timedelta(minutes=LAYER_CONFIG["short_term"]["ttl_minutes"])
+    cutoff_profile = now - timedelta(days=LAYER_CONFIG["long_term_profile"]["ttl_days"])
+    cutoff_biz = now - timedelta(days=LAYER_CONFIG["business_memory"]["ttl_days"])
 
-    for branch, max_age in MAX_AGE_DAYS.items():
-        items = tree.get(branch, {}) if isinstance(tree.get(branch), dict) else tree.get(branch, [])
+    st = memory.get("short_term", [])
+    kept = []
+    for item in st:
+        try:
+            ts_str = item[1:17]
+            item_dt = datetime(now.year, int(ts_str[:2]), int(ts_str[3:5]), int(ts_str[6:8]), int(ts_str[9:11]))
+            if item_dt >= cutoff_short: kept.append(item)
+        except: kept.append(item)
+    memory['short_term'] = kept
 
-        if isinstance(items, dict):
-            # 平台账户是字典，保留
-            continue
+    profile = memory.get('long_term_profile', {})
+    prefs = profile.get('preferences', [])
+    kept = []
+    for p in prefs:
+        try:
+            dt = datetime.strptime(p["first_seen"][:5] + " 00:00", "%m-%d %H:%M").replace(year=now.year)
+            if dt >= cutoff_profile: kept.append(p)
+        except: kept.append(p)
+    profile['preferences'] = kept
 
+    biz = memory.get('business_memory', {})
+    for key in ['recent_decisions', 'alert_history', 'key_metrics']:
+        items = biz.get(key, [])
         kept = []
         for item in items:
-            dt = _parse_date(item)
-            if dt is None:
-                kept.append(item)  # 没有日期的不删
-            else:
-                age = (now - dt).days
-                if age <= max_age:
-                    kept.append(item)
-
-        tree[branch] = kept
-
+            try:
+                dt = datetime.strptime(item['timestamp'][:5] + ' ' + item['timestamp'][6:11], '%m-%d %H:%M').replace(year=now.year)
+                if dt >= cutoff_biz: kept.append(item)
+            except: kept.append(item)
+        biz[key] = kept
     return memory
 
 
-def _generate_summary(tree):
-    """从树状记忆的最近操作中自动生成一段总结"""
-    ops = tree.get("最近操作", [])
-    if not ops:
-        return ""
-
-    # 提取关键操作类型
-    dashboard_count = sum(1 for o in ops if "仪表盘" in o)
-    alert_count = sum(1 for o in ops if "告警" in o)
-    plan_count = sum(1 for o in ops if "计划" in o)
-    trend_count = sum(1 for o in ops if "趋势" in o or "搜索" in o)
-    
-    items = []
-    if dashboard_count > 0:
-        items.append(f"查看了{dashboard_count}次仪表盘")
-    if alert_count > 0:
-        items.append(f"处理了{alert_count}条告警")
-    if plan_count > 0:
-        items.append(f"查看了{plan_count}次广告计划")
-    if trend_count > 0:
-        items.append(f"搜索了{trend_count}次趋势")
-    
-    if not items:
-        return ""
-
-    from datetime import datetime
-    now = datetime.now().strftime("%m-%d")
-    summary = f"[{now}] {', '.join(items)}"
-    return summary
-
-
-def _check_and_summarize(memory):
-    """当新操作积累到阈值时，自动生成阶段总结"""
-    tree = memory["tree"]
-    ops = tree.get("最近操作", [])
-    last_count = tree.get("_last_summary_count", 0)
-    
-    # 从上次总结到现在新增了多少条
-    new_count = len(ops) - last_count
-    if new_count >= 5 and len(ops) > 0:
-        summary = _generate_summary(tree)
-        if summary:
-            tree.setdefault("阶段总结", []).append(summary)
-            # 最多保留 5 条总结
-            if len(tree["阶段总结"]) > 5:
-                tree["阶段总结"] = tree["阶段总结"][-5:]
-            # 更新计数
-            tree["_last_summary_count"] = len(ops)
-
-
-def load_memory(user_id):
+def _load(user_id):
     path = _get_path(user_id)
     if os.path.exists(path):
         with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
+            memory = json.load(f)
+            _apply_decay(memory)
+            return memory
     return {
         "user_id": user_id,
-        "tree": {
-            "平台账户": {},
-            "最近操作": [],
-            "关注偏好": [],
-            "告警与问题": [],
-            "阶段总结": [],
-            "_last_summary_count": 0
+        "short_term": [],
+        "long_term_profile": {
+            "frequent_actions": [],
+            "preferences": [],
+            "first_seen": _now_str(),
+            "total_interactions": 0,
         },
-        "stats": {}
+        "business_memory": {
+            "accounts": {},
+            "recent_decisions": [],
+            "alert_history": [],
+            "key_metrics": [],
+        },
     }
 
 
-def save_memory(user_id, memory):
+def _save(user_id, memory):
     path = _get_path(user_id)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(memory, f, ensure_ascii=False, indent=2)
 
 
-def _learn_preferences(memory, tool_name, fact):
-    stats = memory.setdefault("stats", {})
-    stats[tool_name] = stats.get(tool_name, 0) + 1
+# ==================== L1: 滑动窗口 — 在 orchestrator 内存中维护 ====================
 
-    tree = memory["tree"]
-    prefs = tree.setdefault("关注偏好", [])
-
-    count = stats[tool_name]
-    pref = None
-
-    if tool_name == "get_dashboard_data" and count == 3:
-        pref = "用户经常查看仪表盘，关注整体投放效果（ROAS、花费）"
-    elif tool_name == "get_daily_trend" and count == 3:
-        pref = "用户关注每日趋势变化"
-    elif tool_name == "get_account_detail" and count == 3:
-        pref = "用户频繁查看账户详情，关注余额和预算"
-    elif tool_name == "get_plans_summary" and count == 3:
-        pref = "用户关心各广告计划的表现对比"
-    elif tool_name == "get_real_trends" and count == 3:
-        pref = "用户关注市场搜索趋势"
-    elif tool_name == "get_alerts" and count == 3:
-        pref = "用户重视告警信息，及时处理问题"
-    elif tool_name == "get_hot_products" and count == 3:
-        pref = "用户关注热销产品，有选品需求"
-
-    if pref:
-        if pref not in prefs:
-            prefs.append(pref)
-        if len(prefs) > 5:
-            tree["关注偏好"] = prefs[-5:]
+def build_sliding_window(messages, max_turns=6):
+    """从对话历史中截取最近 N 轮完整消息"""
+    window = []
+    for m in reversed(messages):
+        role = m.get("role", "")
+        if role in ("user", "assistant"):
+            window.insert(0, m)
+            # 统计 user + assistant 的对数
+            user_count = sum(1 for w in window if w["role"] == "user")
+            if user_count >= max_turns:
+                break
+    return window
 
 
-def add_fact(user_id, tool_name, tool_args, tool_result):
-    memory = load_memory(user_id)
-    tree = memory["tree"]
-    now = datetime.now().strftime("%m-%d")
+# ==================== L2: 短期记忆 ====================
 
-    if tool_name == "get_dashboard_data" and tool_result:
-        cost = tool_result.get("total_cost", "?")
-        roas = tool_result.get("roas", "?")
-        sales = tool_result.get("total_sales", "?")
-        fact = f"[{now}] 仪表盘：花费{cost}，ROAS {roas}，销售额{sales}"
+def add_short_term(user_id, user_msg, ai_reply):
+    """存储一次对话摘要到短期记忆"""
+    memory = _load(user_id)
+    ts = _now_str()
+    summary = f"[{ts}] {user_msg[:30]} -> {ai_reply[:60]}"
+    memory["short_term"].append(summary)
+    # 裁剪
+    max_items = LAYER_CONFIG["short_term"]["max_items"]
+    if len(memory["short_term"]) > max_items:
+        memory["short_term"] = memory["short_term"][-max_items:]
+    # TTL 清理：删除超过 30 分钟的
+    cutoff = _now() - timedelta(minutes=LAYER_CONFIG["short_term"]["ttl_minutes"])
+    kept = []
+    for item in memory["short_term"]:
+        try:
+            ts_str = item[1:17]  # [MM-DD HH:MM]
+            item_dt = datetime(_now().year, int(ts_str[:2]), int(ts_str[3:5]),
+                               int(ts_str[6:8]), int(ts_str[9:11]))
+            if item_dt >= cutoff:
+                kept.append(item)
+        except:
+            kept.append(item)
+    memory["short_term"] = kept
+    _save(user_id, memory)
+    return summary
 
-    elif tool_name == "get_account_detail" and tool_result:
-        name = tool_result.get("account_name", "未知")
-        bal = tool_result.get("balance", "?")
-        tree["平台账户"][name] = f"余额{bal}"
-        fact = f"[{now}] 查看了{name}"
 
-    elif tool_name == "get_plans_summary" and tool_result:
-        count = len(tool_result)
-        names = [p.get("plan_name","") for p in tool_result[:3]]
-        fact = f"[{now}] 查看了{count}个计划：{', '.join(names)}"
-        platforms = set(p.get("platform","") for p in tool_result if p.get("platform"))
-        for p in platforms:
-            tree["平台账户"][p] = tree["平台账户"].get(p, "")
+def get_short_term(user_id):
+    """获取短期记忆文本"""
+    memory = _load(user_id)
+    items = memory.get("short_term", [])
+    if not items:
+        return ""
+    return "【近期对话】\n" + "\n".join(items[-8:])
 
-    elif tool_name == "get_real_trends" and tool_result:
-        kw = tool_args.get("keyword", "未知")
-        avg = tool_result.get("average", "?")
-        fact = f"[{now}] 搜索趋势：{kw}（热度{avg}）"
 
-    elif tool_name == "get_alerts" and tool_result:
-        count = len(tool_result)
-        fact = f"[{now}] 告警：{count}条待处理"
-        if tool_result:
-            msgs = [a.get("message","") for a in tool_result[:2]]
-            tree.setdefault("告警与问题", []).append(f"[{now}] {'; '.join(msgs)}")
+# ==================== L3: 长期画像 ====================
 
-    elif tool_name == "get_hot_products" and tool_result:
-        count = len(tool_result)
-        fact = f"[{now}] 查看了{count}个热销产品"
+def update_profile(user_id, action_name, action_args=None):
+    """更新用户长期画像"""
+    memory = _load(user_id)
+    profile = memory["long_term_profile"]
+    profile["total_interactions"] = profile.get("total_interactions", 0) + 1
 
-    elif "suggest" in tool_name or "optimize" in tool_name:
-        fact = f"[{now}] 获取了优化建议"
-    else:
-        fact = f"[{now}] 执行了{tool_name}"
+    # 记录高频操作
+    actions = profile.setdefault("frequent_actions", [])
+    found = False
+    for a in actions:
+        if a["action"] == action_name:
+            a["count"] += 1
+            a["last_seen"] = _now_str()
+            found = True
+            break
+    if not found:
+        actions.append({"action": action_name, "count": 1, "last_seen": _now_str()})
+    # 保留 top 10
+    actions.sort(key=lambda x: -x["count"])
+    profile["frequent_actions"] = actions[:10]
 
-    tree.setdefault("最近操作", []).append(fact)
-    if len(tree["最近操作"]) > 10:
-        tree["最近操作"] = tree["最近操作"][-10:]
+    # 从参数学习偏好
+    if action_args:
+        if "keyword" in action_args:
+            prefs = profile.setdefault("preferences", [])
+            kw = action_args["keyword"]
+            # 不重复记录相同关键词
+            if not any(p.get("keyword") == kw for p in prefs):
+                prefs.append({"keyword": kw, "count": 1, "first_seen": _now_str()})
+            else:
+                for p in prefs:
+                    if p.get("keyword") == kw:
+                        p["count"] = p.get("count", 0) + 1
+        if action_name == "get_dashboard_data":
+            prefs = profile.setdefault("preferences", [])
+            if not any(p.get("type") == "dashboard" for p in prefs):
+                prefs.append({"type": "dashboard", "label": "关注整体投放效果", "first_seen": _now_str()})
+        elif action_name == "get_alerts":
+            prefs = profile.setdefault("preferences", [])
+            if not any(p.get("type") == "alerts" for p in prefs):
+                prefs.append({"type": "alerts", "label": "关注告警与异常", "first_seen": _now_str()})
 
-    if len(tree.get("告警与问题", [])) > 5:
-        tree["告警与问题"] = tree["告警与问题"][-5:]
-    if len(tree.get("关注偏好", [])) > 5:
-        tree["关注偏好"] = tree["关注偏好"][-5:]
-
-    _learn_preferences(memory, tool_name, fact)
-
-    # 检查是否需要生成阶段总结
-    _check_and_summarize(memory)
-
-    # 每次保存前都运行时间衰减
-    _apply_decay(memory)
-
-    save_memory(user_id, memory)
+    _save(user_id, memory)
     return memory
 
 
-def get_compact_memory(user_id):
-    memory = load_memory(user_id)
-    # 读取时也运行衰减
-    memory = _apply_decay(memory)
-    tree = memory["tree"]
+def get_profile_text(user_id):
+    """获取长期画像文本"""
+    memory = _load(user_id)
+    profile = memory.get("long_term_profile", {})
+    parts = []
+    actions = profile.get("frequent_actions", [])
+    if actions:
+        top = [f"{a['action']}({a['count']}次)" for a in actions[:3]]
+        parts.append("【行为习惯】" + " ".join(top))
+    prefs = profile.get("preferences", [])
+    if prefs:
+        labels = [p.get("label") or p.get("keyword", "") for p in prefs[:3]]
+        parts.append("【关注偏好】" + "; ".join(labels))
+    total = profile.get("total_interactions", 0)
+    if total:
+        parts.append(f"【使用频率】共交互{total}次")
+    return "\n".join(parts)
+
+
+# ==================== L4: 业务记忆 ====================
+
+def update_business_memory(user_id, category, data):
+    """更新业务记忆"""
+    memory = _load(user_id)
+    biz = memory["business_memory"]
+    ts = _now_str()
+
+    if category == "account" and isinstance(data, dict):
+        name = data.get("account_name", "")
+        if name:
+            biz["accounts"][name] = {**data, "updated_at": ts}
+
+    elif category == "decision" and isinstance(data, dict):
+        biz.setdefault("recent_decisions", []).append({
+            **data, "timestamp": ts
+        })
+        if len(biz["recent_decisions"]) > 10:
+            biz["recent_decisions"] = biz["recent_decisions"][-10:]
+
+    elif category == "alert" and isinstance(data, dict):
+        biz.setdefault("alert_history", []).append({
+            **data, "timestamp": ts
+        })
+        if len(biz["alert_history"]) > 10:
+            biz["alert_history"] = biz["alert_history"][-10:]
+
+    elif category == "metrics" and isinstance(data, dict):
+        biz.setdefault("key_metrics", []).append({
+            **data, "timestamp": ts
+        })
+        if len(biz["key_metrics"]) > 20:
+            biz["key_metrics"] = biz["key_metrics"][-20:]
+
+    _save(user_id, memory)
+
+
+def get_business_text(user_id):
+    """获取业务记忆文本"""
+    memory = _load(user_id)
+    biz = memory.get("business_memory", {})
     parts = []
 
-    if tree.get("平台账户"):
-        accts = [f"{k}({v})" for k, v in tree["平台账户"].items()]
-        parts.append("【平台账户】" + "; ".join(accts))
+    accounts = biz.get("accounts", {})
+    if accounts:
+        acct_str = []
+        for name, info in accounts.items():
+            bal = info.get("balance", "?")
+            status = info.get("status", "?")
+            acct_str.append(f"{name}(余额{bal}/{status})")
+        if acct_str:
+            parts.append("【账户概况】" + "; ".join(acct_str[:5]))
 
-    if tree.get("最近操作"):
-        recent = tree["最近操作"][-5:]
-        parts.append("【最近】" + " | ".join(recent))
+    decisions = biz.get("recent_decisions", [])
+    if decisions:
+        recent = decisions[-3:]
+        d_str = [f"{d.get('category','?')}:{d.get('suggestion','')[:20]}" for d in recent]
+        parts.append("【近期决策】" + " | ".join(d_str))
 
-    if tree.get("告警与问题"):
-        alerts = tree["告警与问题"][-3:]
-        parts.append("【告警】" + " | ".join(alerts))
+    alerts = biz.get("alert_history", [])
+    if alerts:
+        unread = [a for a in alerts if not a.get("is_read")]
+        if unread:
+            parts.append(f"【未读告警】{len(unread)}条")
 
-    if tree.get("关注偏好"):
-        prefs = tree["关注偏好"]
-        parts.append("【用户偏好】" + "; ".join(prefs))
-
-    if tree.get("阶段总结"):
-        summaries = tree["阶段总结"][-3:]
-        parts.append("【阶段总结】" + " | ".join(summaries))
+    metrics = biz.get("key_metrics", [])
+    if metrics:
+        last = metrics[-1]
+        parts.append(f"【最新指标】ROAS={last.get('roas','?')} 花费={last.get('cost','?')}")
 
     return "\n".join(parts)
 
 
+# ==================== 整合：给 orchestrator 调用 ====================
+
+def compose_context(user_id, messages=None):
+    """组合所有层级的记忆上下文"""
+    layers = []
+
+    # L1: 滑动窗口
+    if messages:
+        window = build_important_window(messages, max_turns=6)
+        parts = []
+        for m in window:
+            role = m["role"]
+            content = m.get("content", "")
+            if role == "user":
+                parts.append("用户: " + content[:200])
+            else:
+                parts.append("AI: " + content[:200])
+        if parts:
+            layers.append("【最近对话】\n" + "\n".join(parts))
+
+    # L2: 短期
+    st = get_short_term(user_id)
+    if st:
+        layers.append(st)
+
+    # L3: 长期画像
+    prof = get_profile_text(user_id)
+    if prof:
+        layers.append(prof)
+
+    # L4: 业务记忆
+    biz = get_business_text(user_id)
+    if biz:
+        layers.append(biz)
+
+    return "\n\n".join(layers)
+
+
+# ==================== 兼容旧接口 ====================
+
+def get_compact_memory(user_id):
+    """保持旧接口兼容"""
+    return compose_context(user_id)
+
+
 def store_conversation_summary(user_id, user_msg, ai_reply):
-    """对话结束后，自动生成一段简短的摘要存起来"""
-    memory = load_memory(user_id)
-    tree = memory["tree"]
-    from datetime import datetime
-    now = datetime.now().strftime("%m-%d %H:%M")
-    
-    # 从用户消息中提取核心意图
-    core_question = user_msg.strip()[:40]
-    # 从AI回复中提取关键结论
-    key_result = ai_reply.strip()[:60].replace("\n", " ")
-    
-    summary = f"[{now}] 问:{core_question} -> 答:{key_result}"
-    
-    summaries = tree.setdefault("对话摘要", [])
-    summaries.append(summary)
-    
-    # 最多保留10条
-    if len(summaries) > 10:
-        tree["对话摘要"] = summaries[-10:]
-    
-    save_memory(user_id, memory)
-    return summary
+    """保持旧接口兼容"""
+    return add_short_term(user_id, user_msg, ai_reply)
+
 
 def get_conversation_summaries(user_id):
-    """获取最近的对话摘要"""
-    memory = load_memory(user_id)
-    tree = memory["tree"]
-    summaries = tree.get("对话摘要", [])
-    if not summaries:
-        return ""
-    recent = summaries[-5:]
-    return "\n".join(recent)
+    """保持旧接口兼容"""
+    return get_short_term(user_id)
+# ===== 兼容旧接口 =====
+add_fact = update_profile

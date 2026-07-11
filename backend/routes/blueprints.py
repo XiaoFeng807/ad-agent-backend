@@ -1,4 +1,4 @@
-﻿"""定义所有Flask蓝图（每个蓝图负责一类功能的路由）"""
+"""定义所有Flask蓝图（每个蓝图负责一类功能的路由）"""
 from flask import Blueprint
 
 auth_bp = Blueprint("auth", __name__)           # 认证：验证码、登录

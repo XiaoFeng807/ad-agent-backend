@@ -1,4 +1,4 @@
-﻿import sys, os, re, hashlib, time
+import sys, os, re, hashlib, time
 sys.path.insert(0, "E:\\codex++\\文件\\ad_agent_backend")
 
 # 只用标准库和requests

@@ -1,4 +1,4 @@
-﻿# coding: utf-8
+# coding: utf-8
 """多Agent系统测试（Orchestrator + ReAct + 自我反思）"""
 import os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))

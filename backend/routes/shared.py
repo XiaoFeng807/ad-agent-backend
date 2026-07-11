@@ -1,4 +1,4 @@
-﻿"""共享状态：路由蓝图之间共享的实例（数据库、认证、AI等）
+"""共享状态：路由蓝图之间共享的实例（数据库、认证、AI等）
    注意：路由文件要通过 from . import shared as _shared; _shared.xxx 来访问，
    不要用 from .shared import xxx，否则拿不到更新后的值"""
 import datetime

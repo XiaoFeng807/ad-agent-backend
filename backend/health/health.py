@@ -1,4 +1,4 @@
-﻿"""健康检查模块：服务器 + 数据库 + 可观测性状态"""
+"""健康检查模块：服务器 + 数据库 + 可观测性状态"""
 
 import time
 from backend.database.database import get_db

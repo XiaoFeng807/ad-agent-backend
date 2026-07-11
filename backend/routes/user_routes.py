@@ -1,4 +1,4 @@
-﻿"""用户管理路由：用户列表、创建、删除"""
+"""用户管理路由：用户列表、创建、删除"""
 from flask import request, jsonify
 from backend.auth.auth import login_required
 from backend.database.database import hash_password

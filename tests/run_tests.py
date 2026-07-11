@@ -1,4 +1,4 @@
-﻿# coding: utf-8
+# coding: utf-8
 """测试运行器：一键运行所有单元测试"""
 import os, sys, subprocess
 

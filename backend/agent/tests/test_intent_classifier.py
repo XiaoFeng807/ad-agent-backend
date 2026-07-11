@@ -1,4 +1,4 @@
-﻿# coding: utf-8
+# coding: utf-8
 """意图识别模块测试"""
 import os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))

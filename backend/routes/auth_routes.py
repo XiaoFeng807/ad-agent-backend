@@ -1,4 +1,4 @@
-﻿"""认证路由：验证码生成、登录、注册"""
+"""认证路由：验证码生成、登录、注册"""
 import io, base64, hashlib, datetime
 from flask import request, jsonify, current_app
 from backend.auth.auth import login_required  # 登录检查装饰器

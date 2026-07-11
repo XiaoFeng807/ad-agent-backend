@@ -1,4 +1,4 @@
-﻿"""仪表盘路由：核心数据和趋势"""
+"""仪表盘路由：核心数据和趋势"""
 from flask import request, jsonify
 from backend.auth.auth import login_required
 from backend.tools.tools import get_dashboard_data, get_daily_trend

@@ -1,4 +1,4 @@
-﻿"""容错模块：重试、超时、降级"""
+"""容错模块：重试、超时、降级"""
 
 import time
 import functools

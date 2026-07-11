@@ -1,4 +1,4 @@
-﻿"""预算管理路由：账户列表、修改预算、充值"""
+"""预算管理路由：账户列表、修改预算、充值"""
 from flask import request, jsonify
 from backend.auth.auth import login_required
 from .blueprints import account_bp

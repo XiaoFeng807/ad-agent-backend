@@ -11,6 +11,7 @@ from backend.agent.fault_tolerance import with_retry, safe_execute, validate_res
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", "..", ".env"))
 
 from backend.prompts.main_agent import SYSTEM_PROMPT_TPL
+from backend.config.config import settings
 
 
 class Agent:
@@ -21,7 +22,7 @@ class Agent:
         self.provider = ProviderFactory.create()
         self.client = self.provider
         from dotenv import load_dotenv
-        self.model = os.getenv("MODEL", "deepseek-chat")
+        self.model = settings.MODEL
         self.tool_registry = tool_registry  # 保存函数注册表
 
     def chat(self, messages, user_id=None, **kwargs):

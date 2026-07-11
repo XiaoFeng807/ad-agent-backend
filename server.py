@@ -1,4 +1,4 @@
-﻿"""Ad Agent Backend Server - 服务入口"""
+"""Ad Agent Backend Server - 服务入口"""
 import os, datetime, time
 from flask import request
 from flask import Flask
@@ -12,6 +12,7 @@ from backend.observability import record_request, get_system_status             
 from backend.di import ConfigProvider, DatabaseProvider, create_tool_registry  # 依赖注入
 from backend.routes import register_blueprints      # 路由注册
 from backend.routes.shared import init as init_shared  # 共享状态初始化
+from backend.config.config import settings
 
 
 def create_app():
@@ -69,4 +70,4 @@ if __name__ == "__main__":
     app, _, _, _, _ = create_app()
     print("Starting server on 0.0.0.0:5001")
     print("Login with: boss/admin123 | admin/admin123 | zhangsan/user123 | lisi/user123")
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")), debug=True, use_reloader=False)
+    app.run(host="0.0.0.0", port=int(settings.PORT), debug=True, use_reloader=False)

@@ -1,4 +1,4 @@
-﻿"""投放计划路由：增删改查"""
+"""投放计划路由：增删改查"""
 from flask import request, jsonify
 from backend.auth.auth import login_required
 from backend.tools.tools import get_plans_summary

@@ -1,4 +1,4 @@
-﻿"""健康检查路由"""
+"""健康检查路由"""
 from flask import jsonify
 import time
 from .blueprints import health_bp

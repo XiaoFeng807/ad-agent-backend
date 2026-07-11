@@ -1,4 +1,4 @@
-﻿"""模拟数据生成模块：生成示例广告数据用于演示"""
+"""模拟数据生成模块：生成示例广告数据用于演示"""
 import random, math
 from datetime import datetime, timedelta
 

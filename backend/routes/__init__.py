@@ -1,4 +1,4 @@
-﻿"""路由注册入口：所有蓝图在这里统一注册到Flask应用"""
+"""路由注册入口：所有蓝图在这里统一注册到Flask应用"""
 from .blueprints import auth_bp, user_bp, dashboard_bp, plan_bp, account_bp
 from .blueprints import alert_bp, chat_bp, log_bp, material_bp, health_bp, decision_bp
 

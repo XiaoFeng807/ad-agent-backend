@@ -1,4 +1,4 @@
-﻿"""AI决策路由：决策统计、活动时间轴"""
+"""AI决策路由：决策统计、活动时间轴"""
 from flask import request, jsonify
 from backend.auth.auth import login_required
 from backend.tools.tools import get_decision_summary, get_verified_suggestions, get_activity_timeline

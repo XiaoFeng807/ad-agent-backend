@@ -1,4 +1,4 @@
-﻿# coding: utf-8
+# coding: utf-8
 """上下文窗口管理测试"""
 import os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))

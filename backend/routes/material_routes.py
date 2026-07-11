@@ -1,4 +1,4 @@
-﻿"""素材管理路由：获取列表、上传素材"""
+"""素材管理路由：获取列表、上传素材"""
 from flask import request, jsonify
 from backend.auth.auth import login_required
 from .blueprints import material_bp

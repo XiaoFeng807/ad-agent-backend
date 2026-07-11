@@ -1,4 +1,4 @@
-﻿# ===== 前端页面生成器：把所有HTML/CSS/JS拼成一个index.html =====
+# ===== 前端页面生成器：把所有HTML/CSS/JS拼成一个index.html =====
 # 输出路径（backend/static/index.html）`nOUT = os.path.join(os.path.dirname(__file__), "backend", "static", "index.html")
 # 用列表收集所有HTML片段，最后拼起来写入文件`nP = []
 # 添加一段HTML到列表`ndef add(t):

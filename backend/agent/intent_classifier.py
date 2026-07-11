@@ -1,8 +1,9 @@
-﻿"""意图识别模块：先分类再处理，规则不够时LLM兜底"""
+"""意图识别模块：先分类再处理，规则不够时LLM兜底"""
 
 from openai import OpenAI
 import os, json
 from dotenv import load_dotenv
+from backend.config.config import settings
 
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", "..", ".env"))
 
@@ -14,8 +15,8 @@ def _get_llm():
     global _llm_client
     if _llm_client is None:
         _llm_client = OpenAI(
-            api_key=os.getenv("API_KEY"),
-            base_url=os.getenv("BASE_URL")
+            api_key=settings.API_KEY,
+            base_url=settings.BASE_URL
         )
     return _llm_client
 
@@ -50,7 +51,7 @@ def classify_with_llm(message):
         prompt = LLM_CLASSIFY_PROMPT.format(message=message[:200])
         
         resp = client.chat.completions.create(
-            model=os.getenv("MODEL", "deepseek-chat"),
+            model=settings.MODEL,
             messages=[{"role": "user", "content": prompt}],
             temperature=0,
             max_tokens=20  # 只要一个词，非常快

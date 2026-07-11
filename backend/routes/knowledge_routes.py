@@ -1,4 +1,4 @@
-﻿# ===== 知识库 API =====
+# ===== 知识库 API =====
 
 @app.get("/api/knowledge/stats")
 async def knowledge_stats():

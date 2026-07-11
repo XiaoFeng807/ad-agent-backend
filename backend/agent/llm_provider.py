@@ -3,6 +3,7 @@
 from abc import ABC, abstractmethod
 import os, json, time
 from dotenv import load_dotenv
+from backend.config.config import settings
 
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", "..", ".env"))
 
@@ -35,10 +36,10 @@ class DeepSeekProvider(LLMProvider):
     def __init__(self):
         from openai import OpenAI
         self._client = OpenAI(
-            api_key=os.getenv("API_KEY") or os.getenv("DEEPSEEK_API_KEY") or "",
-            base_url=os.getenv("BASE_URL", "https://api.deepseek.com")
+            api_key=settings.API_KEY or settings.DEEPSEEK_API_KEY or "",
+            base_url=settings.BASE_URL
         )
-        self._model = os.getenv("MODEL", "deepseek-chat")
+        self._model = settings.MODEL
     
     @property
     def name(self):
@@ -73,8 +74,8 @@ class OpenAIProvider(LLMProvider):
     
     def __init__(self):
         from openai import OpenAI
-        self._client = OpenAI(api_key=os.getenv("OPENAI_API_KEY", ""))
-        self._model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+        self._client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        self._model = settings.OPENAI_MODEL
     
     @property
     def name(self):
@@ -239,7 +240,7 @@ class ProviderFactory:
     @classmethod
     def create(cls, provider_name=None):
         """创建 Provider 实例"""
-        name = provider_name or os.getenv("LLM_PROVIDER", "deepseek").lower()
+        name = provider_name or settings.LLM_PROVIDER.lower()
         
         # 缓存实例（避免重复创建）
         if name in cls._instances:
