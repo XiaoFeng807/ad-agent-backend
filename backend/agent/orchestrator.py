@@ -61,8 +61,7 @@ class OrchestratorAgent:
                 "description": "查询广告投放原始数据，包括花费、营收、ROAS、CPC等",
                 "parameters": {"type": "object", "properties": {
                     "query": {"type": "string", "description": "用户查询需求"}
-                }, "required": ["query",
-            TOOL_DEFINITION]}
+                }, "required": ["query"]}
             }},
             {"type": "function", "function": {
                 "name": "analyze_data",
@@ -77,7 +76,8 @@ class OrchestratorAgent:
                 "parameters": {"type": "object", "properties": {
                     "question": {"type": "string", "description": "用户知识需求"}
                 }, "required": ["question"]}
-            }}
+            }},
+            TOOL_DEFINITION
         ]
 
     def _extract_user_message(self, messages):
