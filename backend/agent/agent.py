@@ -57,8 +57,8 @@ class Agent:
                     task_context="无"
                 )
             sys_msg = {"role": "system", "content": system_content}
-            optimized = optimize_context(messages)
-            payload = [sys_msg] + optimized
+            optimized_msgs, _ = optimize_context(messages)
+            payload = [sys_msg] + optimized_msgs
 
             # 3. 把消息 + 函数菜单发给DeepSeek
             from backend.agent.fault_tolerance import TIMEOUT_CONFIG
@@ -183,8 +183,8 @@ class Agent:
                 task_context=task_context or "无"
             )
             sys_msg = {"role": "system", "content": system_content}
-            optimized = optimize_context(messages)
-            payload = [sys_msg] + optimized
+            optimized_msgs, _ = optimize_context(messages)
+            payload = [sys_msg] + optimized_msgs
 
             # 第一轮：检测是否需要调函数
             _llm_t1 = time.time()

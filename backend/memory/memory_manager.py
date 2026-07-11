@@ -1,6 +1,7 @@
-"""四层记忆系统 v4: 滑动窗口 + 短期/长期/业务记忆"""
+﻿"""四层记忆系统 v4: 滑动窗口 + 短期/长期/业务记忆"""
 import os, json
 from datetime import datetime, timedelta
+from backend.memory.importance import build_important_window
 
 MEMORY_DIR = os.path.join(os.path.dirname(__file__), "user_memory")
 
@@ -349,3 +350,4 @@ def get_conversation_summaries(user_id):
     return get_short_term(user_id)
 # ===== 兼容旧接口 =====
 add_fact = update_profile
+
