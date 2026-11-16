@@ -49,10 +49,4 @@ G4 用两个同主机执行进程、共享隔离 SQLite、固定模型和只读�
 
 Linux amd64 的 [Compose 脚本](../deploy/storepilot-gateway/run-matrix.sh)提供 G0–G1 复跑入口。上述网关矩阵在 QEMU Alpine 中实测。G2–G4 的 [QEMU 脚本](../deploy/storepilot-gateway/run-g2-qemu.ps1)需要本地准备的 GuestAssets、Edge 与锁定依赖，G3 录屏另需 Playwright FFmpeg。测试库和日志由脚本在复跑时生成。
 
-## 技术面试可以从三个问题讲起
-
-1. **什么时候拆任务？** 用简单查销量与广告独立复核对照，解释并行取证与依赖等待，并说明以真实读取区间和 Worker 输入来验证协作。
-2. **引用怎么可信？** 商品资料先解析店铺、站点、SKU 和生效版本，再从本轮授权候选逐项核验。缺项指出缺哪项，读原文时重新校验权限和版本。
-3. **怎么证明改动真的发生？** 用审批前快照、审批后独立 GET、刷新回读和独立 SQL 交叉验证。提案携带版本与来源，回执和目标更新同一事务提交。
-
 [本地启动和验收命令](../README.md#本地启动) · [实现架构](../ARCHITECTURE.md) · [异地试用部署说明](REMOTE_DEMO.md)
