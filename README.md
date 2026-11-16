@@ -2,7 +2,7 @@
 
 StorePilot 是面向跨境电商运营的 AI 工作台。用户可以用自然语言查销量、巡检商品资料、起草 Listing 英文五点，审核后再应用变更。每项结论都可以回查数据窗口、商品事实或执行回执。
 
-[项目截图和讲解](docs/SHOWCASE.md) · [架构](ARCHITECTURE.md) · [接口](API.md) · [部署](DEPLOY.md)
+[项目截图和讲解](docs/SHOWCASE.md) · [架构](ARCHITECTURE.md) · [接口](API.md) · [部署](DEPLOY.md) · [变更日志](docs/CHANGELOG.md)
 
 ![StorePilot 工作台中的销量分析和英文五点待审批卡片](docs/showcase/01-workbench.png)
 
