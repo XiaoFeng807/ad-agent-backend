@@ -1,0 +1,113 @@
+admin:
+  address:
+    socket_address: { address: 127.0.0.1, port_value: 9901 }
+
+static_resources:
+  listeners:
+    - name: storepilot
+      address:
+        socket_address: { address: 0.0.0.0, port_value: 8080 }
+      filter_chains:
+        - filters:
+            - name: envoy.filters.network.http_connection_manager
+              typed_config:
+                '@type': type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                stat_prefix: storepilot
+                use_remote_address: true
+                generate_request_id: true
+                preserve_external_request_id: false
+                always_set_request_id_in_response: true
+                access_log:
+                  - name: envoy.access_loggers.stdout
+                    typed_config:
+                      '@type': type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
+                      log_format:
+                        json_format:
+                          time: '%START_TIME%'
+                          request_id: '%REQ(X-REQUEST-ID)%'
+                          method: '%REQ(:METHOD)%'
+                          route: '%ROUTE_NAME%'
+                          upstream_attempts: '%UPSTREAM_REQUEST_ATTEMPT_COUNT%'
+                          status: '%RESPONSE_CODE%'
+                          flags: '%RESPONSE_FLAGS%'
+                          code_details: '%RESPONSE_CODE_DETAILS%'
+                          connection_details: '%CONNECTION_TERMINATION_DETAILS%'
+                          transport_failure: '%UPSTREAM_TRANSPORT_FAILURE_REASON%'
+                          duration_ms: '%DURATION%'
+                route_config:
+                  name: storepilot
+                  virtual_hosts:
+                    - name: app
+                      domains: ['*']
+                      routes:
+                        - name: chat-stream
+                          match:
+                            path: /api/chat/stream
+                            headers:
+                              - { name: ':method', string_match: { exact: POST } }
+                          route:
+                            cluster: fastapi
+                            timeout: 0s
+                            idle_timeout: 5s
+                            max_stream_duration: { max_stream_duration: 105s }
+                        - name: background-inspection-events
+                          match:
+                            safe_regex: { regex: '/api/chat/conversations/[^/]+/background-inspections/[^/]+/events' }
+                            headers:
+                              - { name: ':method', string_match: { exact: GET } }
+                          route:
+                            cluster: fastapi
+                            timeout: 0s
+                            idle_timeout: 5s
+                        - name: approval-confirm
+                          match:
+                            safe_regex: { regex: '/api/.+/confirm' }
+                            headers:
+                              - { name: ':method', string_match: { exact: POST } }
+                          route: { cluster: fastapi, timeout: 15s }
+                        - name: query
+                          match:
+                            prefix: /
+                            headers:
+                              - { name: ':method', string_match: { safe_regex: { regex: 'GET|HEAD' } } }
+                          route: { cluster: fastapi, timeout: 15s }
+                        - name: other
+                          match: { prefix: / }
+                          route: { cluster: fastapi, timeout: 15s }
+                http_filters:
+                  # Run before the router reads retry, hedge and timeout headers.
+                  - name: envoy.filters.http.header_mutation
+                    typed_config:
+                      '@type': type.googleapis.com/envoy.extensions.filters.http.header_mutation.v3.HeaderMutation
+                      mutations:
+                        request_mutations:
+                          - remove: x-envoy-internal
+                          - remove: x-envoy-retry-on
+                          - remove: x-envoy-retry-grpc-on
+                          - remove: x-envoy-max-retries
+                          - remove: x-envoy-retriable-header-names
+                          - remove: x-envoy-retriable-status-codes
+                          - remove: x-envoy-hedge-on-per-try-timeout
+                          - remove: x-envoy-upstream-rq-timeout-ms
+                          - remove: x-envoy-upstream-rq-per-try-timeout-ms
+                          - remove: x-envoy-upstream-rq-timeout-alt-response
+                          - remove: x-envoy-upstream-stream-duration-ms
+                          - remove: x-envoy-expected-rq-timeout-ms
+                          - remove: x-envoy-attempt-count
+                          - remove: grpc-timeout
+                  - name: envoy.filters.http.router
+                    typed_config:
+                      '@type': type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+                      suppress_envoy_headers: true
+  clusters:
+    - name: fastapi
+      type: STRICT_DNS
+      dns_lookup_family: V4_ONLY
+      connect_timeout: 1s
+      load_assignment:
+        cluster_name: fastapi
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: app, port_value: 5010 }

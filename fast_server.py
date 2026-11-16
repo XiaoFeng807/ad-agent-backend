@@ -6,11 +6,12 @@ from contextlib import asynccontextmanager, closing, contextmanager
 from sqlite3 import Error as SQLiteError
 from threading import Lock
 from typing import Annotated
+from uuid import UUID
 
 # 加载 .env
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
-from anyio import CancelScope, create_task_group
+from anyio import CancelScope, create_task_group, sleep
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Depends, Path, Query, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -24,6 +25,7 @@ from backend.config.config import settings
 from backend.agent.diagnosis import DIAGNOSIS_REQUEST, NaturalDiagnosis, NaturalDiagnosisRequest
 from backend.agent.group_date_change import Clarification, InvalidDateChange, InvalidPlanChange, understand_dates
 from backend.agent.request_budget import ContextBudgetExceeded, ExecutionStopped, RequestBudget
+from backend.agent.start_rate import AccountStartRate
 from backend.agent.team_tools import TeamBudget
 from backend.agent.multi_window_review import parse_review_goal
 from backend.agent.product_evidence_reply import requested as product_evidence_requested
@@ -86,6 +88,7 @@ async def lifespan(app: FastAPI):
 
 MYSQL_DIAGNOSIS_ROUTES = {
     "/api/captcha", "/api/login", "/api/health", "/api/chat/stream",
+    "/_gateway/rate/api/chat/stream",
     "/api/diagnosis/tasks", "/api/diagnosis/tasks/{task_id}",
     "/api/diagnosis/review-proposals/{action_id}/confirm", "/api/diagnosis/reviews/{review_id}",
     "/api/knowledge/chunks/{chunk_id:path}",
@@ -123,6 +126,17 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+def gateway_request_id(request: Request) -> str | None:
+    value = request.headers.get("x-request-id", "")
+    if len(value) == 36:
+        try:
+            if str(UUID(value)) == value:
+                return value
+        except ValueError:
+            pass
+    return None
 
 
 # ===== 请求/响应模型 =====
@@ -168,6 +182,27 @@ def verify_token(token: str = ""):
 
 def authenticated_user_id(request: Request):
     return verify_token(get_token_from_request(request))["user_id"]
+
+
+_start_rate_value = os.getenv("STOREPILOT_STARTS_PER_SECOND")
+_start_rate = AccountStartRate(int(_start_rate_value)) if _start_rate_value is not None else None
+
+
+def _start_rejected(request, code, *, source):
+    trace_id = start_trace(source=source, request_id=gateway_request_id(request))
+    add_trace_step(trace_id, "admission", "rejected", status="error", error_code=code)
+    end_trace(trace_id, "rejected")
+    return JSONResponse({"detail": code, "trace_id": trace_id}, status_code=429,
+                        headers={"Retry-After": "1"} if source == "gateway_start_rate" else None)
+
+
+@app.post("/_gateway/rate/api/chat/stream", include_in_schema=False)
+def gateway_start_rate(request: Request):
+    if _start_rate is None:
+        raise HTTPException(404)
+    if not _start_rate.allow(authenticated_user_id(request)):
+        return _start_rejected(request, "account_rate_exceeded", source="gateway_start_rate")
+    return JSONResponse(None, status_code=200)
 
 
 def request_auth():
@@ -730,6 +765,80 @@ def chat_group_reply_evidence(conversation_id: str, run_id: str, user_id: int = 
         return {"code": 200, "data": chat_groups.reply_evidence(user_id, conversation_id, run_id)}
 
 
+class BackgroundInspectionRequest(BaseModel, extra="forbid"):
+    message: str = Field(min_length=1, max_length=2000)
+
+
+@app.post("/api/chat/conversations/{conversation_id}/background-inspections")
+def start_background_inspection(conversation_id: str, body: BackgroundInspectionRequest, request: Request,
+                                user_id: int = Depends(authenticated_user_id)):
+    from backend.agent.background_inspection import make_spec
+    from backend.database import background_inspections
+
+    model = background_inspections.configured_model()
+    if model is None:
+        raise HTTPException(404, "后台巡检未启用")
+    key = request.headers.get("idempotency-key", "")
+    if not (1 <= len(key) <= 128 and key.isascii() and key.isprintable() and key == key.strip()):
+        raise HTTPException(422, "请提供有效的 Idempotency-Key")
+    try:
+        with group_request():
+            run_id, created = background_inspections.accept(
+                user_id, conversation_id, key, body.message, model, make_spec,
+                new_trace_id(), gateway_request_id(request))
+    except listing_operations.ListingInvalid as error:
+        raise HTTPException(422, str(error)) from None
+    except chat_groups.GroupCapacityExceeded as error:
+        return _start_rejected(request, str(error), source="background_inspection")
+    return JSONResponse({"code": 0, "data": {"run_id": run_id}}, status_code=202 if created else 200)
+
+
+@app.get("/api/chat/conversations/{conversation_id}/background-inspections/{run_id}")
+def read_background_inspection(conversation_id: str, run_id: str, after: int = Query(0, ge=0, le=2**63-1),
+                               user_id: int = Depends(authenticated_user_id)):
+    from backend.database import background_inspections
+
+    if settings.DIAGNOSIS_MYSQL_ENABLED:
+        raise HTTPException(404)
+    with group_request():
+        result = background_inspections.read(user_id, conversation_id, run_id, after, include_answer=True)
+    return {"code": 0, "data": result}
+
+
+@app.get("/api/chat/conversations/{conversation_id}/background-inspections/{run_id}/events")
+async def background_inspection_events(conversation_id: str, run_id: str, request: Request,
+                                       after: int = Query(0, ge=0, le=2**63-1),
+                                       user_id: int = Depends(authenticated_user_id)):
+    from backend.database import background_inspections
+
+    if settings.DIAGNOSIS_MYSQL_ENABLED:
+        raise HTTPException(404)
+    cursor = request.headers.get("last-event-id", str(after))
+    if not cursor.isascii() or not cursor.isdecimal() or len(cursor) > 19 or int(cursor) > 2**63-1:
+        raise HTTPException(422, "无效的进度序号")
+    cursor = int(cursor)
+    with group_request():
+        first = await run_in_threadpool(background_inspections.read, user_id, conversation_id, run_id, cursor)
+
+    async def events():
+        page, last = first, cursor
+        while True:
+            for event in page["events"]:
+                last = event["seq"]
+                yield f"id: {last}\ndata: " + json.dumps(event, ensure_ascii=False) + "\n\n"
+            if page["finalized"]:
+                break
+            if not page["events"]:
+                yield ": heartbeat\n\n"
+            await sleep(0.4)
+            try:
+                page = await run_in_threadpool(background_inspections.read, user_id, conversation_id, run_id, last)
+            except chat_groups.GroupNotFound:
+                break
+
+    return StreamingResponse(events(), media_type="text/event-stream", headers={"Cache-Control": "no-store"})
+
+
 @app.post("/api/chat/conversations/{conversation_id}/runs/{run_id}/pause-actions/{action_id}/confirm")
 def confirm_chat_group_pause(conversation_id: str, run_id: str, action_id: str, request: Request):
     return _diagnosis_pause_request(action_id, request, confirm=True, group_scope=(conversation_id, run_id))
@@ -752,12 +861,18 @@ def read_chat_group_listing(conversation_id: str, run_id: str, action_id: str, r
         raise HTTPException(404, "商品提案不存在") from None
     except listing_operations.ListingConflict:
         raise HTTPException(409, "商品提案与原轮依据不一致") from None
+    if request_id := gateway_request_id(request):
+        trace_id = start_trace(source="listing_readback", request_id=request_id)
+        receipt = result.get("receipt") or {}
+        add_trace_step(trace_id, "listing_action", "read", evidence={"run_id": run_id, "action_id": action_id,
+                       "receipt_id": receipt.get("receipt_id"), "execution_trace_id": receipt.get("execution_trace_id")})
+        end_trace(trace_id)
     return JSONResponse({"code": 200, "data": result}, headers={"Cache-Control": "no-store"})
 
 
 @app.post("/api/chat/conversations/{conversation_id}/runs/{run_id}/listing-actions/{action_id}/confirm")
 def confirm_chat_group_listing(conversation_id: str, run_id: str, action_id: str, request: Request):
-    trace_id = start_trace(source="listing_approval")
+    trace_id = start_trace(source="listing_approval", request_id=gateway_request_id(request))
     status = "error"
     try:
         with closing(get_db()) as conn, conn:
@@ -777,6 +892,8 @@ def confirm_chat_group_listing(conversation_id: str, run_id: str, action_id: str
                        evidence={"run_id": run_id, "action_id": action_id})
         raise HTTPException(409, "商品、证据或工作群状态已变化，请重新生成提案") from None
     except SQLiteError:
+        add_trace_step(trace_id, "listing_action", "rolled_back", status="error", error_code="listing_storage_error",
+                       evidence={"run_id": run_id, "action_id": action_id})
         raise HTTPException(503, "商品修改未提交，请重试") from None
     finally:
         end_trace(trace_id, status)
@@ -937,6 +1054,7 @@ class ChatStreamingResponse(StreamingResponse):
         super().__init__(*args, **kwargs)
         self.execution = execution
         self.group_run = group_run
+        self.disconnected = False
 
     async def __call__(self, scope, receive, send):
         try:
@@ -944,28 +1062,53 @@ class ChatStreamingResponse(StreamingResponse):
         finally:
             if self.group_run is not None:
                 with CancelScope(shield=True):
-                    await run_in_threadpool(self.group_run.finish, "interrupted")
+                    if self.group_run.slot_acquired_ns is not None:
+                        await run_in_threadpool(_drain_group_slot, self.group_run)
+                    else:
+                        await run_in_threadpool(self.group_run.finish, "interrupted")
+
+    def _disconnect(self):
+        if self.disconnected:
+            return
+        self.disconnected = True
+        if self.group_run is not None:
+            add_trace_step(self.group_run.trace_id, "transport", "disconnected", runtime_call_id=self.group_run.run_id)
+        if self.execution is not None:
+            self.execution.cancel()
 
     async def _stream_and_listen(self, receive, send):
+        stream_finished = False
         async with create_task_group() as tasks:
             async def stream():
+                nonlocal stream_finished
                 try:
                     await self.stream_response(send)
                 except OSError:
-                    if self.execution is not None:
-                        self.execution.cancel()
+                    self._disconnect()
                 finally:
-                    await self.body_iterator.aclose()
-                    tasks.cancel_scope.cancel()
+                    try:
+                        with CancelScope(shield=True):
+                            await self.body_iterator.aclose()
+                    finally:
+                        stream_finished = True
+                        tasks.cancel_scope.cancel()
 
             # 让同步工具退出后再归还 Agent，避免另一请求复用运行中的实例。
             tasks.start_soon(stream)
             try:
                 await self.listen_for_disconnect(receive)
             finally:
-                if self.execution is not None:
-                    self.execution.cancel()
+                if not stream_finished:
+                    self._disconnect()
                 tasks.cancel_scope.cancel()
+
+
+def _drain_group_slot(group_run, unfinished_status="interrupted"):
+    status, released_ns = group_run.drain(unfinished_status)
+    if released_ns is not None:
+        add_trace_step(group_run.trace_id, "admission", "released", runtime_call_id=group_run.run_id,
+                       evidence={"released_ns": released_ns})
+    end_trace(group_run.trace_id, status)
 
 
 @app.post("/api/chat/stream")
@@ -1043,36 +1186,50 @@ async def chat_stream_sse(request: Request):
     if "conversation_id" in body:
         if not isinstance(conversation_id, str) or not 1 <= len(conversation_id) <= 32:
             raise HTTPException(status_code=404, detail="工作群不存在")
-        with group_request():
-            if confirmation is None:
-                group_run, group_context = await run_in_threadpool(
-                    chat_groups.accept, user_id, conversation_id, new_trace_id(), message, msg_priority,
-                )
-            else:
-                group_run, group_context, change = await run_in_threadpool(
-                    _confirm_group_change, user_id, conversation_id, confirmation, dates_only=change_field == "date_change",
-                )
-                if group_run is None:
-                    async def replay():
-                        yield "data: " + json.dumps({
-                            "type": "done", "conversation_id": conversation_id, "already_confirmed": True, **change,
-                        }) + "\n\n"
+        try:
+            with group_request():
+                if confirmation is None:
+                    group_run, group_context = await run_in_threadpool(
+                        chat_groups.accept, user_id, conversation_id, new_trace_id(), message, msg_priority,
+                    )
+                else:
+                    group_run, group_context, change = await run_in_threadpool(
+                        _confirm_group_change, user_id, conversation_id, confirmation, dates_only=change_field == "date_change",
+                    )
+                    if group_run is None:
+                        async def replay():
+                            yield "data: " + json.dumps({
+                                "type": "done", "conversation_id": conversation_id, "already_confirmed": True, **change,
+                            }) + "\n\n"
 
-                    return StreamingResponse(replay(), media_type="text/event-stream")
-                message = group_context[-1]["content"]
+                        return StreamingResponse(replay(), media_type="text/event-stream")
+                    message = group_context[-1]["content"]
+        except chat_groups.GroupCapacityExceeded as error:
+            return _start_rejected(request, str(error), source="chat_sse")
 
+    tracked = group_run is not None and group_run.slot_acquired_ns is not None
+    if tracked:
+        start_trace(source="chat_sse", trace_id=group_run.trace_id, request_id=gateway_request_id(request))
+        add_trace_step(group_run.trace_id, "admission", "occupied", runtime_call_id=group_run.run_id,
+                       evidence={"acquired_ns": group_run.slot_acquired_ns})
     execution = None
-    if diagnosis is None:
-        if group_run and not change and not settings.DIAGNOSIS_MYSQL_ENABLED and "listing_operations" not in body:
-            from backend.agent import listing_run, olist_sales
+    try:
+        if diagnosis is None:
+            if group_run and not change and not settings.DIAGNOSIS_MYSQL_ENABLED and "listing_operations" not in body:
+                from backend.agent import listing_run, olist_sales
 
-            listing_mode = (not product_evidence_requested(message)
-                            and not olist_sales.requested(message, group_run.product_context)
-                            and await run_in_threadpool(listing_run.requested, message, user_id, group_run.product_context))
-        review_goal = parse_review_goal(message)[1] if group_run else None
-        # Five evidence workers can each need a tool-call and a summary turn.
-        # Keep room for the alert, dispatch, append and independent reviewer.
-        execution = TeamBudget(model_limit=16) if review_goal and review_goal.independent else TeamBudget()
+                listing_mode = (not product_evidence_requested(message)
+                                and not olist_sales.requested(message, group_run.product_context)
+                                and await run_in_threadpool(listing_run.requested, message, user_id, group_run.product_context))
+            review_goal = parse_review_goal(message)[1] if group_run else None
+            # Five evidence workers can each need a tool-call and a summary turn.
+            # Keep room for the alert, dispatch, append and independent reviewer.
+            execution = TeamBudget(model_limit=16) if review_goal and review_goal.independent else TeamBudget()
+    except BaseException:
+        if tracked:
+            with CancelScope(shield=True):
+                await run_in_threadpool(_drain_group_slot, group_run, "error")
+        raise
 
     product_evidence_mode = (diagnosis is None and not listing_mode and not change
                              and not settings.DIAGNOSIS_MYSQL_ENABLED and product_evidence_requested(message))
@@ -1084,7 +1241,10 @@ async def chat_stream_sse(request: Request):
         return current is not None and current["user_id"] == user_id
 
     async def gen():
-        trace_id = start_trace(source="chat_sse", trace_id=group_run.trace_id if group_run else diagnosis_trace_id)
+        trace_id = group_run.trace_id if tracked else start_trace(
+            source="chat_sse", trace_id=group_run.trace_id if group_run else diagnosis_trace_id,
+            request_id=gateway_request_id(request),
+        )
         budget = RequestBudget(trace_id)
         budget.execution = execution
         ids = {"trace_id": trace_id}
@@ -1195,7 +1355,7 @@ async def chat_stream_sse(request: Request):
                 reply_priority = 2 if any(kw in full_reply for kw in ["元", "ROAS", "点击", "转化", "%", "数据"]) else 1
 
                 def save_reply_and_index():
-                    if product_evidence_mode and (code := execution.stop_code()):
+                    if (group_run or product_evidence_mode) and (code := execution.stop_code()):
                         raise ExecutionStopped(code)
                     reply = full_reply
                     validation = {}
@@ -1285,6 +1445,8 @@ async def chat_stream_sse(request: Request):
             error_message = "回复保存失败，请稍后再试" if operation == "save_reply" else "系统繁忙，请稍后再试"
             terminal_event = {"type": "error", "content": error_message, **ids}
         finally:
+            if terminal_status == "interrupted" and execution is not None and execution.stop_code() == "run_cancelled":
+                add_trace_step(trace_id, "execution", "cancelled", error_code="run_cancelled")
             if sess_agent is not None:
                 pool.release(sess_agent)
             with CancelScope(shield=True):
@@ -1299,7 +1461,8 @@ async def chat_stream_sse(request: Request):
                     if persisted in {"stopped", "superseded"}:
                         terminal_status = persisted
                         terminal_event = {"type": persisted, **ids}
-                await run_in_threadpool(end_trace, trace_id, terminal_status)
+                if not tracked:
+                    await run_in_threadpool(end_trace, trace_id, terminal_status)
         yield "data: " + json.dumps(terminal_event) + "\n\n"
 
     return ChatStreamingResponse(gen(), execution=execution, group_run=group_run, media_type="text/event-stream",

@@ -1,0 +1,29 @@
+services:
+  app:
+    image: storepilot-gateway-app:acceptance
+    platform: linux/amd64
+    build:
+      context: ../..
+      dockerfile: deploy/storepilot-gateway/Dockerfile
+    working_dir: /app
+    environment:
+      PYTHONUNBUFFERED: '1'
+    volumes:
+      - ${STOREPILOT_EVIDENCE_DIR:?Set STOREPILOT_EVIDENCE_DIR}:/evidence
+    networks: [private]
+    # This fixture server uses fast_server:app with synthetic data and fixed responses.
+    command: [python, -m, scripts.storepilot_gateway, serve, /evidence/frozen, --label, demo, --bind, '0.0.0.0:5010']
+  envoy:
+    image: envoyproxy/envoy:v1.38.9@sha256:3ad032295e503c9fdd05b900a4857a110b8d3737aa08a0b4b117ec0fbd63d53f
+    platform: linux/amd64
+    entrypoint: [envoy]
+    command: [-c, /etc/envoy/storepilot.yaml, --concurrency, '1', --log-level, warning]
+    volumes:
+      - ./envoy.yaml:/etc/envoy/storepilot.yaml:ro
+    ports:
+      - '127.0.0.1:${STOREPILOT_PORT:-8080}:8080'
+    networks: [private, edge]
+networks:
+  private:
+    internal: true
+  edge: {}

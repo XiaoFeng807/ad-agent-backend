@@ -1,9 +1,11 @@
 """Persistent ordinary chat groups, with an owner-scoped legacy history."""
 
 import json
+import os
 from contextlib import closing, contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from time import time_ns
 from uuid import uuid4
 
 from backend.database import alert_review, chat_storage, diagnosis_pauses, listing_operations, mysql_diagnosis, orders
@@ -15,6 +17,19 @@ TABLE_COLUMNS = {
     "chat_group_runs": ("run_id", "conversation_id", "trace_id", "status"),
     "chat_group_entries": ("id", "run_id", "kind", "content", "priority", "details", "created_at"),
 }
+
+
+def _inflight_limits():
+    value = os.getenv("STOREPILOT_GROUP_INFLIGHT")
+    if value is None:
+        return None
+    user_limit, global_limit = map(int, value.split(":"))
+    if min(user_limit, global_limit) < 0:
+        raise ValueError("STOREPILOT_GROUP_INFLIGHT requires nonnegative user:global limits")
+    return user_limit, global_limit
+
+
+INFLIGHT_LIMITS = _inflight_limits()
 
 
 def upgrade_sqlite(conn):
@@ -47,6 +62,12 @@ def upgrade_sqlite(conn):
         conn.execute("ALTER TABLE chat_group_date_proposals ADD COLUMN kind TEXT NOT NULL DEFAULT 'date_change'")
     conn.execute("CREATE INDEX IF NOT EXISTS chat_groups_owner ON chat_groups(user_id, archived)")
     conn.execute("CREATE INDEX IF NOT EXISTS chat_group_runs_group ON chat_group_runs(conversation_id, status)")
+    conn.execute("""CREATE TABLE IF NOT EXISTS chat_group_run_slots (
+        run_id TEXT PRIMARY KEY REFERENCES chat_group_runs(run_id), user_id INTEGER NOT NULL,
+        acquired_ns INTEGER NOT NULL, released_ns INTEGER
+    )""")
+    conn.execute("""CREATE INDEX IF NOT EXISTS chat_group_active_slots ON chat_group_run_slots(user_id)
+                    WHERE released_ns IS NULL""")
     conn.execute("CREATE INDEX IF NOT EXISTS chat_group_entries_run ON chat_group_entries(run_id, id)")
     conn.execute("""CREATE TABLE IF NOT EXISTS chat_group_pause_proposals (
         action_id TEXT PRIMARY KEY NOT NULL,
@@ -74,6 +95,9 @@ def upgrade_sqlite(conn):
     conn.execute("""INSERT OR IGNORE INTO chat_groups (conversation_id, user_id, title)
         SELECT 'legacy-' || user_id, user_id, '历史聊天' FROM conversations
         WHERE user_id IS NOT NULL GROUP BY user_id""")
+    from backend.database import background_inspections
+
+    background_inspections.upgrade_sqlite(conn)
 
 
 class GroupNotFound(LookupError):
@@ -81,6 +105,10 @@ class GroupNotFound(LookupError):
 
 
 class GroupConflict(RuntimeError):
+    pass
+
+
+class GroupCapacityExceeded(RuntimeError):
     pass
 
 
@@ -232,7 +260,12 @@ def history(user_id, conversation_id):
             "SELECT run_id, trace_id, status FROM chat_group_runs WHERE conversation_id=?", (conversation_id,)
         ).fetchall()]
         if not mysql_diagnosis.is_mysql(conn):
+            background_ids = {row[0] for row in conn.execute(
+                "SELECT b.run_id FROM background_inspections b JOIN chat_group_runs r USING (run_id) "
+                "WHERE r.conversation_id=?", (conversation_id,))}
             for run in runs:
+                if run["run_id"] in background_ids:
+                    run["background"] = True
                 if run["status"] == "running":
                     run["can_change_dates"] = _review_request(conn, run["run_id"]) is not None
                     run["can_stop"] = True
@@ -311,6 +344,7 @@ class GroupRun:
     message_id: int
     requested_at: datetime | None = None
     product_context: dict | None = None
+    slot_acquired_ns: int | None = None
 
     def _entry(self, conn, kind, content, priority=1, details=None):
         return conn.execute(
@@ -374,6 +408,19 @@ class GroupRun:
             _group(conn, self.user_id, self.conversation_id, lock=True)
             self._finish(conn, status)
 
+    def drain(self, unfinished_status="interrupted"):
+        """Close a never-started or interrupted run and release its slot after execution exits."""
+        with _write() as conn:
+            self._finish(conn, unfinished_status)
+            released_ns = time_ns()
+            released = conn.execute(
+                """UPDATE chat_group_run_slots SET released_ns=?
+                   WHERE run_id=? AND user_id=? AND released_ns IS NULL""",
+                (released_ns, self.run_id, self.user_id),
+            ).rowcount
+            status = conn.execute("SELECT status FROM chat_group_runs WHERE run_id=?", (self.run_id,)).fetchone()["status"]
+        return status, released_ns if released else None
+
     def _finish(self, conn, status):
         conn.execute(
             "UPDATE chat_group_runs SET status=? WHERE conversation_id=? AND run_id=? AND status='running'",
@@ -394,9 +441,20 @@ class GroupRun:
             ).fetchone()["status"]
 
 
-def _accept(conn, user_id, conversation_id, trace_id, message, priority):
-    requested_at = alert_review.now()
+def _accept(conn, user_id, conversation_id, trace_id, message, priority, *, background=False, requested_at=None):
+    requested_at = requested_at or alert_review.now()
     run_id = uuid4().hex
+    track_slot = (background or INFLIGHT_LIMITS is not None) and not mysql_diagnosis.is_mysql(conn)
+    if track_slot:
+        user_limit, global_limit = INFLIGHT_LIMITS or (0, 0)
+        counts = conn.execute(
+            "SELECT count(*) AS total, count(CASE WHEN user_id=? THEN 1 END) AS owned "
+            "FROM chat_group_run_slots WHERE released_ns IS NULL", (user_id,),
+        ).fetchone()
+        if user_limit and counts["owned"] >= user_limit:
+            raise GroupCapacityExceeded("account_inflight_exceeded")
+        if global_limit and counts["total"] >= global_limit:
+            raise GroupCapacityExceeded("global_inflight_exceeded")
     rows = conn.execute(
             "SELECT e.kind, e.content, e.priority, e.details, r.status " + _ENTRIES
             + " AND r.status NOT IN ('superseded', 'stopped') AND e.kind IN ('user', 'assistant') ORDER BY e.id DESC LIMIT 49",
@@ -432,7 +490,12 @@ def _accept(conn, user_id, conversation_id, trace_id, message, priority):
         (run_id, conversation_id, trace_id),
     )
     message_id = GroupRun(user_id, conversation_id, run_id, trace_id, 0)._entry(conn, "user", message, priority)
-    return GroupRun(user_id, conversation_id, run_id, trace_id, message_id, requested_at, product_context), context
+    acquired_ns = None
+    if track_slot:
+        acquired_ns = time_ns()
+        conn.execute("INSERT INTO chat_group_run_slots (run_id, user_id, acquired_ns) VALUES (?, ?, ?)",
+                     (run_id, user_id, acquired_ns))
+    return GroupRun(user_id, conversation_id, run_id, trace_id, message_id, requested_at, product_context, acquired_ns), context
 
 
 def accept(user_id, conversation_id, trace_id, message, priority):

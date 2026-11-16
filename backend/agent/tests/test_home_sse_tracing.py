@@ -664,8 +664,9 @@ class HomeSSETracingTests(HomeSSEFixture):
         self.assertEqual([(step["stage"], step["action"]) for step in steps
                           if step["stage"] not in {"model_call", "model_result"}], [
             ("fallback", "data_agent_stream"), ("context_budget", "stream_prepare"),
-            ("context_budget", "stream_reply"),
+            ("context_budget", "stream_reply"), ("execution", "cancelled"),
         ])
+        self.assertEqual(steps[-1]["error_code"], "run_cancelled")
 
     async def test_cancelled_request_does_not_release_agent_while_tool_runs(self):
         self.block_tool = True

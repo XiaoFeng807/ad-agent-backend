@@ -255,7 +255,6 @@ def inspect_listings(message, candidates, scope, provider, model, budget, trace_
                 break
             messages.append({"role": "user", "content": "Collect the remaining evidence with the available tools."})
 
-    evidence = {"kind": INSPECTION_KIND, **scope, "products": []}
     products = {row["sku"]: {} for row in candidates}
     with checkpoint("inspection_review") as check:
         for (source, sku), row in current_receipts().items():
@@ -265,19 +264,27 @@ def inspect_listings(message, candidates, scope, provider, model, budget, trace_
     if code := execution.stop_code():
         raise ExecutionStopped(code)
     with checkpoint("inspection_final") as check:
-        for candidate in candidates:
-            sku = candidate["sku"]
-            receipts = {source: row for source, row in products[sku].items()
-                        if not recheck(row, check, "inspection_final")}
-            findings = review.get(sku, []) if CURRENT in receipts and FACTS in receipts else []
-            missing = missing_fact_fields(receipts[FACTS]["result"]) if FACTS in receipts else {}
-            gaps = [label for source, label in ((CURRENT, "缺少可核对的当前 Listing。"), (FACTS, "缺少可核对的生效事实。"))
-                    if source not in receipts]
-            if not gaps and not findings:
-                gaps.append("五点核验结果缺失。")
-            evidence["products"].append({"sku": sku, "title": candidate["title"], "receipts": receipts,
-                                         "findings": findings, "missing_fields": missing,
-                                         "review_complete": bool(findings), "gaps": gaps})
-    evidence["priority"] = _priority(evidence["products"])
+        verified = {sku: {source: row for source, row in receipts.items()
+                          if not recheck(row, check, "inspection_final")}
+                    for sku, receipts in products.items()}
+    evidence = inspection_evidence(candidates, scope, verified, review)
     evidence_sink(evidence)
     return _summary(evidence)
+
+
+def inspection_evidence(candidates, scope, products, review):
+    evidence = {"kind": INSPECTION_KIND, **scope, "products": []}
+    for candidate in candidates:
+        sku = candidate["sku"]
+        receipts = products[sku]
+        findings = review.get(sku, []) if CURRENT in receipts and FACTS in receipts else []
+        missing = missing_fact_fields(receipts[FACTS]["result"]) if FACTS in receipts else {}
+        gaps = [label for source, label in ((CURRENT, "缺少可核对的当前 Listing。"), (FACTS, "缺少可核对的生效事实。"))
+                if source not in receipts]
+        if not gaps and not findings:
+            gaps.append("五点核验结果缺失。")
+        evidence["products"].append({"sku": sku, "title": candidate["title"], "receipts": receipts,
+                                     "findings": findings, "missing_fields": missing,
+                                     "review_complete": bool(findings), "gaps": gaps})
+    evidence["priority"] = _priority(evidence["products"])
+    return evidence

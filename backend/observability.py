@@ -31,7 +31,7 @@ MAX_TRACES = 500   # 内存保留上限
 def new_trace_id():
     return uuid.uuid4().hex[:12]
 
-def start_trace(user_id=None, message=None, *, source=None, trace_id=None):
+def start_trace(user_id=None, message=None, *, source=None, trace_id=None, request_id=None):
     trace_id = trace_id or new_trace_id()
     trace = {
         "trace_id": trace_id,
@@ -47,6 +47,8 @@ def start_trace(user_id=None, message=None, *, source=None, trace_id=None):
         trace["message"] = message[:100]
     if source is not None:
         trace["source"] = source
+    if request_id is not None:
+        trace["request_id"] = request_id
     with _trace_lock:
         _traces[trace_id] = trace
         # 控制内存上限
@@ -74,6 +76,7 @@ def add_trace_step(trace_id, stage, action, detail="", duration=0, status="ok", 
             "detail": str(detail)[:200],
             "duration": round(duration, 3),
             "time": datetime.now().strftime("%H:%M:%S"),
+            "epoch_ns": time.time_ns(),
             "status": status,
         }
         if role is not None:

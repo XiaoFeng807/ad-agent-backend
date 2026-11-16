@@ -257,6 +257,10 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
   <p id="chatGroupDateFeedback" role="status" style="white-space:pre-line"></p>
 </div>
 <div class="chat-messages" id="chatMessages"></div>
+<details id="backgroundInspectionProgress" class="workbench-delegation" hidden>
+  <summary>后台巡检进度 <span id="backgroundInspectionState" role="status"></span></summary>
+  <ol id="backgroundInspectionEvents" style="max-height:10rem;overflow:auto"></ol>
+</details>
 <div class="chat-thinking" id="chatThinking" style="display:none">AI 正在思考<span class="dots">...</span></div>
 <div class="chat-suggestions" id="chatSuggestions">
   <button class="sug-btn" onclick="sendSug('帮我查看今天数据')">📊 今天数据</button>
@@ -268,6 +272,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
   <textarea class="chat-input" id="chatInput" rows="1" aria-label="工作群消息" placeholder="输入问题…"
     onkeydown="if(event.key==='Enter' && !event.shiftKey && !event.isComposing){event.preventDefault();sendChat()}"></textarea>
   <button class="chat-send-btn" id="chatSend" onclick="sendChat()">发送</button>
+  <button type="button" class="btn btn-outline btn-sm" id="chatGroupBackground" onclick="sendGroupChat(true)" hidden>后台巡检</button>
   <button type="button" class="chat-send-btn" id="chatGroupStop" onclick="stopGroupRun(activeChatGroup, this.dataset.runId, this)" hidden><span aria-hidden="true"></span>停止本轮</button>
 </div>
 </section>
@@ -889,6 +894,8 @@ var groupSelection = 0;
 var groupHistoryRead = 0;
 var groupPoll;
 var groupPending = new Map();
+var backgroundDrafts = new Map();
+var backgroundWatch = null;
 var groupErrors = new Map();
 var groupSession = new AbortController();
 var groupDateEdit;
@@ -1494,6 +1501,8 @@ function resetChatGroups(){
   chatGroups.clear();
   groupListRevision = 0;
   groupPending.clear();
+  backgroundDrafts.clear();
+  watchBackgroundInspection("", null);
   groupErrors.clear();
   groupSession.abort();
   groupSession = new AbortController();
@@ -1562,6 +1571,9 @@ function updateChatGroupControls(){
   byId("chatSend").hidden = stoppable;
   byId("chatGroupListing").hidden = chatMode!=="groups";
   byId("chatGroupListing").disabled = byId("chatInput").disabled;
+  byId("chatGroupBackground").hidden = chatMode!=="groups" ||
+    byId("chatGroupListing").getAttribute("aria-pressed")!=="true";
+  byId("chatGroupBackground").disabled = byId("chatInput").disabled;
   byId("chatThinking").style.display = running ? "flex" : "none";
   if(running) byId("chatThinking").textContent = "正在处理本轮…";
   byId("chatGroupStatus").textContent = groupErrors.get(activeChatGroup) ||
@@ -1575,6 +1587,7 @@ function setGroupListingMode(enabled){
   button.classList.toggle("btn-outline", !enabled);
   byId("chatInput").placeholder = enabled ? "输入 SKU 和要完成的商品任务…" : "输入问题…";
   byId("chatSuggestions").hidden = enabled;
+  byId("chatGroupBackground").hidden = !enabled || chatMode!=="groups";
 }
 
 function renderChatGroupList(){
@@ -2163,6 +2176,7 @@ async function readChatGroupHistory(){
     if(selection!==groupSelection || read!==groupHistoryRead || view!==chatViewId) return;
     var group = chatGroups.get(conversationId);
     group.running = result.runs.find(function(run){return run.status==="running";});
+    watchBackgroundInspection(conversationId, result.runs.findLast(run => run.background)?.run_id);
     var pending = groupPending.get(conversationId);
     if(pending?.runId && result.runs.some(function(run){
       return run.run_id===pending.runId && (run.status==="superseded" || run.status==="stopped");
@@ -2272,6 +2286,7 @@ function selectChatGroup(conversationId){
   closeChatGroupDetails(false);
   closeGroupDetail(false);
   setGroupListingMode(false);
+  watchBackgroundInspection("", null);
   activeChatGroup = conversationId;
   closeGroupDateChange();
   groupSelection++;
@@ -2651,7 +2666,106 @@ async function sendChat(){
   }
 }
 
-async function sendGroupChat(){
+function watchBackgroundInspection(conversationId, runId){
+  var panel = byId("backgroundInspectionProgress");
+  if(backgroundWatch?.runId===runId && runId) return;
+  backgroundWatch?.controller.abort();
+  backgroundWatch = null;
+  panel.hidden = !runId;
+  byId("backgroundInspectionEvents").replaceChildren();
+  if(!runId) return;
+  panel.open = true;
+  var state = {runId, cursor:0, controller:new AbortController()};
+  backgroundWatch = state;
+  panel.dataset.runId = runId;
+  observeBackgroundInspection(conversationId, state, TOKEN);
+}
+
+async function observeBackgroundInspection(conversationId, state, token){
+  var signal = state.controller.signal;
+  var list = byId("backgroundInspectionEvents");
+  var status = byId("backgroundInspectionState");
+  var labels = {accepted:"已接受", claimed:"开始执行", step_started:"正在取证",
+    step_completed:"已提交检查点", reused:"复用已提交产物", invalidated:"依据已失效", finished:"已结束"};
+  var toolLabels = {get_listing_sales:"销量", get_listing_current:"页面五点", get_listing_facts:"商品事实"};
+  var path = "/api/chat/conversations/"+encodeURIComponent(conversationId)+
+    "/background-inspections/"+encodeURIComponent(state.runId)+"/events";
+  status.textContent = "连接中";
+  while(!signal.aborted){
+    try{
+      var response = await fetch(path, {headers:{Authorization:"Bearer "+token,
+        "Last-Event-ID":String(state.cursor)}, signal});
+      if([401,403,404].includes(response.status)){
+        if(!signal.aborted) status.textContent = "无法读取此任务";
+        return;
+      }
+      if(!response.ok) throw new Error("进度连接失败");
+      var reader = response.body.getReader();
+      var decoder = new TextDecoder();
+      var buffer = "";
+      try{
+        while(!signal.aborted){
+          var packet = await reader.read();
+          if(packet.done || signal.aborted) break;
+          buffer += decoder.decode(packet.value, {stream:true});
+          var frames = buffer.split(/\r?\n\r?\n/);
+          buffer = frames.pop();
+          for(var frame of frames){
+            var data = frame.split(/\r?\n/).find(line => line.startsWith("data: "));
+            if(!data) continue;
+            var event = JSON.parse(data.slice(6));
+            if(event.seq<=state.cursor) continue;
+            var [sku, tool] = (event.step || "").split("/");
+            var step = sku==="review" ? "五点核验" : [sku, toolLabels[tool]].filter(Boolean).join(" · ");
+            var detail = event.kind==="invalidated" ? event.items.map(item => item.sku || item.source).join("、") : step;
+            var label = labels[event.kind];
+            if(event.kind==="claimed" && event.generation>1) label = "从检查点恢复";
+            if(event.kind==="step_started" && sku==="review") label = "正在核验";
+            if(event.kind==="finished"){
+              label = {completed:"结果已提交", invalidated:"巡检依据已失效", failed:"执行失败",
+                stopped:"已停止", superseded:"本轮已被替换"}[event.status] || label;
+            }
+            groupText(list, "li", [label, detail].filter(Boolean).join(" · ")).dataset.seq = event.seq;
+            list.scrollTop = list.scrollHeight;
+            state.cursor = event.seq;
+            status.textContent = label;
+            if(event.kind==="finished"){
+              if(activeChatGroup===conversationId) readChatGroupHistory();
+              return;
+            }
+          }
+        }
+      }finally{
+        reader.cancel().catch(function(){});
+        reader.releaseLock();
+      }
+    }catch(error){
+      if(signal.aborted) return;
+    }
+    if(!signal.aborted){
+      status.textContent = "连接中断，正在重连";
+      await new Promise(resolve => setTimeout(resolve, 700));
+    }
+  }
+}
+
+async function startBackgroundInspection(conversationId, message, signal){
+  var draft = backgroundDrafts.get(conversationId);
+  if(draft?.message!==message){
+    draft = {message, key:crypto.randomUUID()};
+    backgroundDrafts.set(conversationId, draft);
+  }
+  var response = await fetch("/api/chat/conversations/"+encodeURIComponent(conversationId)+"/background-inspections", {
+    method:"POST", headers:{Authorization:"Bearer "+TOKEN, "Content-Type":"application/json", "Idempotency-Key":draft.key},
+    body:JSON.stringify({message}), signal
+  });
+  var result = await response.json().catch(() => ({}));
+  if(!response.ok || !result.data?.run_id) throw new Error(result.detail || "未收到启动回执，可发送相同消息重试");
+  backgroundDrafts.delete(conversationId);
+  return result.data.run_id;
+}
+
+async function sendGroupChat(background = false){
   var conversationId = activeChatGroup;
   var input = byId("chatInput");
   var message = input.value.trim();
@@ -2665,6 +2779,11 @@ async function sendGroupChat(){
   groupErrors.delete(conversationId);
   updateChatGroupControls();
   try{
+    if(background){
+      pending.runId = await startBackgroundInspection(conversationId, message, groupSession.signal);
+      if(view===chatViewId && activeChatGroup===conversationId) watchBackgroundInspection(conversationId, pending.runId);
+      return;
+    }
     var streaming = readChatStream(body, TOKEN, function(data){
       if(data.conversation_id!==conversationId || (pending.runId && pending.runId!==data.run_id))
         throw new Error("工作群标识异常");
@@ -2674,8 +2793,10 @@ async function sendGroupChat(){
     readChatGroupHistory();
     await streaming;
   }catch(error){
-    if(view===chatViewId && TOKEN && groupPending.get(conversationId)===pending)
+    if(view===chatViewId && TOKEN && groupPending.get(conversationId)===pending){
       groupErrors.set(conversationId, error.message);
+      if(background && activeChatGroup===conversationId) input.value = message;
+    }
   }finally{
     if(view===chatViewId && TOKEN){
       if(groupPending.get(conversationId)===pending) groupPending.delete(conversationId);
