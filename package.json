@@ -1,0 +1,14 @@
+{
+  "name": "ad-agent-acceptance",
+  "version": "3.0.0",
+  "private": true,
+  "engines": { "node": ">=22", "npm": ">=10" },
+  "packageManager": "npm@11.6.2",
+  "scripts": {
+    "browser:install": "playwright install chromium",
+    "browser:sse": "node tests/home_sse_browser.cjs",
+    "browser:diagnosis": "node tests/home_diagnosis_browser.cjs",
+    "browser:public": "node tests/home_plan_metrics_browser.cjs"
+  },
+  "devDependencies": { "playwright": "1.62.1" }
+}

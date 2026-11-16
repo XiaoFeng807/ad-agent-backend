@@ -1,0 +1,27 @@
+attribute	value	unit	conditions	product
+Elbow opening diameter	8	mm	Angled hose fitting	RILL-60
+Drain hose length	0.45	m	Drain line only	RILL-60
+Power-supply order code	X-CA	code	Wall adapter	RILL-60
+Spare nozzle number	X-NZ	code	Fan tip	RILL-60
+Hose clamp replacement code	X-HC	code	Clamp only	RILL-60
+Hose inlet temperature for storage	48	°C	Dried hose only	RILL-60
+Winter storage temperature	4	°C	Pump empty	RILL-60
+Nozzle operating pressure	1.8	bar	Narrow nozzle	RILL-60
+Caddy rated capacity	0.8	L	Detachable soap accessory	RILL-60
+Tank nominal capacity	2.7	L	Fill line, upright reservoir	RILL-60
+Recovery basin volume	1.6	L	Used water	RILL-60
+Reservoir drain time	35	seconds	Drain valve open	RILL-60
+Reservoir fitting depth	48	mm	Intake dry	RILL-60
+Continuous charge time	120	minutes	Sprayer off	RILL-60
+Rinse nozzle flow	0.4	L/min	Bench calibration	RILL-60
+Hose burst pressure	7	bar	Bench test	RILL-60
+Hose bend radius	35	mm	New hose	RILL-60
+Inlet screen diameter	19	mm	Filter removed	RILL-60
+Caddy rinse limit	55	°C	Motor detached	RILL-60
+Spare service hose order number	RL-H6	code	Straight replacement hose assembly	RILL-60
+Carry case volume	8	L	Unpacked accessories	RILL-60
+Removable measuring cup	0.2	L	Accessory	RILL-60
+Spray pulse	0.6	seconds	Diagnostic mode	RILL-60
+Elbow angle	45	degrees	Angled hose fitting only	RILL-60
+Nozzle line working temperature	28	°C	Only bench nozzle calibration	RILL-60
+Tank fill opening diameter	6	cm	Cap removed	RILL-60

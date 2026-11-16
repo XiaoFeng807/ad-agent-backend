@@ -1,163 +1,179 @@
-﻿"""RAG 知识库 v7 — BGE Embedding + BM25 + RRF 混合检索"""
-import os
-import re
-import json
+"""BGE 向量与 TF-IDF 关键词检索，经 RRF 融合。"""
 import hashlib
 import logging
+import os
+import re
+from functools import lru_cache
+from threading import Lock
+
 import chromadb
 from chromadb.config import Settings
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-import numpy as np
 
+from backend.config.config import settings
 from backend.rag.chinese_embedding import BGEEmbedding
+from backend.rag.rule_reference import rule_query_scope, rule_reference
 
 logger = logging.getLogger(__name__)
 
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data", "rag_db")
+_KEYWORD_PARTS = re.compile(r"[a-z0-9_]+(?:[.#-][a-z0-9_]+)*|[\u3400-\u9fff]+")
+_EVIDENCE_FIELDS = ("rule_id", "version", "title", "source")
+_OPEN_LOCK = Lock()
+
+
+def _keyword_tokens(text):
+    for part in _KEYWORD_PARTS.findall(text.lower()):
+        if part.isascii() or len(part) == 1:
+            yield part
+        else:
+            yield from (part[i:i + 2] for i in range(len(part) - 1))
+
+
+def _keyword_text(hit):
+    metadata = hit["metadata"]
+    rule_id, version = metadata.get("rule_id"), metadata.get("version")
+    reference = rule_reference(rule_id, version) if isinstance(rule_id, str) and isinstance(version, str) else ""
+    return f"{reference} {metadata.get('title', '')} {hit['content']}"
+
+
+def _hit(chunk_id, content, metadata, distance=None):
+    return {"chunk_id": chunk_id, "content": content, "metadata": metadata or {}, "distance": distance}
+
+
+def _evidence(hit):
+    metadata = hit["metadata"]
+    return {"chunk_id": hit["chunk_id"], **{key: metadata[key] for key in _EVIDENCE_FIELDS if key in metadata}}
 
 
 class RAGKnowledge:
-    """RAG 知识库 v7 — 混合检索（密集向量 + BM25 关键词 + RRF 融合）"""
-
-    def __init__(self):
-        self.embedding_fn = BGEEmbedding()
+    def __init__(self, *, db_path=None, embedding_fn=None, create=True):
+        self.embedding_fn = BGEEmbedding() if embedding_fn is None else embedding_fn
         self.client = chromadb.PersistentClient(
-            path=DB_PATH,
-            settings=Settings(anonymized_telemetry=False)
+            path=str(db_path or settings.RAG_DB_PATH or DB_PATH),
+            settings=Settings(anonymized_telemetry=False),
         )
-        self.collection = self.client.get_or_create_collection(
-            name="ad_knowledge",
-            embedding_function=self.embedding_fn
-        )
-        # BM25 后备（使用 sklearn TfidfVectorizer）
-        self._bm25_index = None
-        self._bm25_vectorizer = None
-        self._bm25_docs = []
-        self._bm25_metas = []
-        logger.info(f"  [RAG] 知识库已加载，文档数: {self.collection.count()}")
+        open_collection = self.client.get_or_create_collection if create else self.client.get_collection
+        try:
+            self.collection = open_collection(name="ad_knowledge", embedding_function=self.embedding_fn)
+        except Exception:
+            self.close()
+            raise
+        self._keyword_lock = Lock()
+        self._keyword_ids = set()
+        self._keyword_index = None
 
-    # ── 索引维护 ───────────────────────────────────────────
-
-    def _rebuild_bm25(self):
-        """从 ChromaDB 重建 BM25 索引"""
-        if self.collection.count() == 0:
-            self._bm25_index = None
-            self._bm25_vectorizer = None
-            self._bm25_docs = []
-            self._bm25_metas = []
-            return
-        all_data = self.collection.get(include=["documents", "metadatas"])
-        self._bm25_docs = all_data["documents"] or []
-        self._bm25_metas = all_data["metadatas"] or []
-        if self._bm25_docs:
-            self._bm25_vectorizer = TfidfVectorizer(
-                analyzer="word",
-                token_pattern=r"(?u)\b\w+\b",
-                max_features=5000,
-                ngram_range=(1, 2),
-            )
-            self._bm25_index = self._bm25_vectorizer.fit_transform(self._bm25_docs)
-
-    # ── 写入 ─────────────────────────────────────────────────
+    def close(self):
+        close = getattr(self.client, "close", None)
+        if close is not None:
+            close()
 
     def add_text(self, text: str, metadata: dict = None, doc_id: str = None, auto_chunk: bool = False):
-        """添加文本到知识库"""
+        """添加文本到知识库。已有分块 ID 保留首次写入的原文。"""
         if not text or not text.strip():
             return
         text = text.strip()
         doc_id = doc_id or hashlib.md5(text.encode()).hexdigest()[:12]
-        metadata = metadata or {}
-        self.collection.add(documents=[text], metadatas=[metadata], ids=[doc_id])
-        # 增量更新 BM25
-        if self._bm25_vectorizer is not None:
-            self._bm25_docs.append(text)
-            self._bm25_metas.append(metadata)
-            # 重新 fit（低开销，数据量不大时可行）
-            self._bm25_index = self._bm25_vectorizer.fit_transform(self._bm25_docs)
-        else:
-            self._rebuild_bm25()
+        self.collection.add(documents=[text], metadatas=[metadata] if metadata else None, ids=[doc_id])
 
-    # ── 检索 ─────────────────────────────────────────────────
+    def _keyword_search(self, query, top_k):
+        with self._keyword_lock:
+            # Check IDs so external imports and deletions also refresh the index.
+            ids = set(self.collection.get(include=[])["ids"])
+            if ids != self._keyword_ids:
+                data = self.collection.get(include=["documents", "metadatas"])
+                hits = [
+                    _hit(chunk_id, content, metadata)
+                    for chunk_id, content, metadata in zip(data["ids"], data["documents"], data["metadatas"])
+                    if content
+                ]
+                texts = [_keyword_text(hit) for hit in hits]
+                self._keyword_index = None
+                if any(_KEYWORD_PARTS.search(text.lower()) for text in texts):
+                    vectorizer = TfidfVectorizer(analyzer=_keyword_tokens)
+                    self._keyword_index = hits, vectorizer, vectorizer.fit_transform(texts)
+                self._keyword_ids = set(data["ids"])
+            index = self._keyword_index
+        if index is None:
+            return []
+        hits, vectorizer, matrix = index
+        # TF-IDF rows are L2 normalized, so the dot product is cosine similarity.
+        scores = (matrix @ vectorizer.transform([query]).T).toarray().ravel()
+        ranked = sorted((i for i, score in enumerate(scores) if score > 0),
+                        key=lambda i: (-scores[i], hits[i]["chunk_id"]))
+        return [hits[i] for i in ranked[:top_k]]
 
     def search(self, query: str, top_k: int = 3):
-        """
-        向量检索（供外部调用）
-        返回: [{"content": ..., "metadata": ..., "distance": ...}, ...]
-        """
-        if self.collection.count() == 0:
+        """纯向量检索，保留距离供现有调用方使用。"""
+        n_results = min(top_k, self.collection.count())
+        if n_results <= 0:
             return []
-        results = self.collection.query(
-            query_texts=[query],
-            n_results=min(top_k, self.collection.count())
-        )
-        docs = []
-        if results["documents"] and results["documents"][0]:
-            for i, doc in enumerate(results["documents"][0]):
-                docs.append({
-                    "content": doc,
-                    "metadata": results["metadatas"][0][i] if results["metadatas"] else {},
-                    "distance": results["distances"][0][i] if results["distances"] else None
-                })
-        return docs
+        results = self.collection.query(query_texts=[query], n_results=n_results)
+        return [_hit(*row) for row in zip(results["ids"][0], results["documents"][0],
+                                          results["metadatas"][0], results["distances"][0])]
+
+    def hybrid_search(self, query: str, top_k: int = 3):
+        """融合两路召回，使用 Chroma 分块 ID 累加排名分。"""
+        if top_k <= 0:
+            return []
+        recall_k = max(30, top_k)
+        vector_hits = self.search(query, recall_k)
+        if not vector_hits:
+            return []
+        keyword_hits = self._keyword_search(query, recall_k)
+        hits, scores = {}, {}
+        for channel in (vector_hits, keyword_hits):
+            for rank, hit in enumerate(channel, start=1):
+                chunk_id = hit["chunk_id"]
+                hits.setdefault(chunk_id, hit)
+                scores[chunk_id] = scores.get(chunk_id, 0.0) + 1.0 / (60 + rank)
+        ranked_ids = sorted(hits, key=lambda chunk_id: -scores[chunk_id])
+        return [hits[chunk_id] for chunk_id in ranked_ids[:top_k]]
 
     def recall(self, query: str, recall_k: int = 30):
-        """
-        多路召回：向量检索 + BM25 + RRF 融合
-        返回: [(content, metadata), ...]  供 causal_reasoning 使用
-        """
-        if self.collection.count() == 0:
-            return []
-
-        # 1. 向量检索
-        vec_results = self.collection.query(
-            query_texts=[query],
-            n_results=min(recall_k, self.collection.count())
-        )
-        vec_hits = []
-        if vec_results["documents"] and vec_results["documents"][0]:
-            for i, doc in enumerate(vec_results["documents"][0]):
-                meta = vec_results["metadatas"][0][i] if vec_results["metadatas"] else {}
-                vec_hits.append((doc, meta))
-
-        # 2. BM25 检索
-        bm25_hits = []
-        if self._bm25_index is not None and self._bm25_docs:
-            q_vec = self._bm25_vectorizer.transform([query])
-            sims = cosine_similarity(q_vec, self._bm25_index).flatten()
-            top_indices = sims.argsort()[::-1][:recall_k]
-            for idx in top_indices:
-                if sims[idx] > 0:
-                    bm25_hits.append((self._bm25_docs[idx], self._bm25_metas[idx] if idx < len(self._bm25_metas) else {}))
-
-        # 3. RRF 融合
-        return self._rrf_fusion(vec_hits, bm25_hits, k=60, top_n=recall_k)
-
-    def _rrf_fusion(self, list_a, list_b, k=60, top_n=30):
-        """Reciprocal Rank Fusion: 融合两路召回结果"""
-        scores = {}
-        for rank, (content, meta) in enumerate(list_a):
-            scores[id(content)] = {"content": content, "meta": meta, "score": 1.0 / (k + rank + 1)}
-        for rank, (content, meta) in enumerate(list_b):
-            cid = id(content)
-            if cid in scores:
-                scores[cid]["score"] += 1.0 / (k + rank + 1)
-            else:
-                scores[cid] = {"content": content, "meta": meta, "score": 1.0 / (k + rank + 1)}
-        sorted_items = sorted(scores.values(), key=lambda x: x["score"], reverse=True)
-        return [(item["content"], item["meta"]) for item in sorted_items[:top_n]]
+        """保留因果检索所用的 (content, metadata) 返回格式。"""
+        return [(hit["content"], hit["metadata"]) for hit in self.hybrid_search(query, recall_k)]
 
     def generate(self, query: str, top_k: int = 3):
-        """检索 → 拼接上下文（供 Agent 调 LLM 用）"""
-        docs = self.search(query, top_k)
+        """返回检索上下文、来源和可回查的分块证据。"""
+        if top_k <= 0:
+            return None
+        scope = rule_query_scope(query)
+        if scope is None:
+            docs = self.hybrid_search(query, top_k)
+        else:
+            rule_ids, version = scope
+            result = self.collection.get(
+                where={"$and": [{"rule_id": {"$in": list(rule_ids)}}, {"version": version}]},
+                limit=top_k,
+                include=["documents", "metadatas"],
+            )
+            docs = [_hit(*row) for row in zip(result["ids"], result["documents"], result["metadatas"])]
         if not docs:
             return None
-        context = "\n\n---\n\n".join(d["content"] for d in docs)
         return {
-            "context": context,
-            "sources": [d["metadata"].get("source", "未知来源") for d in docs if d.get("metadata")],
-            "doc_count": len(docs)
+            "context": "\n\n---\n\n".join(hit["content"] for hit in docs),
+            "sources": [hit["metadata"].get("source", "未知来源") for hit in docs if hit["metadata"]],
+            "doc_count": len(docs),
+            "evidence": [{**_evidence(hit), "content": hit["content"]} for hit in docs],
         }
+
+    def get_chunk(self, chunk_id: str):
+        result = self.collection.get(ids=[chunk_id], include=["documents", "metadatas"])
+        if not result["ids"]:
+            return None
+        hit = _hit(chunk_id, result["documents"][0], result["metadatas"][0])
+        return {**_evidence(hit), "content": hit["content"]}
+
+
+@lru_cache(maxsize=1)
+def _open_knowledge(db_path):
+    return RAGKnowledge(db_path=db_path)
+
+
+def get_rag_knowledge():
+    with _OPEN_LOCK:
+        return _open_knowledge(settings.RAG_DB_PATH or DB_PATH)
 
 
 # ===== 种子数据 =====

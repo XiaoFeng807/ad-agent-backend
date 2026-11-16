@@ -1,0 +1,19 @@
+{"id":"T01","target":{"shop_id":"evidence-main","marketplace_id":"US","sku":"METRO-500"},"version":"v1","query":"How should I wash the bottle body in a dishwasher?","required":[["manual","page:5"]]}
+{"id":"T02","target":{"shop_id":"evidence-main","marketplace_id":"US","sku":"METRO-750"},"version":"v1","query":"What is the empty weight including the cap and gasket?","required":[["specs","row:5"]]}
+{"id":"T03","target":{"shop_id":"evidence-main","marketplace_id":"US","sku":"METRO-500"},"version":"v1","query":"What is the body wash restriction in the specification table?","required":[["specs","row:9"]]}
+{"id":"T04","target":{"shop_id":"evidence-main","marketplace_id":"US","sku":"METRO-500"},"version":"v1","query":"Can I add ice cubes by hand?","required":[["faq","faq:ice"]]}
+{"id":"T05","target":{"shop_id":"evidence-main","marketplace_id":"US","sku":"METRO-500"},"version":"v2","query":"What is the drink-contact liner made of?","required":[["manual","page:4"]]}
+{"id":"T06","target":{"shop_id":"evidence-main","marketplace_id":"US","sku":"METRO-750"},"version":"v1","query":"气密实验的压力是多少？","required":[]}
+{"id":"T07","target":{"shop_id":"evidence-main","marketplace_id":"US","sku":"METRO-750"},"version":"v1","query":"装配后的总高度是多少 mm？请按直立、杯盖关闭的状态核对。","required":[["specs","row:4"]],"probe":"alias"}
+{"id":"T08","target":{"shop_id":"evidence-main","marketplace_id":"CA","sku":"METRO-500"},"version":"v1","query":"装着杯盖及干燥密封圈、不装饮料时，空杯重量按 g 怎么标？","required":[["specs","row:5"]],"probe":"alias"}
+{"id":"T09","target":{"shop_id":"evidence-main","marketplace_id":"US","sku":"METRO-750"},"version":"v1","query":"杯身与杯盖在 55 °C 的上层架能机洗吗，哪些要改用手洗？","required":[["manual","page:5"],["manual","page:6"]],"probe":"parts"}
+{"id":"T10","target":{"shop_id":"evidence-main","marketplace_id":"US","sku":"METRO-500"},"version":"v2","query":"清洗瓶身和盖子时，是要手洗，还是可以放洗碗机？不要把密封圈算进去。","required":[["manual","page:5"],["manual","page:6"]],"probe":"parts"}
+{"id":"T11","target":{"shop_id":"evidence-main","marketplace_id":"US","sku":"METRO-750"},"version":"v1","query":"Can I wash the bottle body and cap in a dishwasher if the cycle stays below 50 °C?","required":[["manual","page:5"],["manual","page:6"]],"probe":"parts"}
+{"id":"T12","target":{"shop_id":"evidence-main","marketplace_id":"US","sku":"METRO-750"},"version":"v1","query":"出厂零件号 LID-M500 的空杯重量是多少 g？","required":[],"probe":"negative"}
+{"id":"T13","target":{"shop_id":"evidence-main","marketplace_id":"US","sku":"METRO-750"},"version":"v1","query":"杯身和杯盖用洗碗机前，能用同一浓度的漂白剂消毒吗？","required":[],"probe":"negative"}
+{"id":"T14","target":{"shop_id":"evidence-main","marketplace_id":"US","sku":"METRO-750"},"version":"v1","query":"杯盖单独的高度是多少 mm？","required":[],"probe":"negative"}
+{"id":"T15","target":{"shop_id":"evidence-main","marketplace_id":"US","sku":"METRO-750"},"version":"v1","query":"Does LID-M500 fit this SKU?","required":[],"probe":"negative"}
+{"id":"T16","target":{"shop_id":"evidence-main","marketplace_id":"US","sku":"METRO-750"},"version":"v1","query":"杯身最宽处的直径（不计提环）是多少 mm？","required":[["specs","row:3"]],"probe":"alias"}
+{"id":"T17","target":{"shop_id":"evidence-main","marketplace_id":"CA","sku":"METRO-500"},"version":"v1","query":"这款瓶身直立到刻线时的容量是多少 mL？","required":[["specs","row:2"]],"probe":"alias"}
+{"id":"T18","target":{"shop_id":"evidence-main","marketplace_id":"US","sku":"METRO-750"},"version":"v1","query":"杯盖出厂检验用的扭矩是多少 N·m？平时拧盖不能用工具。","required":[["specs","row:11"]],"probe":"alias"}
+{"id":"T19","target":{"shop_id":"evidence-main","marketplace_id":"US","sku":"METRO-750"},"version":"v1","query":"适用于 B42 螺纹的备用杯盖，零件号怎么标？","required":[["specs","row:7"]],"probe":"alias"}

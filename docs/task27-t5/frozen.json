@@ -1,0 +1,689 @@
+{
+  "task": "TASK-027-T5",
+  "frozen_utc": "2026-11-10T08:55:38.708511+00:00",
+  "source": {
+    "source_id": "criteo-attribution-2017",
+    "data_version": "b0dba3715c56871fad76d6b570520b9ea29a25a62af16bf1d9780451dc1ecf78",
+    "kind": "public",
+    "source_url": "https://ailab.criteo.com/criteo-attribution-modeling-bidding-dataset/",
+    "download_url": "https://huggingface.co/datasets/criteo/criteo-attribution-dataset/resolve/904188a63cbad78bee43cd26ff5ee4ac77903986/criteo_attribution_dataset.tsv.gz",
+    "revision": "904188a63cbad78bee43cd26ff5ee4ac77903986",
+    "license": "CC-BY-NC-SA-4.0",
+    "license_url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+    "attribution": "Diemert, Meynet, Galland, Lefortier (2017), Attribution Modeling Increases Efficiency of Bidding in Display Advertising",
+    "compressed_sha256": "94ac7a465564349bc7ba008602211d5990a3c53cc133abc0aadef61ea2391a98",
+    "tsv_sha256": "0cd0c6ee363f9d6a47d9b6c6735159d22ffa4301f3b136b0c34bb00a68315be3",
+    "sampling": "all rows of pinned, already sub-sampled anonymized public release; no additional row sampling",
+    "rows": 16468027,
+    "campaigns": 675,
+    "timestamp_min": 0,
+    "timestamp_max": 2671199,
+    "time_mapping": {
+      "anchor_date": "2026-10-01",
+      "formula": "demo_date = anchor_date + floor(timestamp / 86400) days",
+      "timezone": "relative 86400-second bins; no original calendar date or timezone inferred",
+      "original_calendar_dates": false
+    },
+    "complete_start_date": "2026-10-01",
+    "complete_end_date": "2026-10-30",
+    "artifact_sha256": "cbc14383dd8862a488fd2864b88c50077b8e713338d6bba0c5f4f54564d019e1"
+  },
+  "source_path": "data\\plan_metrics\\criteo.sqlite3",
+  "owner": 17,
+  "plans": [
+    {
+      "id": 101,
+      "plan_name": "北岸搜索",
+      "status": "active",
+      "daily_budget": 310,
+      "user_id": 17
+    },
+    {
+      "id": 102,
+      "plan_name": "南桥搜索",
+      "status": "paused",
+      "daily_budget": 720,
+      "user_id": 17
+    }
+  ],
+  "alert": {
+    "type": "ctr_review",
+    "message": "投放监控触发严重 CTR 波动告警，需核实历史及复核条文。",
+    "level": "critical",
+    "is_read": 0,
+    "user_id": 17
+  },
+  "plan_sql": "SELECT id, plan_name, status, daily_budget, user_id FROM ad_plans WHERE user_id=? ORDER BY id",
+  "alert_sql": "SELECT type, message, level, is_read, user_id FROM alerts WHERE user_id=? ORDER BY id",
+  "sql": {
+    "window": "-- Independently reconstruct requested window totals and coverage directly from the pinned artifact.\n-- Parameters: source_plan_id, start_date, end_date, excluded_date (NULL in ordinary cases).\nWITH RECURSIVE\nparams(source_plan_id, start_date, end_date, excluded_date) AS (VALUES (?, ?, ?, ?)),\ndays(day) AS (\n    SELECT start_date FROM params\n    UNION ALL\n    SELECT date(day, '+1 day') FROM days, params WHERE day < end_date\n)\nSELECT COUNT(*) AS expected_days,\n       COUNT(m.metric_date) AS observed_days,\n       GROUP_CONCAT(CASE WHEN m.metric_date IS NULL THEN days.day END, ',') AS missing_dates,\n       CASE WHEN COUNT(*) = COUNT(m.metric_date) THEN SUM(m.impressions) END AS impressions,\n       CASE WHEN COUNT(*) = COUNT(m.metric_date) THEN SUM(m.clicks) END AS clicks,\n       CASE WHEN COUNT(*) = COUNT(m.metric_date)\n            THEN 100.0 * SUM(m.clicks) / NULLIF(SUM(m.impressions), 0) END AS ctr_pct\nFROM days CROSS JOIN params p\nLEFT JOIN plan_daily_metrics m ON m.metric_date = days.day\n    AND m.source_plan_id = p.source_plan_id AND days.day IS NOT p.excluded_date;\n",
+    "review": "-- Parameters: baseline impressions, current impressions, baseline CTR %, current CTR %,\n-- minimum impressions per window, minimum relative decline %.\nWITH facts(bi, ci, bctr, cctr, min_exp, min_drop) AS (VALUES (?, ?, ?, ?, ?, ?)),\ncomparison AS (\n    SELECT *, 100.0 * (bctr - cctr) / NULLIF(bctr, 0) AS relative_decline_pct FROM facts\n)\nSELECT relative_decline_pct,\n       CASE WHEN relative_decline_pct IS NOT NULL THEN\n           bi >= min_exp AND ci >= min_exp AND relative_decline_pct >= min_drop END AS qualifies\nFROM comparison;\n"
+  },
+  "rule_corpus": [
+    [
+      "ctr-review-v1-low-ctr-01",
+      "ctr-review#low-ctr",
+      "v1",
+      "点击率下降复核",
+      "两个可比窗口各达到 1,000 次计划曝光，且当前 CTR 较基准窗口相对下降至少 20% 时，标记为待复核。先核对同一计划的历史曝光和点击，确认后检查素材与流量构成。用户级汇总不得代替计划指标。"
+    ],
+    [
+      "ctr-review-v2-low-ctr-01",
+      "ctr-review#low-ctr",
+      "v2",
+      "点击率下降复核",
+      "两个可比窗口各达到 2,000 次计划曝光，且当前 CTR 较基准窗口相对下降至少 15% 时，标记为待复核。先核对同一计划的历史曝光和点击，确认后检查素材与流量构成。用户级汇总不得代替计划指标。"
+    ],
+    [
+      "ctr-review-v1-low-volume-01",
+      "ctr-review#low-volume",
+      "v1",
+      "点击率样本量",
+      "任一窗口的计划曝光不足 1,000 次时，记为样本不足。补齐曝光和点击数据后再比较点击率。"
+    ],
+    [
+      "ctr-review-v1-windows-01",
+      "ctr-review#windows",
+      "v1",
+      "比较窗口口径",
+      "基准窗口和当前窗口应覆盖相同天数，并尽量对齐星期分布。按计划分别汇总曝光和点击，再以总点击除以总曝光计算窗口 CTR。"
+    ],
+    [
+      "creative-review-v1-fatigue-01",
+      "creative-review#fatigue",
+      "v1",
+      "素材疲劳复核",
+      "同一受众的触达频次升高且点击率持续下滑时，按素材拆分流量和点击表现，排查素材疲劳。"
+    ],
+    [
+      "bid-review-v1-cpc-01",
+      "bid-review#cpc",
+      "v1",
+      "点击成本复核",
+      "平均点击成本 CPC 突然上升时，先比较同一版位的竞价和流量占比，再排查出价变化。"
+    ],
+    [
+      "budget-review-v1-pacing-01",
+      "budget-review#pacing",
+      "v1",
+      "预算消耗进度",
+      "日预算提前耗尽时，按小时核对花费与预算消耗速度，区分流量高峰和投放节奏异常。"
+    ],
+    [
+      "conversion-review-v1-tracking-01",
+      "conversion-review#tracking",
+      "v1",
+      "转化跟踪复核",
+      "转化骤降时，先验证转化事件的上报链路、归因窗口和去重设置，再核对落地页是否正常。"
+    ]
+  ],
+  "sdk_limit": 72,
+  "rubric": {
+    "simple": "实际读取对应计划状态，终态及群历史有效，状态回答一致。实际详情、额外读取和过度组队分别统计。",
+    "business": [
+      "两个计划各自使用指定的两窗，正确披露覆盖、可核实的曝光、点击、CTR 及相对变化。百分点容差 0.01，计数精确。",
+      "实际检索指定规则版本，引用该版本的低 CTR 分块，准确应用两窗曝光和相对下降门槛。",
+      "两计划历史及条文均经实际查证后，才实际读取应入清单计划的详情。答复中给出该编号、名称、状态和日预算。正确直查与委派同分。",
+      "缺项时继续核对条文和未受影响计划，报告缺项类型及已知范围，暂缓完整清单。缺绑定的另一个窗口无需重复试读；缺日的另一个窗口仍应保留。任何依赖详情读取或披露均不通过。",
+      "业务通过要求 HTTP 成功、唯一 done 终态及回复写入本轮群。逐项记录与最早偏离。"
+    ],
+    "collaboration": [
+      "自主委派以实际模型工具调用为准。Worker 数和重叠区间分别从 Trace 和带单调时钟的执行入口获取。",
+      "正样本交接须有下游 Worker 首轮输入中的已准入上游工具产物。匹配上游任务、产物 ID、输入内容及下游实际详情参数。与主 Agent 转述或直查区分。",
+      "完整交接链需要从下游收到的实际指标及规则证据独立重算出目标。部分交接单列，完整原样本与换绑样本都满足才计配对覆盖。",
+      "缺项的下游阻塞须有已声明的依赖和实际调度证据。缺项时底层详情读取数和回复披露数分别统计。",
+      "重复读取按同轮底层工具名及注入属主后的规范参数累计。拒绝、缓存命中及复用另记。"
+    ]
+  },
+  "cases": [
+    {
+      "id": "simple-1",
+      "kind": "simple",
+      "message": "帮我查一下广告计划 #101 现在是什么状态？",
+      "bindings": {},
+      "expected": {
+        "detail": {
+          "id": 101,
+          "plan_name": "北岸搜索",
+          "status": "active",
+          "daily_budget": 310,
+          "user_id": 17
+        }
+      },
+      "message_sha256": "b00700a31859f4141a9ab0d20eb1f4b4d9d1b22409a6422ee0f3d916c7e54205"
+    },
+    {
+      "id": "simple-2",
+      "kind": "simple",
+      "message": "帮我查一下广告计划 #102 现在是什么状态？",
+      "bindings": {},
+      "expected": {
+        "detail": {
+          "id": 102,
+          "plan_name": "南桥搜索",
+          "status": "paused",
+          "daily_budget": 720,
+          "user_id": 17
+        }
+      },
+      "message_sha256": "2bd061d6d6f5e77700614c4b19e302902ebd6d69df5ded83819005bfa94dcfbc"
+    },
+    {
+      "id": "branch-1",
+      "kind": "branch",
+      "pair": 1,
+      "message": "周例会需要核销 CTR 监控告警。先看我当前未读告警的级别；若发现严重 CTR 波动，请调查 #101 和 #102。历史基准窗为 2026-10-17 至 2026-10-23，当前窗为 2026-10-24 至 2026-10-30。逐计划核对两窗的覆盖、曝光、点击、CTR 和相对变化。独立核对《点击率下降复核》 v1 条文，给出分块编号、曝光与下降门槛，并据此形成复核清单。先完成两条计划的四份窗口指标和指定版本条文核验，再确定复核清单。清单确定之后，只读取入选计划的详情，并将编号、名称、当前状态和日预算写入清单。任一必要窗口或条文缺项时，跳过详情读取，保留可核实的窗口和条文，说明缺项并暂缓出清单。",
+      "bindings": {
+        "101": "13289562",
+        "102": "27589150"
+      },
+      "excluded_row": null,
+      "expected": {
+        "metrics": {
+          "101": {
+            "windows": [
+              {
+                "expected_days": 7,
+                "observed_days": 7,
+                "missing_dates": [],
+                "impressions": 7627,
+                "clicks": 2906,
+                "ctr_pct": 38.10148157860233,
+                "sql_params": [
+                  "13289562",
+                  "2026-10-17",
+                  "2026-10-23",
+                  null
+                ],
+                "start_date": "2026-10-17",
+                "end_date": "2026-10-23"
+              },
+              {
+                "expected_days": 7,
+                "observed_days": 7,
+                "missing_dates": [],
+                "impressions": 11807,
+                "clicks": 2980,
+                "ctr_pct": 25.23926484288981,
+                "sql_params": [
+                  "13289562",
+                  "2026-10-24",
+                  "2026-10-30",
+                  null
+                ],
+                "start_date": "2026-10-24",
+                "end_date": "2026-10-30"
+              }
+            ],
+            "relative_decline_pct": 33.75778631909133,
+            "qualifies": 1,
+            "review_sql_params": [
+              7627,
+              11807,
+              38.10148157860233,
+              25.23926484288981,
+              1000,
+              20
+            ],
+            "unbound": false
+          },
+          "102": {
+            "windows": [
+              {
+                "expected_days": 7,
+                "observed_days": 7,
+                "missing_dates": [],
+                "impressions": 7586,
+                "clicks": 4046,
+                "ctr_pct": 53.335090957026104,
+                "sql_params": [
+                  "27589150",
+                  "2026-10-17",
+                  "2026-10-23",
+                  null
+                ],
+                "start_date": "2026-10-17",
+                "end_date": "2026-10-23"
+              },
+              {
+                "expected_days": 7,
+                "observed_days": 7,
+                "missing_dates": [],
+                "impressions": 13635,
+                "clicks": 5924,
+                "ctr_pct": 43.44701136780345,
+                "sql_params": [
+                  "27589150",
+                  "2026-10-24",
+                  "2026-10-30",
+                  null
+                ],
+                "start_date": "2026-10-24",
+                "end_date": "2026-10-30"
+              }
+            ],
+            "relative_decline_pct": 18.53953825107342,
+            "qualifies": 0,
+            "review_sql_params": [
+              7586,
+              13635,
+              53.335090957026104,
+              43.44701136780345,
+              1000,
+              20
+            ],
+            "unbound": false
+          }
+        },
+        "rule": {
+          "chunk_id": "ctr-review-v1-low-ctr-01",
+          "rule_id": "ctr-review#low-ctr",
+          "version": "v1",
+          "title": "点击率下降复核",
+          "content": "两个可比窗口各达到 1,000 次计划曝光，且当前 CTR 较基准窗口相对下降至少 20% 时，标记为待复核。先核对同一计划的历史曝光和点击，确认后检查素材与流量构成。用户级汇总不得代替计划指标。",
+          "min_impressions": 1000,
+          "min_relative_decline_pct": 20
+        },
+        "detail": {
+          "id": 101,
+          "plan_name": "北岸搜索",
+          "status": "active",
+          "daily_budget": 310,
+          "user_id": 17
+        }
+      },
+      "message_sha256": "f05dbad063182f7fc1b6f92def7443fd96de150cb9c448eb7810a6e4bb2bb0c1"
+    },
+    {
+      "id": "swap-1",
+      "kind": "swap",
+      "pair": 1,
+      "message": "周例会需要核销 CTR 监控告警。先看我当前未读告警的级别；若发现严重 CTR 波动，请调查 #101 和 #102。历史基准窗为 2026-10-17 至 2026-10-23，当前窗为 2026-10-24 至 2026-10-30。逐计划核对两窗的覆盖、曝光、点击、CTR 和相对变化。独立核对《点击率下降复核》 v1 条文，给出分块编号、曝光与下降门槛，并据此形成复核清单。先完成两条计划的四份窗口指标和指定版本条文核验，再确定复核清单。清单确定之后，只读取入选计划的详情，并将编号、名称、当前状态和日预算写入清单。任一必要窗口或条文缺项时，跳过详情读取，保留可核实的窗口和条文，说明缺项并暂缓出清单。",
+      "bindings": {
+        "101": "27589150",
+        "102": "13289562"
+      },
+      "excluded_row": null,
+      "expected": {
+        "metrics": {
+          "101": {
+            "windows": [
+              {
+                "expected_days": 7,
+                "observed_days": 7,
+                "missing_dates": [],
+                "impressions": 7586,
+                "clicks": 4046,
+                "ctr_pct": 53.335090957026104,
+                "sql_params": [
+                  "27589150",
+                  "2026-10-17",
+                  "2026-10-23",
+                  null
+                ],
+                "start_date": "2026-10-17",
+                "end_date": "2026-10-23"
+              },
+              {
+                "expected_days": 7,
+                "observed_days": 7,
+                "missing_dates": [],
+                "impressions": 13635,
+                "clicks": 5924,
+                "ctr_pct": 43.44701136780345,
+                "sql_params": [
+                  "27589150",
+                  "2026-10-24",
+                  "2026-10-30",
+                  null
+                ],
+                "start_date": "2026-10-24",
+                "end_date": "2026-10-30"
+              }
+            ],
+            "relative_decline_pct": 18.53953825107342,
+            "qualifies": 0,
+            "review_sql_params": [
+              7586,
+              13635,
+              53.335090957026104,
+              43.44701136780345,
+              1000,
+              20
+            ],
+            "unbound": false
+          },
+          "102": {
+            "windows": [
+              {
+                "expected_days": 7,
+                "observed_days": 7,
+                "missing_dates": [],
+                "impressions": 7627,
+                "clicks": 2906,
+                "ctr_pct": 38.10148157860233,
+                "sql_params": [
+                  "13289562",
+                  "2026-10-17",
+                  "2026-10-23",
+                  null
+                ],
+                "start_date": "2026-10-17",
+                "end_date": "2026-10-23"
+              },
+              {
+                "expected_days": 7,
+                "observed_days": 7,
+                "missing_dates": [],
+                "impressions": 11807,
+                "clicks": 2980,
+                "ctr_pct": 25.23926484288981,
+                "sql_params": [
+                  "13289562",
+                  "2026-10-24",
+                  "2026-10-30",
+                  null
+                ],
+                "start_date": "2026-10-24",
+                "end_date": "2026-10-30"
+              }
+            ],
+            "relative_decline_pct": 33.75778631909133,
+            "qualifies": 1,
+            "review_sql_params": [
+              7627,
+              11807,
+              38.10148157860233,
+              25.23926484288981,
+              1000,
+              20
+            ],
+            "unbound": false
+          }
+        },
+        "rule": {
+          "chunk_id": "ctr-review-v1-low-ctr-01",
+          "rule_id": "ctr-review#low-ctr",
+          "version": "v1",
+          "title": "点击率下降复核",
+          "content": "两个可比窗口各达到 1,000 次计划曝光，且当前 CTR 较基准窗口相对下降至少 20% 时，标记为待复核。先核对同一计划的历史曝光和点击，确认后检查素材与流量构成。用户级汇总不得代替计划指标。",
+          "min_impressions": 1000,
+          "min_relative_decline_pct": 20
+        },
+        "detail": {
+          "id": 102,
+          "plan_name": "南桥搜索",
+          "status": "paused",
+          "daily_budget": 720,
+          "user_id": 17
+        }
+      },
+      "message_sha256": "f05dbad063182f7fc1b6f92def7443fd96de150cb9c448eb7810a6e4bb2bb0c1"
+    },
+    {
+      "id": "gap-1",
+      "kind": "gap",
+      "pair": 1,
+      "message": "周例会需要核销 CTR 监控告警。先看我当前未读告警的级别；若发现严重 CTR 波动，请调查 #101 和 #102。历史基准窗为 2026-10-17 至 2026-10-23，当前窗为 2026-10-24 至 2026-10-30。逐计划核对两窗的覆盖、曝光、点击、CTR 和相对变化。独立核对《点击率下降复核》 v1 条文，给出分块编号、曝光与下降门槛，并据此形成复核清单。先完成两条计划的四份窗口指标和指定版本条文核验，再确定复核清单。清单确定之后，只读取入选计划的详情，并将编号、名称、当前状态和日预算写入清单。任一必要窗口或条文缺项时，跳过详情读取，保留可核实的窗口和条文，说明缺项并暂缓出清单。",
+      "bindings": {
+        "101": "13289562",
+        "102": null
+      },
+      "excluded_row": null,
+      "expected": {
+        "metrics": {
+          "101": {
+            "windows": [
+              {
+                "expected_days": 7,
+                "observed_days": 7,
+                "missing_dates": [],
+                "impressions": 7627,
+                "clicks": 2906,
+                "ctr_pct": 38.10148157860233,
+                "sql_params": [
+                  "13289562",
+                  "2026-10-17",
+                  "2026-10-23",
+                  null
+                ],
+                "start_date": "2026-10-17",
+                "end_date": "2026-10-23"
+              },
+              {
+                "expected_days": 7,
+                "observed_days": 7,
+                "missing_dates": [],
+                "impressions": 11807,
+                "clicks": 2980,
+                "ctr_pct": 25.23926484288981,
+                "sql_params": [
+                  "13289562",
+                  "2026-10-24",
+                  "2026-10-30",
+                  null
+                ],
+                "start_date": "2026-10-24",
+                "end_date": "2026-10-30"
+              }
+            ],
+            "relative_decline_pct": 33.75778631909133,
+            "qualifies": 1,
+            "review_sql_params": [
+              7627,
+              11807,
+              38.10148157860233,
+              25.23926484288981,
+              1000,
+              20
+            ],
+            "unbound": false
+          },
+          "102": {
+            "windows": [
+              {
+                "expected_days": 7,
+                "observed_days": 0,
+                "missing_dates": [
+                  "2026-10-17",
+                  "2026-10-18",
+                  "2026-10-19",
+                  "2026-10-20",
+                  "2026-10-21",
+                  "2026-10-22",
+                  "2026-10-23"
+                ],
+                "impressions": null,
+                "clicks": null,
+                "ctr_pct": null,
+                "sql_params": [
+                  null,
+                  "2026-10-17",
+                  "2026-10-23",
+                  null
+                ],
+                "start_date": "2026-10-17",
+                "end_date": "2026-10-23"
+              },
+              {
+                "expected_days": 7,
+                "observed_days": 0,
+                "missing_dates": [
+                  "2026-10-24",
+                  "2026-10-25",
+                  "2026-10-26",
+                  "2026-10-27",
+                  "2026-10-28",
+                  "2026-10-29",
+                  "2026-10-30"
+                ],
+                "impressions": null,
+                "clicks": null,
+                "ctr_pct": null,
+                "sql_params": [
+                  null,
+                  "2026-10-24",
+                  "2026-10-30",
+                  null
+                ],
+                "start_date": "2026-10-24",
+                "end_date": "2026-10-30"
+              }
+            ],
+            "relative_decline_pct": null,
+            "qualifies": null,
+            "review_sql_params": [
+              null,
+              null,
+              null,
+              null,
+              1000,
+              20
+            ],
+            "unbound": true
+          }
+        },
+        "rule": {
+          "chunk_id": "ctr-review-v1-low-ctr-01",
+          "rule_id": "ctr-review#low-ctr",
+          "version": "v1",
+          "title": "点击率下降复核",
+          "content": "两个可比窗口各达到 1,000 次计划曝光，且当前 CTR 较基准窗口相对下降至少 20% 时，标记为待复核。先核对同一计划的历史曝光和点击，确认后检查素材与流量构成。用户级汇总不得代替计划指标。",
+          "min_impressions": 1000,
+          "min_relative_decline_pct": 20
+        },
+        "detail": null
+      },
+      "message_sha256": "f05dbad063182f7fc1b6f92def7443fd96de150cb9c448eb7810a6e4bb2bb0c1"
+    },
+    {
+      "id": "gap-2",
+      "kind": "gap",
+      "pair": 2,
+      "message": "请整理搜索投放交接用的 CTR 复核清单。先看我当前未读告警的级别；若发现严重 CTR 波动，请调查 #101 和 #102。历史基准窗为 2026-10-16 至 2026-10-22，当前窗为 2026-10-23 至 2026-10-29。逐计划核对两窗的覆盖、曝光、点击、CTR 和相对变化。独立核对《点击率下降复核》 v1 条文，给出分块编号、曝光与下降门槛，并据此形成复核清单。先完成两条计划的四份窗口指标和指定版本条文核验，再确定复核清单。清单确定之后，只读取入选计划的详情，并将编号、名称、当前状态和日预算写入清单。任一必要窗口或条文缺项时，跳过详情读取，保留可核实的窗口和条文，说明缺项并暂缓出清单。",
+      "bindings": {
+        "101": "26998434",
+        "102": "32135670"
+      },
+      "excluded_row": {
+        "source": "26998434",
+        "date": "2026-10-27"
+      },
+      "expected": {
+        "metrics": {
+          "101": {
+            "windows": [
+              {
+                "expected_days": 7,
+                "observed_days": 7,
+                "missing_dates": [],
+                "impressions": 2875,
+                "clicks": 1440,
+                "ctr_pct": 50.08695652173913,
+                "sql_params": [
+                  "26998434",
+                  "2026-10-16",
+                  "2026-10-22",
+                  "2026-10-27"
+                ],
+                "start_date": "2026-10-16",
+                "end_date": "2026-10-22"
+              },
+              {
+                "expected_days": 7,
+                "observed_days": 6,
+                "missing_dates": [
+                  "2026-10-27"
+                ],
+                "impressions": null,
+                "clicks": null,
+                "ctr_pct": null,
+                "sql_params": [
+                  "26998434",
+                  "2026-10-23",
+                  "2026-10-29",
+                  "2026-10-27"
+                ],
+                "start_date": "2026-10-23",
+                "end_date": "2026-10-29"
+              }
+            ],
+            "relative_decline_pct": null,
+            "qualifies": null,
+            "review_sql_params": [
+              2875,
+              null,
+              50.08695652173913,
+              null,
+              1000,
+              20
+            ],
+            "unbound": false
+          },
+          "102": {
+            "windows": [
+              {
+                "expected_days": 7,
+                "observed_days": 7,
+                "missing_dates": [],
+                "impressions": 9350,
+                "clicks": 2919,
+                "ctr_pct": 31.219251336898395,
+                "sql_params": [
+                  "32135670",
+                  "2026-10-16",
+                  "2026-10-22",
+                  null
+                ],
+                "start_date": "2026-10-16",
+                "end_date": "2026-10-22"
+              },
+              {
+                "expected_days": 7,
+                "observed_days": 7,
+                "missing_dates": [],
+                "impressions": 28146,
+                "clicks": 6495,
+                "ctr_pct": 23.07610317629503,
+                "sql_params": [
+                  "32135670",
+                  "2026-10-23",
+                  "2026-10-29",
+                  null
+                ],
+                "start_date": "2026-10-23",
+                "end_date": "2026-10-29"
+              }
+            ],
+            "relative_decline_pct": 26.08373939761612,
+            "qualifies": 1,
+            "review_sql_params": [
+              9350,
+              28146,
+              31.219251336898395,
+              23.07610317629503,
+              1000,
+              20
+            ],
+            "unbound": false
+          }
+        },
+        "rule": {
+          "chunk_id": "ctr-review-v1-low-ctr-01",
+          "rule_id": "ctr-review#low-ctr",
+          "version": "v1",
+          "title": "点击率下降复核",
+          "content": "两个可比窗口各达到 1,000 次计划曝光，且当前 CTR 较基准窗口相对下降至少 20% 时，标记为待复核。先核对同一计划的历史曝光和点击，确认后检查素材与流量构成。用户级汇总不得代替计划指标。",
+          "min_impressions": 1000,
+          "min_relative_decline_pct": 20
+        },
+        "detail": null
+      },
+      "message_sha256": "ccf6617b0ec55fe63f84dac9ab8364a46e1f4738f890a3e2fd20d8705edfbfff"
+    }
+  ],
+  "t3_sha256": "52f79eb56942e6f85e7e211fc99d829f61a528c7c7754fc8cd2fd37396ef147a",
+  "t3a_sha256": "76da395571043d12b583289efa3853d26d2c695024e393eddb6e43f52fdace0e",
+  "model": "glm-4.5-air",
+  "round_sdk_limit": 12
+}

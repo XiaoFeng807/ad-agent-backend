@@ -1,0 +1,1456 @@
+[
+  {
+    "id": "S01",
+    "scenario": "same_name",
+    "principal": "owner",
+    "query": "买这盏灯的话，标的电芯有多少毫安时？",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "ARC-220"
+    },
+    "version": "v1",
+    "expectation": "supported",
+    "required": [
+      [
+        {
+          "document_id": "specs",
+          "location": "row:2",
+          "filename": "arc220-specs.tsv",
+          "quote": "Internal battery capacity\t2200\tmAh\tMain rechargeable lamp cell\tARC-220",
+          "start_offset": 40,
+          "end_offset": 110
+        }
+      ]
+    ],
+    "pair": "same-1"
+  },
+  {
+    "id": "S02",
+    "scenario": "same_name",
+    "principal": "owner",
+    "query": "买这盏灯的话，标的电芯有多少毫安时？",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "ARC-480"
+    },
+    "version": "v1",
+    "expectation": "supported",
+    "required": [
+      [
+        {
+          "document_id": "specs",
+          "location": "row:2",
+          "filename": "arc480-specs.tsv",
+          "quote": "Internal battery capacity\t4800\tmAh\tMain rechargeable lamp cell\tARC-480",
+          "start_offset": 40,
+          "end_offset": 110
+        }
+      ]
+    ],
+    "pair": "same-1"
+  },
+  {
+    "id": "S03",
+    "scenario": "same_name",
+    "principal": "owner",
+    "query": "买这盏灯的话，标的电芯有多少毫安时？",
+    "target": null,
+    "version": null,
+    "expectation": "clarify",
+    "required": [],
+    "pair": "same-1",
+    "scope_choices": [
+      {
+        "shop_id": "t1-harbor",
+        "marketplace_id": "US",
+        "sku": "ARC-220"
+      },
+      {
+        "shop_id": "t1-harbor",
+        "marketplace_id": "US",
+        "sku": "ARC-480"
+      }
+    ],
+    "unbound_scope": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US"
+    }
+  },
+  {
+    "id": "S04",
+    "scenario": "same_name",
+    "principal": "owner",
+    "query": "支架收拢以后整盏灯有多厚？",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "ARC-220"
+    },
+    "version": "v1",
+    "expectation": "supported",
+    "required": [
+      [
+        {
+          "document_id": "specs",
+          "location": "row:3",
+          "filename": "arc220-specs.tsv",
+          "quote": "Folded case thickness\t34\tmm\tStand fully closed\tARC-220",
+          "start_offset": 111,
+          "end_offset": 165
+        }
+      ]
+    ],
+    "pair": "same-2"
+  },
+  {
+    "id": "S05",
+    "scenario": "same_name",
+    "principal": "owner",
+    "query": "支架收拢以后整盏灯有多厚？",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "ARC-480"
+    },
+    "version": "v1",
+    "expectation": "supported",
+    "required": [
+      [
+        {
+          "document_id": "specs",
+          "location": "row:3",
+          "filename": "arc480-specs.tsv",
+          "quote": "Folded case thickness\t47\tmm\tStand fully closed\tARC-480",
+          "start_offset": 111,
+          "end_offset": 165
+        }
+      ]
+    ],
+    "pair": "same-2"
+  },
+  {
+    "id": "S06",
+    "scenario": "same_name",
+    "principal": "owner",
+    "query": "支架收拢以后整盏灯有多厚？",
+    "target": null,
+    "version": null,
+    "expectation": "clarify",
+    "required": [],
+    "pair": "same-2",
+    "scope_choices": [
+      {
+        "shop_id": "t1-harbor",
+        "marketplace_id": "US",
+        "sku": "ARC-220"
+      },
+      {
+        "shop_id": "t1-harbor",
+        "marketplace_id": "US",
+        "sku": "ARC-480"
+      }
+    ],
+    "unbound_scope": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US"
+    }
+  },
+  {
+    "id": "S07",
+    "scenario": "same_name",
+    "principal": "owner",
+    "query": "磁吸底座丢了，补买时该报哪个零件编号？",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "ARC-220"
+    },
+    "version": "v1",
+    "expectation": "supported",
+    "required": [
+      [
+        {
+          "document_id": "specs",
+          "location": "row:4",
+          "filename": "arc220-specs.tsv",
+          "quote": "Magnetic base replacement part\tAT-MB22\tcode\tBare steel mount for this SKU\tARC-220",
+          "start_offset": 166,
+          "end_offset": 247
+        }
+      ]
+    ],
+    "pair": "same-3"
+  },
+  {
+    "id": "S08",
+    "scenario": "same_name",
+    "principal": "owner",
+    "query": "磁吸底座丢了，补买时该报哪个零件编号？",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "ARC-480"
+    },
+    "version": "v1",
+    "expectation": "supported",
+    "required": [
+      [
+        {
+          "document_id": "specs",
+          "location": "row:4",
+          "filename": "arc480-specs.tsv",
+          "quote": "Magnetic base replacement part\tAT-MB48\tcode\tBare steel mount for this SKU\tARC-480",
+          "start_offset": 166,
+          "end_offset": 247
+        }
+      ]
+    ],
+    "pair": "same-3"
+  },
+  {
+    "id": "S09",
+    "scenario": "same_name",
+    "principal": "owner",
+    "query": "磁吸底座丢了，补买时该报哪个零件编号？",
+    "target": null,
+    "version": null,
+    "expectation": "clarify",
+    "required": [],
+    "pair": "same-3",
+    "scope_choices": [
+      {
+        "shop_id": "t1-harbor",
+        "marketplace_id": "US",
+        "sku": "ARC-220"
+      },
+      {
+        "shop_id": "t1-harbor",
+        "marketplace_id": "US",
+        "sku": "ARC-480"
+      }
+    ],
+    "unbound_scope": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US"
+    }
+  },
+  {
+    "id": "S10",
+    "scenario": "same_name",
+    "principal": "owner",
+    "query": "What is the beam angle at half peak intensity?",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "ARC-220"
+    },
+    "version": "v1",
+    "expectation": "supported",
+    "required": [
+      [
+        {
+          "document_id": "specs",
+          "location": "row:5",
+          "filename": "arc220-specs.tsv",
+          "quote": "Light beam angle\t52\tdegrees\tFull width at half maximum\tARC-220",
+          "start_offset": 248,
+          "end_offset": 310
+        }
+      ]
+    ],
+    "pair": "same-4"
+  },
+  {
+    "id": "S11",
+    "scenario": "same_name",
+    "principal": "owner",
+    "query": "What is the beam angle at half peak intensity?",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "ARC-480"
+    },
+    "version": "v1",
+    "expectation": "supported",
+    "required": [
+      [
+        {
+          "document_id": "specs",
+          "location": "row:5",
+          "filename": "arc480-specs.tsv",
+          "quote": "Light beam angle\t68\tdegrees\tFull width at half maximum\tARC-480",
+          "start_offset": 248,
+          "end_offset": 310
+        }
+      ]
+    ],
+    "pair": "same-4"
+  },
+  {
+    "id": "S12",
+    "scenario": "same_name",
+    "principal": "owner",
+    "query": "What is the beam angle at half peak intensity?",
+    "target": null,
+    "version": null,
+    "expectation": "clarify",
+    "required": [],
+    "pair": "same-4",
+    "scope_choices": [
+      {
+        "shop_id": "t1-harbor",
+        "marketplace_id": "US",
+        "sku": "ARC-220"
+      },
+      {
+        "shop_id": "t1-harbor",
+        "marketplace_id": "US",
+        "sku": "ARC-480"
+      }
+    ],
+    "unbound_scope": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US"
+    }
+  },
+  {
+    "id": "V01",
+    "scenario": "version",
+    "principal": "owner",
+    "query": "这台冲洗泵接热水用，最高能到几度？",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "DRIFT-P12"
+    },
+    "version": "v1",
+    "expectation": "supported",
+    "required": [
+      [
+        {
+          "document_id": "manual",
+          "location": "page:2",
+          "filename": "drift-v1-manual.md",
+          "quote": "## 2 | Working water temperature\nUse water at or below 42 °C at the pump inlet during spraying.",
+          "start_offset": 107,
+          "end_offset": 202
+        }
+      ]
+    ],
+    "pair": "version-1"
+  },
+  {
+    "id": "V02",
+    "scenario": "version",
+    "principal": "owner",
+    "query": "这台冲洗泵接热水用，最高能到几度？",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "DRIFT-P12"
+    },
+    "version": "v2",
+    "expectation": "supported",
+    "required": [
+      [
+        {
+          "document_id": "manual",
+          "location": "page:2",
+          "filename": "drift-v2-manual.md",
+          "quote": "## 2 | Working water temperature\nUse water at or below 35 °C at the pump inlet during spraying.",
+          "start_offset": 107,
+          "end_offset": 202
+        }
+      ]
+    ],
+    "pair": "version-1"
+  },
+  {
+    "id": "V03",
+    "scenario": "version",
+    "principal": "owner",
+    "query": "一直开着冲，最多撑几分钟得停？",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "DRIFT-P12"
+    },
+    "version": "v1",
+    "expectation": "supported",
+    "required": [
+      [
+        {
+          "document_id": "manual",
+          "location": "page:7",
+          "filename": "drift-v1-manual.md",
+          "quote": "## 7 | Continuous spray duty cycle\nSpray for no more than 12 minutes continuously, then leave the pump off for 15 minutes.",
+          "start_offset": 629,
+          "end_offset": 751
+        }
+      ]
+    ],
+    "pair": "version-2"
+  },
+  {
+    "id": "V04",
+    "scenario": "version",
+    "principal": "owner",
+    "query": "一直开着冲，最多撑几分钟得停？",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "DRIFT-P12"
+    },
+    "version": "v2",
+    "expectation": "supported",
+    "required": [
+      [
+        {
+          "document_id": "manual",
+          "location": "page:7",
+          "filename": "drift-v2-manual.md",
+          "quote": "## 7 | Continuous spray duty cycle\nSpray for no more than 8 minutes continuously, then leave the pump off for 15 minutes.",
+          "start_offset": 629,
+          "end_offset": 750
+        }
+      ]
+    ],
+    "pair": "version-2"
+  },
+  {
+    "id": "V05",
+    "scenario": "version",
+    "principal": "owner",
+    "query": "What working pressure does it run at with the wide nozzle?",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "DRIFT-P12"
+    },
+    "version": "v1",
+    "expectation": "supported",
+    "required": [
+      [
+        {
+          "document_id": "specs",
+          "location": "row:2",
+          "filename": "drift-v1-specs.tsv",
+          "quote": "Maximum working pressure\t2.6\tbar\tWide nozzle, pump running\tDRIFT-P12",
+          "start_offset": 40,
+          "end_offset": 108
+        }
+      ]
+    ],
+    "pair": "version-3"
+  },
+  {
+    "id": "V06",
+    "scenario": "version",
+    "principal": "owner",
+    "query": "What working pressure does it run at with the wide nozzle?",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "DRIFT-P12"
+    },
+    "version": "v2",
+    "expectation": "supported",
+    "required": [
+      [
+        {
+          "document_id": "specs",
+          "location": "row:2",
+          "filename": "drift-v2-specs.tsv",
+          "quote": "Maximum working pressure\t2.1\tbar\tWide nozzle, pump running\tDRIFT-P12",
+          "start_offset": 40,
+          "end_offset": 108
+        }
+      ]
+    ],
+    "pair": "version-3"
+  },
+  {
+    "id": "V07",
+    "scenario": "version",
+    "principal": "owner",
+    "query": "这个水箱实际上能灌进去几升？",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "DRIFT-P12"
+    },
+    "version": "v1",
+    "expectation": "supported",
+    "required": [
+      [
+        {
+          "document_id": "specs",
+          "location": "row:3",
+          "filename": "drift-v1-specs.tsv",
+          "quote": "Reservoir rated volume\t4.2\tL\tCold water to the fill line\tDRIFT-P12",
+          "start_offset": 109,
+          "end_offset": 175
+        }
+      ]
+    ],
+    "pair": "version-4"
+  },
+  {
+    "id": "V08",
+    "scenario": "version",
+    "principal": "owner",
+    "query": "这个水箱实际上能灌进去几升？",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "DRIFT-P12"
+    },
+    "version": "v2",
+    "expectation": "supported",
+    "required": [
+      [
+        {
+          "document_id": "specs",
+          "location": "row:3",
+          "filename": "drift-v2-specs.tsv",
+          "quote": "Reservoir rated volume\t3.6\tL\tCold water to the fill line\tDRIFT-P12",
+          "start_offset": 109,
+          "end_offset": 175
+        }
+      ]
+    ],
+    "pair": "version-4"
+  },
+  {
+    "id": "V09",
+    "scenario": "version",
+    "principal": "owner",
+    "query": "水垢挺多，用柠檬酸除垢要配成多少浓度？",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "DRIFT-P12"
+    },
+    "version": "v1",
+    "expectation": "supported",
+    "required": [
+      [
+        {
+          "document_id": "manual",
+          "location": "page:16",
+          "filename": "drift-v1-manual.md",
+          "quote": "## 16 | Drain additive\nAfter disconnecting the nozzle, use a 1% citric acid solution for the reservoir descaling cycle.",
+          "start_offset": 1604,
+          "end_offset": 1723
+        }
+      ]
+    ],
+    "pair": "version-5"
+  },
+  {
+    "id": "V10",
+    "scenario": "version",
+    "principal": "owner",
+    "query": "水垢挺多，用柠檬酸除垢要配成多少浓度？",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "DRIFT-P12"
+    },
+    "version": "v2",
+    "expectation": "insufficient",
+    "required": [],
+    "pair": "version-5",
+    "missing": "柠檬酸除垢浓度"
+  },
+  {
+    "id": "V11",
+    "scenario": "version",
+    "principal": "owner",
+    "query": "准备过冬收起来，进水滤篮需要先拿下来吗？",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "DRIFT-P12"
+    },
+    "version": "v1",
+    "expectation": "supported",
+    "required": [
+      [
+        {
+          "document_id": "manual",
+          "location": "page:17",
+          "filename": "drift-v1-manual.md",
+          "quote": "## 17 | Cold-storage preparation\nFor winter storage, remove the inlet basket before putting the empty pump in its tray.",
+          "start_offset": 1725,
+          "end_offset": 1844
+        }
+      ]
+    ],
+    "pair": "version-6"
+  },
+  {
+    "id": "V12",
+    "scenario": "version",
+    "principal": "owner",
+    "query": "准备过冬收起来，进水滤篮需要先拿下来吗？",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "DRIFT-P12"
+    },
+    "version": "v2",
+    "expectation": "insufficient",
+    "required": [],
+    "pair": "version-6",
+    "missing": "过冬储存时进水滤篮的处理方法"
+  },
+  {
+    "id": "M01",
+    "scenario": "multi_document",
+    "principal": "owner",
+    "query": "软管头外形一样也能换吗？下单时要认哪个编号？",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "DRIFT-P12"
+    },
+    "version": "v2",
+    "expectation": "supported",
+    "required": [
+      [
+        {
+          "document_id": "faq",
+          "location": "faq:hose-fit",
+          "filename": "drift-v2-faq.md",
+          "quote": "## hose-fit | Replacement hose fit\nQ: Can I buy any hose with the same connector shape?\nA: Match the actual replacement hose order code before installation. Shape alone is insufficient.",
+          "start_offset": 0,
+          "end_offset": 185
+        }
+      ],
+      [
+        {
+          "document_id": "specs",
+          "location": "row:4",
+          "filename": "drift-v2-specs.tsv",
+          "quote": "Replacement hose order code\tDP-H08\tcode\tService hose assembly\tDRIFT-P12",
+          "start_offset": 176,
+          "end_offset": 247
+        }
+      ]
+    ],
+    "pair": "multi-1"
+  },
+  {
+    "id": "M02",
+    "scenario": "multi_document",
+    "principal": "owner",
+    "query": "软管头外形一样也能换吗？下单时要认哪个编号？",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "DRIFT-P12"
+    },
+    "version": "v2-without-specs",
+    "expectation": "partial",
+    "required": [
+      [
+        {
+          "document_id": "faq",
+          "location": "faq:hose-fit",
+          "filename": "drift-v2-faq.md",
+          "quote": "## hose-fit | Replacement hose fit\nQ: Can I buy any hose with the same connector shape?\nA: Match the actual replacement hose order code before installation. Shape alone is insufficient.",
+          "start_offset": 0,
+          "end_offset": 185
+        }
+      ]
+    ],
+    "pair": "multi-1",
+    "missing": "替换软管的订购配件号",
+    "missing_terms": [
+      "软管",
+      "订购|编号|配件号|货号"
+    ],
+    "removed_source": {
+      "document_id": "specs",
+      "location": "row:4",
+      "filename": "drift-v2-specs.tsv",
+      "quote": "Replacement hose order code\tDP-H08\tcode\tService hose assembly\tDRIFT-P12",
+      "start_offset": 176,
+      "end_offset": 247
+    }
+  },
+  {
+    "id": "M03",
+    "scenario": "multi_document",
+    "principal": "owner",
+    "query": "拿它洗自行车，喷头离链罩多远，工作水压又是多少？",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "DRIFT-P12"
+    },
+    "version": "v2",
+    "expectation": "supported",
+    "required": [
+      [
+        {
+          "document_id": "faq",
+          "location": "faq:bike-rinse",
+          "filename": "drift-v2-faq.md",
+          "quote": "## bike-rinse | Bike rinse distance\nQ: How should I rinse a bike chain cover?\nA: Keep the nozzle at least 25 cm from the cover and consult the working pressure limit before spraying.",
+          "start_offset": 187,
+          "end_offset": 369
+        }
+      ],
+      [
+        {
+          "document_id": "specs",
+          "location": "row:2",
+          "filename": "drift-v2-specs.tsv",
+          "quote": "Maximum working pressure\t2.1\tbar\tWide nozzle, pump running\tDRIFT-P12",
+          "start_offset": 40,
+          "end_offset": 108
+        }
+      ]
+    ],
+    "pair": "multi-2"
+  },
+  {
+    "id": "M04",
+    "scenario": "multi_document",
+    "principal": "owner",
+    "query": "拿它洗自行车，喷头离链罩多远，工作水压又是多少？",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "DRIFT-P12"
+    },
+    "version": "v2-without-specs",
+    "expectation": "partial",
+    "required": [
+      [
+        {
+          "document_id": "faq",
+          "location": "faq:bike-rinse",
+          "filename": "drift-v2-faq.md",
+          "quote": "## bike-rinse | Bike rinse distance\nQ: How should I rinse a bike chain cover?\nA: Keep the nozzle at least 25 cm from the cover and consult the working pressure limit before spraying.",
+          "start_offset": 187,
+          "end_offset": 369
+        }
+      ]
+    ],
+    "pair": "multi-2",
+    "missing": "工作压力上限",
+    "missing_terms": [
+      "工作|喷射|冲洗",
+      "压力|水压"
+    ],
+    "removed_source": {
+      "document_id": "specs",
+      "location": "row:2",
+      "filename": "drift-v2-specs.tsv",
+      "quote": "Maximum working pressure\t2.1\tbar\tWide nozzle, pump running\tDRIFT-P12",
+      "start_offset": 40,
+      "end_offset": 108
+    }
+  },
+  {
+    "id": "M05",
+    "scenario": "multi_document",
+    "principal": "owner",
+    "query": "接满能装几升？中途不松扳机，能连续喷几分钟？",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "DRIFT-P12"
+    },
+    "version": "v2",
+    "expectation": "supported",
+    "required": [
+      [
+        {
+          "document_id": "specs",
+          "location": "row:3",
+          "filename": "drift-v2-specs.tsv",
+          "quote": "Reservoir rated volume\t3.6\tL\tCold water to the fill line\tDRIFT-P12",
+          "start_offset": 109,
+          "end_offset": 175
+        }
+      ],
+      [
+        {
+          "document_id": "manual",
+          "location": "page:7",
+          "filename": "drift-v2-manual.md",
+          "quote": "## 7 | Continuous spray duty cycle\nSpray for no more than 8 minutes continuously, then leave the pump off for 15 minutes.",
+          "start_offset": 629,
+          "end_offset": 750
+        }
+      ]
+    ],
+    "pair": "multi-3"
+  },
+  {
+    "id": "M06",
+    "scenario": "multi_document",
+    "principal": "owner",
+    "query": "接满能装几升？中途不松扳机，能连续喷几分钟？",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "DRIFT-P12"
+    },
+    "version": "v2-without-manual",
+    "expectation": "partial",
+    "required": [
+      [
+        {
+          "document_id": "specs",
+          "location": "row:3",
+          "filename": "drift-v2-specs.tsv",
+          "quote": "Reservoir rated volume\t3.6\tL\tCold water to the fill line\tDRIFT-P12",
+          "start_offset": 109,
+          "end_offset": 175
+        }
+      ]
+    ],
+    "pair": "multi-3",
+    "missing": "最长连续喷洗时间",
+    "missing_terms": [
+      "连续|一直|不停",
+      "时间|多久|分钟|时长"
+    ],
+    "removed_source": {
+      "document_id": "manual",
+      "location": "page:7",
+      "filename": "drift-v2-manual.md",
+      "quote": "## 7 | Continuous spray duty cycle\nSpray for no more than 8 minutes continuously, then leave the pump off for 15 minutes.",
+      "start_offset": 629,
+      "end_offset": 750
+    }
+  },
+  {
+    "id": "M07",
+    "scenario": "multi_document",
+    "principal": "owner",
+    "query": "水箱能加多少升，接热水时对水温上限有什么要求？",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "DRIFT-P12"
+    },
+    "version": "v2",
+    "expectation": "supported",
+    "required": [
+      [
+        {
+          "document_id": "specs",
+          "location": "row:3",
+          "filename": "drift-v2-specs.tsv",
+          "quote": "Reservoir rated volume\t3.6\tL\tCold water to the fill line\tDRIFT-P12",
+          "start_offset": 109,
+          "end_offset": 175
+        }
+      ],
+      [
+        {
+          "document_id": "manual",
+          "location": "page:2",
+          "filename": "drift-v2-manual.md",
+          "quote": "## 2 | Working water temperature\nUse water at or below 35 °C at the pump inlet during spraying.",
+          "start_offset": 107,
+          "end_offset": 202
+        }
+      ]
+    ],
+    "pair": "multi-4"
+  },
+  {
+    "id": "M08",
+    "scenario": "multi_document",
+    "principal": "owner",
+    "query": "水箱能加多少升，接热水时对水温上限有什么要求？",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "DRIFT-P12"
+    },
+    "version": "v2-without-manual",
+    "expectation": "partial",
+    "required": [
+      [
+        {
+          "document_id": "specs",
+          "location": "row:3",
+          "filename": "drift-v2-specs.tsv",
+          "quote": "Reservoir rated volume\t3.6\tL\tCold water to the fill line\tDRIFT-P12",
+          "start_offset": 109,
+          "end_offset": 175
+        }
+      ]
+    ],
+    "pair": "multi-4",
+    "missing": "进水温度上限",
+    "missing_terms": [
+      "进水|水温|热水",
+      "上限|最高|限值|温度"
+    ],
+    "removed_source": {
+      "document_id": "manual",
+      "location": "page:2",
+      "filename": "drift-v2-manual.md",
+      "quote": "## 2 | Working water temperature\nUse water at or below 35 °C at the pump inlet during spraying.",
+      "start_offset": 107,
+      "end_offset": 202
+    }
+  },
+  {
+    "id": "M09",
+    "scenario": "multi_document",
+    "principal": "owner",
+    "query": "最多能接多热的水？顺便查下替换软管订货编号。",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "DRIFT-P12"
+    },
+    "version": "v2",
+    "expectation": "supported",
+    "required": [
+      [
+        {
+          "document_id": "manual",
+          "location": "page:2",
+          "filename": "drift-v2-manual.md",
+          "quote": "## 2 | Working water temperature\nUse water at or below 35 °C at the pump inlet during spraying.",
+          "start_offset": 107,
+          "end_offset": 202
+        }
+      ],
+      [
+        {
+          "document_id": "specs",
+          "location": "row:4",
+          "filename": "drift-v2-specs.tsv",
+          "quote": "Replacement hose order code\tDP-H08\tcode\tService hose assembly\tDRIFT-P12",
+          "start_offset": 176,
+          "end_offset": 247
+        }
+      ]
+    ],
+    "pair": "multi-5"
+  },
+  {
+    "id": "M10",
+    "scenario": "multi_document",
+    "principal": "owner",
+    "query": "最多能接多热的水？顺便查下替换软管订货编号。",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "DRIFT-P12"
+    },
+    "version": "v2-without-specs",
+    "expectation": "partial",
+    "required": [
+      [
+        {
+          "document_id": "manual",
+          "location": "page:2",
+          "filename": "drift-v2-manual.md",
+          "quote": "## 2 | Working water temperature\nUse water at or below 35 °C at the pump inlet during spraying.",
+          "start_offset": 107,
+          "end_offset": 202
+        }
+      ]
+    ],
+    "pair": "multi-5",
+    "missing": "替换软管的订购配件号",
+    "missing_terms": [
+      "软管",
+      "订购|编号|配件号|货号"
+    ],
+    "removed_source": {
+      "document_id": "specs",
+      "location": "row:4",
+      "filename": "drift-v2-specs.tsv",
+      "quote": "Replacement hose order code\tDP-H08\tcode\tService hose assembly\tDRIFT-P12",
+      "start_offset": 176,
+      "end_offset": 247
+    }
+  },
+  {
+    "id": "M11",
+    "scenario": "multi_document",
+    "principal": "owner",
+    "query": "用这台冲车链罩要离多远？然后告诉我最高工作压力。",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "DRIFT-P12"
+    },
+    "version": "v2",
+    "expectation": "supported",
+    "required": [
+      [
+        {
+          "document_id": "specs",
+          "location": "row:2",
+          "filename": "drift-v2-specs.tsv",
+          "quote": "Maximum working pressure\t2.1\tbar\tWide nozzle, pump running\tDRIFT-P12",
+          "start_offset": 40,
+          "end_offset": 108
+        }
+      ],
+      [
+        {
+          "document_id": "faq",
+          "location": "faq:bike-rinse",
+          "filename": "drift-v2-faq.md",
+          "quote": "## bike-rinse | Bike rinse distance\nQ: How should I rinse a bike chain cover?\nA: Keep the nozzle at least 25 cm from the cover and consult the working pressure limit before spraying.",
+          "start_offset": 187,
+          "end_offset": 369
+        }
+      ]
+    ],
+    "pair": "multi-6"
+  },
+  {
+    "id": "M12",
+    "scenario": "multi_document",
+    "principal": "owner",
+    "query": "用这台冲车链罩要离多远？然后告诉我最高工作压力。",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "DRIFT-P12"
+    },
+    "version": "v2-without-faq",
+    "expectation": "partial",
+    "required": [
+      [
+        {
+          "document_id": "specs",
+          "location": "row:2",
+          "filename": "drift-v2-specs.tsv",
+          "quote": "Maximum working pressure\t2.1\tbar\tWide nozzle, pump running\tDRIFT-P12",
+          "start_offset": 40,
+          "end_offset": 108
+        }
+      ]
+    ],
+    "pair": "multi-6",
+    "missing": "喷头与自行车链罩的最小距离",
+    "missing_terms": [
+      "链罩|自行车|单车",
+      "距离|多远|间距"
+    ],
+    "removed_source": {
+      "document_id": "faq",
+      "location": "faq:bike-rinse",
+      "filename": "drift-v2-faq.md",
+      "quote": "## bike-rinse | Bike rinse distance\nQ: How should I rinse a bike chain cover?\nA: Keep the nozzle at least 25 cm from the cover and consult the working pressure limit before spraying.",
+      "start_offset": 187,
+      "end_offset": 369
+    }
+  },
+  {
+    "id": "N01",
+    "scenario": "no_answer",
+    "principal": "owner",
+    "query": "磁吸底座吸在墙上，竖挂时最多能承重多少公斤？",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "ARC-220"
+    },
+    "version": "v1",
+    "expectation": "insufficient",
+    "required": [],
+    "missing": "竖挂承重",
+    "distractors": [
+      {
+        "document_id": "manual",
+        "location": "page:5",
+        "filename": "arc220-manual.md",
+        "quote": "## 5 | Mounting magnet\nThe magnetic base is a workshop mount. A weak pull on a narrow steel edge is expected; reposition it.",
+        "start_offset": 477,
+        "end_offset": 601
+      },
+      {
+        "document_id": "specs",
+        "location": "row:13",
+        "filename": "arc220-specs.tsv",
+        "quote": "Charging cradle holding force\t7\tN\tDock detent only, cable disconnected\tARC-220",
+        "start_offset": 688,
+        "end_offset": 766
+      }
+    ]
+  },
+  {
+    "id": "N02",
+    "scenario": "no_answer",
+    "principal": "owner",
+    "query": "随箱充电器本体标注的 IP 防水等级是多少？",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "ARC-480"
+    },
+    "version": "v1",
+    "expectation": "insufficient",
+    "required": [],
+    "missing": "随箱充电器本体的 IP 等级",
+    "distractors": [
+      {
+        "document_id": "faq",
+        "location": "faq:charger",
+        "filename": "arc480-faq.md",
+        "quote": "## charger | USB charger enclosure\nQ: What is the included USB charger's water rating?\nA: Use the charger indoors and keep its enclosure dry.",
+        "start_offset": 282,
+        "end_offset": 423
+      },
+      {
+        "document_id": "manual",
+        "location": "page:8",
+        "filename": "arc480-manual.md",
+        "quote": "## 8 | Splash protection\nOnly the closed lamp enclosure has an IPX4 splash rating. Light rain is permitted with the USB cover closed.",
+        "start_offset": 822,
+        "end_offset": 955
+      }
+    ]
+  },
+  {
+    "id": "N03",
+    "scenario": "no_answer",
+    "principal": "owner",
+    "query": "这款拆下来的灯罩能过洗碗机吗？",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "ARC-220"
+    },
+    "version": "v1",
+    "expectation": "insufficient",
+    "required": [],
+    "missing": "拆下的灯罩能否机洗",
+    "distractors": [
+      {
+        "document_id": "manual",
+        "location": "page:6",
+        "filename": "arc220-manual.md",
+        "quote": "## 6 | Lens care\nWipe the lens with a dry microfiber cloth. Do not use solvent on the optical window.",
+        "start_offset": 603,
+        "end_offset": 704
+      },
+      {
+        "document_id": "faq",
+        "location": "faq:beam",
+        "filename": "arc220-faq.md",
+        "quote": "## beam | Reflector insert\nQ: Can I remove the reflector insert?\nA: Return the light to service for reflector replacement.",
+        "start_offset": 1092,
+        "end_offset": 1214
+      }
+    ]
+  },
+  {
+    "id": "N04",
+    "scenario": "no_answer",
+    "principal": "owner",
+    "query": "Can the beam swing 110 degrees while the stand stays still?",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "ARC-480"
+    },
+    "version": "v1",
+    "expectation": "insufficient",
+    "required": [],
+    "missing": "支架静止时光束是否可以转动 110 度",
+    "distractors": [
+      {
+        "document_id": "specs",
+        "location": "row:5",
+        "filename": "arc480-specs.tsv",
+        "quote": "Light beam angle\t68\tdegrees\tFull width at half maximum\tARC-480",
+        "start_offset": 248,
+        "end_offset": 310
+      },
+      {
+        "document_id": "faq",
+        "location": "faq:angle",
+        "filename": "arc480-faq.md",
+        "quote": "## angle | Stand travel\nQ: How far can I swing the stand?\nA: The stand pivots through 110 degrees at its hinge. Close it for transport.",
+        "start_offset": 425,
+        "end_offset": 560
+      }
+    ]
+  },
+  {
+    "id": "N05",
+    "scenario": "no_answer",
+    "principal": "owner",
+    "query": "把电池从灯里拆出来，低于零度还能给电芯充电吗？",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "ARC-220"
+    },
+    "version": "v1",
+    "expectation": "insufficient",
+    "required": [],
+    "missing": "拆下电芯在零下能否充电",
+    "distractors": [
+      {
+        "document_id": "manual",
+        "location": "page:11",
+        "filename": "arc220-manual.md",
+        "quote": "## 11 | USB input temperature\nCharge the built-in light battery between 5 and 35 °C. Let the unit cool before connecting power.",
+        "start_offset": 1196,
+        "end_offset": 1323
+      },
+      {
+        "document_id": "manual",
+        "location": "page:12",
+        "filename": "arc220-manual.md",
+        "quote": "## 12 | Battery servicing\nThe built-in lamp cell is not supplied as a loose field spare. Arrange service through an authorized workshop.",
+        "start_offset": 1325,
+        "end_offset": 1461
+      }
+    ]
+  },
+  {
+    "id": "N06",
+    "scenario": "no_answer",
+    "principal": "owner",
+    "query": "随箱充电线能不能给 20V 的电脑供电？",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "ARC-480"
+    },
+    "version": "v1",
+    "expectation": "insufficient",
+    "required": [],
+    "missing": "随箱线材的 20V 供电能力",
+    "distractors": [
+      {
+        "document_id": "manual",
+        "location": "page:3",
+        "filename": "arc480-manual.md",
+        "quote": "## 3 | Charging inlet\nCharge from a 5 V USB-C supply. Close the dust cover before setting the lamp on a dusty bench.",
+        "start_offset": 229,
+        "end_offset": 345
+      },
+      {
+        "document_id": "specs",
+        "location": "row:9",
+        "filename": "arc480-specs.tsv",
+        "quote": "Cable length\t0.45\tm\tIncluded lead\tARC-480",
+        "start_offset": 459,
+        "end_offset": 500
+      }
+    ]
+  },
+  {
+    "id": "N07",
+    "scenario": "no_answer",
+    "principal": "owner",
+    "query": "连电机一起放 65 度水里浸半小时做消毒，有经过验证的杀菌率吗？",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "DRIFT-P12"
+    },
+    "version": "v2",
+    "expectation": "insufficient",
+    "required": [],
+    "missing": "规定条件下验证的杀菌率",
+    "distractors": [
+      {
+        "document_id": "manual",
+        "location": "page:12",
+        "filename": "drift-v2-manual.md",
+        "quote": "## 12 | Detachable caddy\nThe detachable cleaning caddy can be rinsed in water up to 65 °C with no motor attached.",
+        "start_offset": 1161,
+        "end_offset": 1274
+      },
+      {
+        "document_id": "manual",
+        "location": "page:4",
+        "filename": "drift-v2-manual.md",
+        "quote": "## 4 | Electrical compartment\nDo not immerse the motor housing. Dry the outside before plugging in the charger.",
+        "start_offset": 319,
+        "end_offset": 430
+      }
+    ]
+  },
+  {
+    "id": "N08",
+    "scenario": "no_answer",
+    "principal": "owner",
+    "query": "同系列 DRIFT-P30 的宽喷头工作压力是多少？",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "DRIFT-P12"
+    },
+    "version": "v2",
+    "expectation": "insufficient",
+    "required": [],
+    "missing": "DRIFT-P30 喷头工作压力",
+    "distractors": [
+      {
+        "document_id": "specs",
+        "location": "row:2",
+        "filename": "drift-v2-specs.tsv",
+        "quote": "Maximum working pressure\t2.1\tbar\tWide nozzle, pump running\tDRIFT-P12",
+        "start_offset": 40,
+        "end_offset": 108
+      },
+      {
+        "document_id": "specs",
+        "location": "row:13",
+        "filename": "drift-v2-specs.tsv",
+        "quote": "Temporary service pressure\t3.8\tbar\tWith a closed bench gauge, not spray pressure\tDRIFT-P12",
+        "start_offset": 771,
+        "end_offset": 861
+      }
+    ]
+  },
+  {
+    "id": "N09",
+    "scenario": "no_answer",
+    "principal": "owner",
+    "query": "用这个泵抽百分之三的盐水，软管能用几个月？",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "DRIFT-P12"
+    },
+    "version": "v2",
+    "expectation": "insufficient",
+    "required": [],
+    "missing": "盐水环境下软管寿命",
+    "distractors": [
+      {
+        "document_id": "manual",
+        "location": "page:6",
+        "filename": "drift-v2-manual.md",
+        "quote": "## 6 | Maintenance\nCheck the hose for flattening and kinks. Hang it loosely between uses.",
+        "start_offset": 538,
+        "end_offset": 627
+      },
+      {
+        "document_id": "specs",
+        "location": "row:4",
+        "filename": "drift-v2-specs.tsv",
+        "quote": "Replacement hose order code\tDP-H08\tcode\tService hose assembly\tDRIFT-P12",
+        "start_offset": 176,
+        "end_offset": 247
+      }
+    ]
+  },
+  {
+    "id": "N10",
+    "scenario": "no_answer",
+    "principal": "owner",
+    "query": "Does the 45-degree hose elbow have the same replacement code as the straight service hose?",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "DRIFT-P12"
+    },
+    "version": "v2",
+    "expectation": "insufficient",
+    "required": [],
+    "missing": "45 度弯头的订购码和直管比较",
+    "distractors": [
+      {
+        "document_id": "specs",
+        "location": "row:4",
+        "filename": "drift-v2-specs.tsv",
+        "quote": "Replacement hose order code\tDP-H08\tcode\tService hose assembly\tDRIFT-P12",
+        "start_offset": 176,
+        "end_offset": 247
+      },
+      {
+        "document_id": "specs",
+        "location": "row:10",
+        "filename": "drift-v2-specs.tsv",
+        "quote": "Wand bayonet turn\t45\tdegrees\tInstallation twist\tDRIFT-P12",
+        "start_offset": 610,
+        "end_offset": 667
+      }
+    ]
+  },
+  {
+    "id": "N11",
+    "scenario": "no_answer",
+    "principal": "owner",
+    "query": "加满后在高海拔一直喷，运行电流最大能到多少安？",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "DRIFT-P12"
+    },
+    "version": "v2",
+    "expectation": "insufficient",
+    "required": [],
+    "missing": "高海拔连续喷洗的最大运行电流",
+    "distractors": [
+      {
+        "document_id": "specs",
+        "location": "row:9",
+        "filename": "drift-v2-specs.tsv",
+        "quote": "Motor idle current\t0.24\tA\tBench test with pump dry and relay off\tDRIFT-P12",
+        "start_offset": 535,
+        "end_offset": 609
+      },
+      {
+        "document_id": "manual",
+        "location": "page:7",
+        "filename": "drift-v2-manual.md",
+        "quote": "## 7 | Continuous spray duty cycle\nSpray for no more than 8 minutes continuously, then leave the pump off for 15 minutes.",
+        "start_offset": 629,
+        "end_offset": 750
+      }
+    ]
+  },
+  {
+    "id": "N12",
+    "scenario": "no_answer",
+    "principal": "owner",
+    "query": "DP-NC4 卡扣能装到我的 DRIFT-P30 上吗？",
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "DRIFT-P12"
+    },
+    "version": "v2",
+    "expectation": "insufficient",
+    "required": [],
+    "missing": "DP-NC4 对 DRIFT-P30 的适配",
+    "distractors": [
+      {
+        "document_id": "specs",
+        "location": "row:5",
+        "filename": "drift-v2-specs.tsv",
+        "quote": "Nozzle clip replacement code\tDP-NC4\tcode\tClip only, supplied without spray head\tDRIFT-P12",
+        "start_offset": 248,
+        "end_offset": 337
+      },
+      {
+        "document_id": "faq",
+        "location": "faq:spare",
+        "filename": "drift-v2-faq.md",
+        "quote": "## spare | Spare nozzle\nQ: Does the wide fan nozzle fit this pump?\nA: Only the nozzle seated on the hose bayonet is used in service.",
+        "start_offset": 800,
+        "end_offset": 932
+      }
+    ]
+  }
+]

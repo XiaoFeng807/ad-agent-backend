@@ -30,10 +30,6 @@ class PipelineCoordinator:
             if m.get("role") == "user":
                 user_msg = m.get("content", "")
                 break
-        # intent detection at entry point
-        intent_result = self.orchestrator.intent_manager.update(user_msg)
-        if intent_result["change_type"] in ("shift", "drift"):
-            print(f"  [Intent] topic shift detected: {intent_result['last']} -> {intent_result['current']}")
         if not needs_pipeline(user_msg):
             return self.orchestrator.chat(messages, user_id, **kwargs)
         return self._run_pipeline(user_msg, user_id)
@@ -44,10 +40,13 @@ class PipelineCoordinator:
             (self.orchestrator.knowledge_agent, "基于分析结果给出专业优化建议。要求：建议分优先级"),
         ])
         return pipeline.run(user_msg, user_id)
-    def get_optimized_context(self, user_id):
-        return self.orchestrator.get_optimized_context(user_id)
-    def save_conversation(self, user_id, role, content, priority=1):
-        self.orchestrator.save_conversation(user_id, role, content, priority)
+    def get_optimized_context(self, user_id, *, through_message_id=None, exclude_chat_view_id=None):
+        return self.orchestrator.get_optimized_context(
+            user_id, through_message_id=through_message_id, exclude_chat_view_id=exclude_chat_view_id,
+        )
+    def save_conversation(self, user_id, role, content, priority=1, *, chat_view_id=None, user_message_id=None):
+        return self.orchestrator.save_conversation(user_id, role, content, priority, chat_view_id=chat_view_id,
+                                                 user_message_id=user_message_id)
     def get_history(self, user_id):
         return self.orchestrator.get_history(user_id)
     def chat_stream(self, messages, user_id=None, **kwargs):

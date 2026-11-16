@@ -1,0 +1,958 @@
+{
+  "task": "TASK-027-T3A",
+  "captures": [
+    {
+      "id": "branch-1",
+      "bindings": {
+        "101": "13289562",
+        "102": "27589150"
+      },
+      "expected_detail": {
+        "id": 101,
+        "plan_name": "北岸搜索",
+        "status": "active",
+        "daily_budget": 310,
+        "user_id": 17
+      },
+      "original_failure": {
+        "trace_id": "fb4cb13d3550",
+        "message": "周例会需要核销 CTR 监控告警。先看我当前未读告警的级别；若发现严重 CTR 波动，请调查 #101 和 #102。历史基准窗为 2026-10-17 至 2026-10-23，当前窗为 2026-10-24 至 2026-10-30。逐计划核对两窗的覆盖、曝光、点击、CTR 和相对变化。独立核对《点击率下降复核》 v1 条文，给出分块编号、曝光与下降门槛，并据此形成复核清单。请把清单内计划的编号、名称、当前状态和日预算写在清单中。证据有缺项时请保留可核实的窗口和条文，说明具体缺项并暂缓出清单。",
+        "sdk_delegate": {
+          "attempt": 9,
+          "role": "orchestrator",
+          "step": "main",
+          "worker_id": null,
+          "index": 0,
+          "id": "call_00_LQmuJoxeudwGJ5j4ukdj7836",
+          "type": "function",
+          "function": {
+            "name": "delegate_tasks",
+            "arguments": "{\"reason\": \"未读告警为 critical 级 CTR 波动，触发对 #101、#102 的两窗核对与《点击率下降复核》v1 条文核对，三条线索相互独立，并行取证。\", \"comparison_goal\": {\"plan_id\": 101, \"start_date\": \"2026-10-17\", \"end_date\": \"2026-10-30\", \"windows\": {\"baseline\": {\"start_date\": \"2026-10-17\", \"end_date\": \"2026-10-23\"}, \"current\": {\"start_date\": \"2026-10-24\", \"end_date\": \"2026-10-30\"}}}, \"tasks\": [{\"task_id\": \"metrics_101\", \"objective\": \"读取计划 #101 在基准窗 2026-10-17~2026-10-23 与当前窗 2026-10-24~2026-10-30 的计划级曝光、点击、覆盖日期与缺报日期，分别计算两窗 CTR 及相对变化。\", \"capabilities\": [\"get_plan_metrics_by_date\"], \"expected_output\": \"逐窗列出起止日期、coverage 覆盖日期、缺报日期、曝光、点击、CTR（两位小数）、相对变化；标注曝光门槛是否满足或未知。\", \"stop_condition\": \"两窗各读取一次即停止；若某窗缺报，报告缺报日期并停止该窗计算，不重复查询。\", \"direct_refs\": []}, {\"task_id\": \"metrics_102\", \"objective\": \"读取计划 #102 在基准窗 2026-10-17~2026-10-23 与当前窗 2026-10-24~2026-10-30 的计划级曝光、点击、覆盖日期与缺报日期，分别计算两窗 CTR 及相对变化。\", \"capabilities\": [\"get_plan_metrics_by_date\"], \"expected_output\": \"逐窗列出起止日期、coverage 覆盖日期、缺报日期、曝光、点击、CTR（两位小数）、相对变化；标注曝光门槛是否满足或未知。\", \"stop_condition\": \"两窗各读取一次即停止；若某窗缺报，报告缺报日期并停止该窗计算，不重复查询。\", \"direct_refs\": []}, {\"task_id\": \"rule_v1\", \"objective\": \"检索《点击率下降复核》v1 条文，提取分块编号（chunk_id）、曝光门槛与 CTR 下降门槛的原文表述。\", \"capabilities\": [\"search_knowledge\"], \"expected_output\": \"列出各相关 chunk_id 及原文要点，明确曝光门槛数值与下降门槛（相对变化或绝对）表述；若未找到该版本，明确说明缺项。\", \"stop_condition\": \"取得该版本条文回执即停止；不检索其他版本规则。\", \"direct_refs\": []}, {\"task_id\": \"detail_101_102\", \"objective\": \"读取计划 #101 与 #102 的当前状态与日预算（计划详情快照）。\", \"capabilities\": [\"get_plan_detail\"], \"expected_output\": \"逐计划给出 plan_id、名称、当前状态、日预算；注明为累计快照口径。\", \"stop_condition\": \"两计划各读取一次即停止。\", \"direct_refs\": []}]}"
+          }
+        },
+        "detail_worker_first_attempt": 16,
+        "detail_worker_first_input": {
+          "task": {
+            "task_id": "detail_101_102",
+            "objective": "读取计划 #101 与 #102 的当前状态与日预算（计划详情快照）。",
+            "input_refs": [],
+            "artifact_refs": [],
+            "direct_refs": [],
+            "capabilities": [
+              "get_plan_detail"
+            ],
+            "dependencies": [],
+            "expected_output": "逐计划给出 plan_id、名称、当前状态、日预算；注明为累计快照口径。",
+            "stop_condition": "两计划各读取一次即停止。"
+          },
+          "inputs": {}
+        },
+        "detail_worker_sdk_actions": [
+          {
+            "attempt": 16,
+            "role": "team_worker",
+            "step": "team_worker",
+            "worker_id": "0e8da9a54b5149fba20f7b0e9957b4b9",
+            "index": 0,
+            "id": "call_00_yRL0zWj6xmDaKX8Va4SR0647",
+            "type": "function",
+            "function": {
+              "name": "get_plan_detail",
+              "arguments": "{\"plan_id\": 101}"
+            }
+          },
+          {
+            "attempt": 16,
+            "role": "team_worker",
+            "step": "team_worker",
+            "worker_id": "0e8da9a54b5149fba20f7b0e9957b4b9",
+            "index": 1,
+            "id": "call_01_6suRC8uaFg8eZMXLjFae3142",
+            "type": "function",
+            "function": {
+              "name": "get_plan_detail",
+              "arguments": "{\"plan_id\": 102}"
+            }
+          }
+        ],
+        "actual_details": [
+          {
+            "trace_id": "fb4cb13d3550",
+            "role": "team_worker",
+            "tool_call_id": "call_00_yRL0zWj6xmDaKX8Va4SR0647",
+            "runtime_call_id": "447e223674284ed0aa9e81f4fb4ccf4d",
+            "parent_call_id": "0e8da9a54b5149fba20f7b0e9957b4b9",
+            "retry_of": null,
+            "case": "branch-1",
+            "tool": "get_plan_detail",
+            "arguments": {
+              "plan_id": 101,
+              "user_id": 17
+            },
+            "start_ns": 625835310099800,
+            "nested_under": null,
+            "result": {
+              "id": 101,
+              "plan_name": "北岸搜索",
+              "platform": null,
+              "daily_budget": 310.0,
+              "status": "active",
+              "impressions": 0,
+              "clicks": 0,
+              "cost": 0.0,
+              "sales": 0.0,
+              "start_date": null,
+              "end_date": null,
+              "account_id": null,
+              "user_id": 17,
+              "created_at": "2026-11-10 07:04:25",
+              "account_name": null,
+              "ctr": 0,
+              "cpc": 0,
+              "roas": 0
+            },
+            "end_ns": 625835315114000
+          },
+          {
+            "trace_id": "fb4cb13d3550",
+            "role": "team_worker",
+            "tool_call_id": "call_01_6suRC8uaFg8eZMXLjFae3142",
+            "runtime_call_id": "f57a1dd654ee4afb8c9075133abab229",
+            "parent_call_id": "0e8da9a54b5149fba20f7b0e9957b4b9",
+            "retry_of": null,
+            "case": "branch-1",
+            "tool": "get_plan_detail",
+            "arguments": {
+              "plan_id": 102,
+              "user_id": 17
+            },
+            "start_ns": 625835324311800,
+            "nested_under": null,
+            "result": {
+              "id": 102,
+              "plan_name": "南桥搜索",
+              "platform": null,
+              "daily_budget": 720.0,
+              "status": "paused",
+              "impressions": 0,
+              "clicks": 0,
+              "cost": 0.0,
+              "sales": 0.0,
+              "start_date": null,
+              "end_date": null,
+              "account_id": null,
+              "user_id": 17,
+              "created_at": "2026-11-10 07:04:25",
+              "account_name": null,
+              "ctr": 0,
+              "cpc": 0,
+              "roas": 0
+            },
+            "end_ns": 625835329170400
+          }
+        ]
+      },
+      "explicit_condition": {
+        "trace_id": "09a8cc35178a",
+        "message": "周例会需要核销 CTR 监控告警。先看我当前未读告警的级别；若发现严重 CTR 波动，请调查 #101 和 #102。历史基准窗为 2026-10-17 至 2026-10-23，当前窗为 2026-10-24 至 2026-10-30。逐计划核对两窗的覆盖、曝光、点击、CTR 和相对变化。独立核对《点击率下降复核》 v1 条文，给出分块编号、曝光与下降门槛，并据此形成复核清单。先完成两条计划的四份窗口指标和指定版本条文核验，再确定复核清单。清单确定之后，只读取入选计划的详情，并将编号、名称、当前状态和日预算写入清单。任一必要窗口或条文缺项时，跳过详情读取，保留可核实的窗口和条文，说明缺项并暂缓出清单。",
+        "sdk_delegate": {
+          "attempt": 125,
+          "role": "orchestrator",
+          "step": "main",
+          "worker_id": null,
+          "index": 0,
+          "id": "call_00_AjjLK7O6avsoxPCbMjqP8589",
+          "type": "function",
+          "function": {
+            "name": "delegate_tasks",
+            "arguments": "{\"reason\": \"未读告警为 critical 级 CTR 波动，触发对 #101、#102 的两窗指标核对与《点击率下降复核》v1 条文核验；三条线索相互独立，并行取证。\", \"comparison_goal\": {\"plan_id\": 101, \"start_date\": \"2026-10-17\", \"end_date\": \"2026-10-30\", \"windows\": {\"baseline\": {\"start_date\": \"2026-10-17\", \"end_date\": \"2026-10-23\"}, \"current\": {\"start_date\": \"2026-10-24\", \"end_date\": \"2026-10-30\"}}}, \"tasks\": [{\"task_id\": \"plan101\", \"objective\": \"读取计划 #101 在基准窗 2026-10-17 至 2026-10-23 与当前窗 2026-10-24 至 2026-10-30 的计划级曝光、点击与覆盖情况，分别计算两窗 CTR 与相对变化。\", \"capabilities\": [\"get_plan_metrics_by_date\"], \"expected_output\": \"逐窗列出：起止日期、覆盖日期列表与缺报日期、曝光、点击、CTR（点击/曝光，保留两位小数百分比）、相对变化（(当前-基准)/基准）；若某窗缺报或基准 CTR 为 0 导致无法计算，明确标注未知。\", \"stop_condition\": \"两窗各读取一次并给出上述字段即停止；不读取计划详情，不做原因推断。\"}, {\"task_id\": \"plan102\", \"objective\": \"读取计划 #102 在基准窗 2026-10-17 至 2026-10-23 与当前窗 2026-10-24 至 2026-10-30 的计划级曝光、点击与覆盖情况，分别计算两窗 CTR 与相对变化。\", \"capabilities\": [\"get_plan_metrics_by_date\"], \"expected_output\": \"逐窗列出：起止日期、覆盖日期列表与缺报日期、曝光、点击、CTR（点击/曝光，保留两位小数百分比）、相对变化（(当前-基准)/基准）；若某窗缺报或基准 CTR 为 0 导致无法计算，明确标注未知。\", \"stop_condition\": \"两窗各读取一次并给出上述字段即停止；不读取计划详情，不做原因推断。\"}, {\"task_id\": \"rule_v1\", \"objective\": \"检索并核对《点击率下降复核》v1 条文，提取分块编号（chunk_id）、曝光门槛与 CTR 下降门槛的原文表述。\", \"capabilities\": [\"search_knowledge\"], \"expected_output\": \"列出命中的 chunk_id、条文原文摘录，明确曝光门槛数值与下降幅度门槛（相对或绝对口径），并说明是否存在未找到的门槛项。\", \"stop_condition\": \"取得 v1 版本相关条文分块即停止；不检索其他版本，不代入计划数据判定。\"}]}"
+          }
+        },
+        "decision_attempt": 132,
+        "decision_start_ns": 626938424355000,
+        "worker_artifacts_in_main_input": [
+          {
+            "artifact_id": "d06c2c35b2b540d2b53b7b97126863ea",
+            "task_id": "rule_v1",
+            "worker_id": "7397b0266aba44929753d52dce53043f",
+            "source": "search_knowledge",
+            "status": "succeeded",
+            "tool_call_id": "86a9273c9c3e46d5a5034d60da2ecb14",
+            "arguments": {
+              "query": "点击率下降复核 v1"
+            },
+            "error_code": null,
+            "ns": 626935721495900
+          },
+          {
+            "artifact_id": "625a218eb29e4357a81ffef55dbf8ce6",
+            "task_id": "plan101",
+            "worker_id": "e530c76dc73b48a58fefdaf877f61a21",
+            "source": "get_plan_metrics_by_date",
+            "status": "succeeded",
+            "tool_call_id": "74b58c70ef7f41308cb5ecf4f12e114f",
+            "arguments": {
+              "start_date": "2026-10-17",
+              "end_date": "2026-10-23",
+              "plan_id": 101
+            },
+            "error_code": null,
+            "ns": 626936157397500
+          },
+          {
+            "artifact_id": "dbff6ed5afbd49fbbd1e2172255081c3",
+            "task_id": "plan101",
+            "worker_id": "e530c76dc73b48a58fefdaf877f61a21",
+            "source": "get_plan_metrics_by_date",
+            "status": "succeeded",
+            "tool_call_id": "502f135cc3eb49afa694a48302874a4f",
+            "arguments": {
+              "start_date": "2026-10-24",
+              "end_date": "2026-10-30",
+              "plan_id": 101
+            },
+            "error_code": null,
+            "ns": 626936171639900
+          },
+          {
+            "artifact_id": "5958b82f5ae748678b8f365c12b1b1b6",
+            "task_id": "plan102",
+            "worker_id": "15dc1b9ffeba433bb2190b72225dc57f",
+            "source": "get_plan_metrics_by_date",
+            "status": "succeeded",
+            "tool_call_id": "750c6d818d4644078c123c8fd6a4b7d1",
+            "arguments": {
+              "start_date": "2026-10-17",
+              "end_date": "2026-10-23",
+              "plan_id": 102
+            },
+            "error_code": null,
+            "ns": 626936263600800
+          },
+          {
+            "artifact_id": "22f92b59f2b14aa3873360eebeccfef5",
+            "task_id": "plan102",
+            "worker_id": "15dc1b9ffeba433bb2190b72225dc57f",
+            "source": "get_plan_metrics_by_date",
+            "status": "succeeded",
+            "tool_call_id": "8b36f3e52e4a499fb586e19220a6eb26",
+            "arguments": {
+              "start_date": "2026-10-24",
+              "end_date": "2026-10-30",
+              "plan_id": 102
+            },
+            "error_code": null,
+            "ns": 626936280042900
+          }
+        ],
+        "actual_details": [
+          {
+            "trace_id": "09a8cc35178a",
+            "role": "orchestrator",
+            "tool_call_id": "call_00_1L0BJskPq8JhD6hWyXEG7040",
+            "runtime_call_id": "6a8793831d194ee4a18679c350a3f0b7",
+            "parent_call_id": null,
+            "retry_of": null,
+            "case": "branch-1",
+            "tool": "get_plan_detail",
+            "arguments": {
+              "plan_id": 101,
+              "user_id": 17
+            },
+            "start_ns": 626939954140400,
+            "nested_under": null,
+            "result": {
+              "id": 101,
+              "plan_name": "北岸搜索",
+              "platform": null,
+              "daily_budget": 310.0,
+              "status": "active",
+              "impressions": 0,
+              "clicks": 0,
+              "cost": 0.0,
+              "sales": 0.0,
+              "start_date": null,
+              "end_date": null,
+              "account_id": null,
+              "user_id": 17,
+              "created_at": "2026-11-10 07:23:01",
+              "account_name": null,
+              "ctr": 0,
+              "cpc": 0,
+              "roas": 0
+            },
+            "end_ns": 626939959788700
+          }
+        ]
+      }
+    },
+    {
+      "id": "swap-1",
+      "bindings": {
+        "101": "27589150",
+        "102": "13289562"
+      },
+      "expected_detail": {
+        "id": 102,
+        "plan_name": "南桥搜索",
+        "status": "paused",
+        "daily_budget": 720,
+        "user_id": 17
+      },
+      "original_failure": {
+        "trace_id": "db7598db7634",
+        "message": "周例会需要核销 CTR 监控告警。先看我当前未读告警的级别；若发现严重 CTR 波动，请调查 #101 和 #102。历史基准窗为 2026-10-17 至 2026-10-23，当前窗为 2026-10-24 至 2026-10-30。逐计划核对两窗的覆盖、曝光、点击、CTR 和相对变化。独立核对《点击率下降复核》 v1 条文，给出分块编号、曝光与下降门槛，并据此形成复核清单。请把清单内计划的编号、名称、当前状态和日预算写在清单中。证据有缺项时请保留可核实的窗口和条文，说明具体缺项并暂缓出清单。",
+        "sdk_delegate": {
+          "attempt": 21,
+          "role": "orchestrator",
+          "step": "main",
+          "worker_id": null,
+          "index": 0,
+          "id": "call_00_5ZUDmvmBVGV8GrDoU3YF2804",
+          "type": "function",
+          "function": {
+            "name": "delegate_tasks",
+            "arguments": "{\"reason\": \"未读告警为 critical 级 CTR 波动，触发对 #101、#102 的两窗核对与《点击率下降复核》v1 条文核对。三条线索相互独立，并行分派。\", \"comparison_goal\": {\"plan_id\": 101, \"start_date\": \"2026-10-17\", \"end_date\": \"2026-10-30\", \"windows\": {\"baseline\": {\"start_date\": \"2026-10-17\", \"end_date\": \"2026-10-23\"}, \"current\": {\"start_date\": \"2026-10-24\", \"end_date\": \"2026-10-30\"}}}, \"tasks\": [{\"task_id\": \"metrics_101\", \"objective\": \"读取计划 #101 在基准窗 2026-10-17~2026-10-23 与当前窗 2026-10-24~2026-10-30 的计划级曝光与点击，逐窗报告覆盖日期、缺报日期、曝光合计、点击合计、CTR（点击/曝光）及相对变化。\", \"capabilities\": [\"get_plan_metrics_by_date\"], \"expected_output\": \"两窗分别的起止日、覆盖日期列表、缺报日期、曝光、点击、CTR、CTR 相对变化；覆盖不完整时明确标注该窗合计与 CTR 未知。\", \"stop_condition\": \"两窗各读取一次即停止，不扩展日期范围，不推测成因。\"}, {\"task_id\": \"metrics_102\", \"objective\": \"读取计划 #102 在基准窗 2026-10-17~2026-10-23 与当前窗 2026-10-24~2026-10-30 的计划级曝光与点击，逐窗报告覆盖日期、缺报日期、曝光合计、点击合计、CTR（点击/曝光）及相对变化。\", \"capabilities\": [\"get_plan_metrics_by_date\"], \"expected_output\": \"两窗分别的起止日、覆盖日期列表、缺报日期、曝光、点击、CTR、CTR 相对变化；覆盖不完整时明确标注该窗合计与 CTR 未知。\", \"stop_condition\": \"两窗各读取一次即停止，不扩展日期范围，不推测成因。\"}, {\"task_id\": \"rule_ctr_v1\", \"objective\": \"检索《点击率下降复核》v1 条文，提取分块编号（chunk_id）、曝光门槛与 CTR 下降门槛的原文表述。\", \"capabilities\": [\"search_knowledge\"], \"expected_output\": \"条文分块编号、曝光门槛、下降门槛原文，以及条文是否要求两窗均满足门槛的说明。\", \"stop_condition\": \"取得 v1 相关分块即停止；若仅找到其他版本，明确说明未找到 v1。\"}, {\"task_id\": \"plan_detail\", \"objective\": \"读取计划 #101 与 #102 的当前状态与日预算。\", \"capabilities\": [\"get_plan_detail\"], \"expected_output\": \"两计划的编号、名称、当前状态、日预算。\", \"stop_condition\": \"两计划各读取一次即停止。\"}]}"
+          }
+        },
+        "detail_worker_first_attempt": 28,
+        "detail_worker_first_input": {
+          "task": {
+            "task_id": "plan_detail",
+            "objective": "读取计划 #101 与 #102 的当前状态与日预算。",
+            "input_refs": [],
+            "artifact_refs": [],
+            "direct_refs": [],
+            "capabilities": [
+              "get_plan_detail"
+            ],
+            "dependencies": [],
+            "expected_output": "两计划的编号、名称、当前状态、日预算。",
+            "stop_condition": "两计划各读取一次即停止。"
+          },
+          "inputs": {}
+        },
+        "detail_worker_sdk_actions": [
+          {
+            "attempt": 28,
+            "role": "team_worker",
+            "step": "team_worker",
+            "worker_id": "4122a7a06cef4d269ea1e91cbbc47908",
+            "index": 0,
+            "id": "call_00_i4JxQfVcH2xXoTAMrN3W0561",
+            "type": "function",
+            "function": {
+              "name": "get_plan_detail",
+              "arguments": "{\"plan_id\": 101}"
+            }
+          },
+          {
+            "attempt": 28,
+            "role": "team_worker",
+            "step": "team_worker",
+            "worker_id": "4122a7a06cef4d269ea1e91cbbc47908",
+            "index": 1,
+            "id": "call_01_cTdEf7PpzySSt3bEksCL9031",
+            "type": "function",
+            "function": {
+              "name": "get_plan_detail",
+              "arguments": "{\"plan_id\": 102}"
+            }
+          }
+        ],
+        "actual_details": [
+          {
+            "trace_id": "db7598db7634",
+            "role": "team_worker",
+            "tool_call_id": "call_00_i4JxQfVcH2xXoTAMrN3W0561",
+            "runtime_call_id": "9f8495347a764c4abb69aa56a1bcd760",
+            "parent_call_id": "4122a7a06cef4d269ea1e91cbbc47908",
+            "retry_of": null,
+            "case": "swap-1",
+            "tool": "get_plan_detail",
+            "arguments": {
+              "plan_id": 101,
+              "user_id": 17
+            },
+            "start_ns": 625854425357800,
+            "nested_under": null,
+            "result": {
+              "id": 101,
+              "plan_name": "北岸搜索",
+              "platform": null,
+              "daily_budget": 310.0,
+              "status": "active",
+              "impressions": 0,
+              "clicks": 0,
+              "cost": 0.0,
+              "sales": 0.0,
+              "start_date": null,
+              "end_date": null,
+              "account_id": null,
+              "user_id": 17,
+              "created_at": "2026-11-10 07:04:25",
+              "account_name": null,
+              "ctr": 0,
+              "cpc": 0,
+              "roas": 0
+            },
+            "end_ns": 625854431058400
+          },
+          {
+            "trace_id": "db7598db7634",
+            "role": "team_worker",
+            "tool_call_id": "call_01_cTdEf7PpzySSt3bEksCL9031",
+            "runtime_call_id": "ac02b9d6a2924beeb0592ea16030f841",
+            "parent_call_id": "4122a7a06cef4d269ea1e91cbbc47908",
+            "retry_of": null,
+            "case": "swap-1",
+            "tool": "get_plan_detail",
+            "arguments": {
+              "plan_id": 102,
+              "user_id": 17
+            },
+            "start_ns": 625854440199400,
+            "nested_under": null,
+            "result": {
+              "id": 102,
+              "plan_name": "南桥搜索",
+              "platform": null,
+              "daily_budget": 720.0,
+              "status": "paused",
+              "impressions": 0,
+              "clicks": 0,
+              "cost": 0.0,
+              "sales": 0.0,
+              "start_date": null,
+              "end_date": null,
+              "account_id": null,
+              "user_id": 17,
+              "created_at": "2026-11-10 07:04:25",
+              "account_name": null,
+              "ctr": 0,
+              "cpc": 0,
+              "roas": 0
+            },
+            "end_ns": 625854444910700
+          }
+        ]
+      },
+      "explicit_condition": {
+        "trace_id": "df5b504f85e2",
+        "message": "周例会需要核销 CTR 监控告警。先看我当前未读告警的级别；若发现严重 CTR 波动，请调查 #101 和 #102。历史基准窗为 2026-10-17 至 2026-10-23，当前窗为 2026-10-24 至 2026-10-30。逐计划核对两窗的覆盖、曝光、点击、CTR 和相对变化。独立核对《点击率下降复核》 v1 条文，给出分块编号、曝光与下降门槛，并据此形成复核清单。先完成两条计划的四份窗口指标和指定版本条文核验，再确定复核清单。清单确定之后，只读取入选计划的详情，并将编号、名称、当前状态和日预算写入清单。任一必要窗口或条文缺项时，跳过详情读取，保留可核实的窗口和条文，说明缺项并暂缓出清单。",
+        "sdk_delegate": {
+          "attempt": 136,
+          "role": "orchestrator",
+          "step": "main",
+          "worker_id": null,
+          "index": 0,
+          "id": "call_00_WJEd7pfsIknUwi9xcprX6603",
+          "type": "function",
+          "function": {
+            "name": "delegate_tasks",
+            "arguments": "{\"reason\": \"未读告警为 critical 级 CTR 波动，触发对 #101、#102 的两窗指标核对与《点击率下降复核》v1 条文核验。\", \"comparison_goal\": {\"plan_id\": 101, \"start_date\": \"2026-10-17\", \"end_date\": \"2026-10-30\", \"windows\": {\"baseline\": {\"start_date\": \"2026-10-17\", \"end_date\": \"2026-10-23\"}, \"current\": {\"start_date\": \"2026-10-24\", \"end_date\": \"2026-10-30\"}}}, \"tasks\": [{\"task_id\": \"plan101\", \"objective\": \"读取计划 #101 在基准窗 2026-10-17~2026-10-23 与当前窗 2026-10-24~2026-10-30 的计划级指标，分别报告每窗的覆盖日期、缺报日期、曝光、点击、CTR（点击/曝光）及相对变化。\", \"capabilities\": [\"get_plan_metrics_by_date\"], \"expected_output\": \"两窗各自的起止日期、coverage 覆盖日期、缺报日、曝光、点击、CTR（保留两位小数百分比）、CTR 相对变化；若某窗缺报则明确标注该窗合计与 CTR 未知。\", \"stop_condition\": \"两窗指标均读取完成或确认某窗缺报即停止，不读取计划详情。\"}, {\"task_id\": \"plan102\", \"objective\": \"读取计划 #102 在基准窗 2026-10-17~2026-10-23 与当前窗 2026-10-24~2026-10-30 的计划级指标，分别报告每窗的覆盖日期、缺报日期、曝光、点击、CTR（点击/曝光）及相对变化。\", \"capabilities\": [\"get_plan_metrics_by_date\"], \"expected_output\": \"两窗各自的起止日期、coverage 覆盖日期、缺报日、曝光、点击、CTR（保留两位小数百分比）、CTR 相对变化；若某窗缺报则明确标注该窗合计与 CTR 未知。\", \"stop_condition\": \"两窗指标均读取完成或确认某窗缺报即停止，不读取计划详情。\"}, {\"task_id\": \"rule_v1\", \"objective\": \"检索《点击率下降复核》v1 条文，给出分块编号（chunk_id）、曝光门槛与 CTR 下降门槛的原文表述。\", \"capabilities\": [\"search_knowledge\"], \"expected_output\": \"条文分块编号、曝光门槛数值、下降门槛（相对变化或绝对）原文，以及版本标题确认。\", \"stop_condition\": \"找到该版本条文并给出分块编号与两项门槛即停止；若未找到则明确报告缺项。\"}]}"
+          }
+        },
+        "decision_attempt": 143,
+        "decision_start_ns": 626956966918300,
+        "worker_artifacts_in_main_input": [
+          {
+            "artifact_id": "b5a04d6eeefe44deb3492174fe14d865",
+            "task_id": "rule_v1",
+            "worker_id": "5c5abf6025bd4d14a949be3fe2add1da",
+            "source": "search_knowledge",
+            "status": "succeeded",
+            "tool_call_id": "50177f238bea451ea11ff8ac233f7385",
+            "arguments": {
+              "query": "点击率下降复核 v1"
+            },
+            "error_code": null,
+            "ns": 626954819988600
+          },
+          {
+            "artifact_id": "dc2eddfd17e24560adb3930cf33d0ebe",
+            "task_id": "plan101",
+            "worker_id": "52e4388fa2cc41df8bbfa4ad10148cc6",
+            "source": "get_plan_metrics_by_date",
+            "status": "succeeded",
+            "tool_call_id": "4c7c72ca48614f62a1911a0d7884be15",
+            "arguments": {
+              "start_date": "2026-10-17",
+              "end_date": "2026-10-23",
+              "plan_id": 101
+            },
+            "error_code": null,
+            "ns": 626955046547500
+          },
+          {
+            "artifact_id": "afeee8615c524f16ace38bf7a931aba8",
+            "task_id": "plan101",
+            "worker_id": "52e4388fa2cc41df8bbfa4ad10148cc6",
+            "source": "get_plan_metrics_by_date",
+            "status": "succeeded",
+            "tool_call_id": "cd7de41ce0004f02a94d05e65d529d1f",
+            "arguments": {
+              "start_date": "2026-10-24",
+              "end_date": "2026-10-30",
+              "plan_id": 101
+            },
+            "error_code": null,
+            "ns": 626955062941600
+          },
+          {
+            "artifact_id": "27f3d7d83ecc4cc9b28ac1d220b755cd",
+            "task_id": "plan102",
+            "worker_id": "927b50df0f774248b24b52afefea35f6",
+            "source": "get_plan_metrics_by_date",
+            "status": "succeeded",
+            "tool_call_id": "ff14bea4592f48b4ac0994864e90c9ed",
+            "arguments": {
+              "start_date": "2026-10-17",
+              "end_date": "2026-10-23",
+              "plan_id": 102
+            },
+            "error_code": null,
+            "ns": 626955639043600
+          },
+          {
+            "artifact_id": "b0dbc7ae032c413a8994cec5d0b945ca",
+            "task_id": "plan102",
+            "worker_id": "927b50df0f774248b24b52afefea35f6",
+            "source": "get_plan_metrics_by_date",
+            "status": "succeeded",
+            "tool_call_id": "0ed8c58b264745188d6aaa60249927a7",
+            "arguments": {
+              "start_date": "2026-10-24",
+              "end_date": "2026-10-30",
+              "plan_id": 102
+            },
+            "error_code": null,
+            "ns": 626955653397200
+          }
+        ],
+        "actual_details": [
+          {
+            "trace_id": "df5b504f85e2",
+            "role": "orchestrator",
+            "tool_call_id": "call_00_64AQSZvyH53qlnc4FNNB6948",
+            "runtime_call_id": "b087877e6d6d4c39b1ce1de01aa49210",
+            "parent_call_id": null,
+            "retry_of": null,
+            "case": "swap-1",
+            "tool": "get_plan_detail",
+            "arguments": {
+              "plan_id": 102,
+              "user_id": 17
+            },
+            "start_ns": 626958632397400,
+            "nested_under": null,
+            "result": {
+              "id": 102,
+              "plan_name": "南桥搜索",
+              "platform": null,
+              "daily_budget": 720.0,
+              "status": "paused",
+              "impressions": 0,
+              "clicks": 0,
+              "cost": 0.0,
+              "sales": 0.0,
+              "start_date": null,
+              "end_date": null,
+              "account_id": null,
+              "user_id": 17,
+              "created_at": "2026-11-10 07:23:01",
+              "account_name": null,
+              "ctr": 0,
+              "cpc": 0,
+              "roas": 0
+            },
+            "end_ns": 626958638420300
+          }
+        ]
+      }
+    },
+    {
+      "id": "gap-1",
+      "bindings": {
+        "101": "13289562",
+        "102": null
+      },
+      "expected_detail": null,
+      "original_failure": {
+        "trace_id": "80f4e1ded97c",
+        "message": "周例会需要核销 CTR 监控告警。先看我当前未读告警的级别；若发现严重 CTR 波动，请调查 #101 和 #102。历史基准窗为 2026-10-17 至 2026-10-23，当前窗为 2026-10-24 至 2026-10-30。逐计划核对两窗的覆盖、曝光、点击、CTR 和相对变化。独立核对《点击率下降复核》 v1 条文，给出分块编号、曝光与下降门槛，并据此形成复核清单。请把清单内计划的编号、名称、当前状态和日预算写在清单中。证据有缺项时请保留可核实的窗口和条文，说明具体缺项并暂缓出清单。",
+        "sdk_delegate": {
+          "attempt": 103,
+          "role": "orchestrator",
+          "step": "main",
+          "worker_id": null,
+          "index": 0,
+          "id": "call_00_SeaerkLnl4AqG0TQK0go1904",
+          "type": "function",
+          "function": {
+            "name": "delegate_tasks",
+            "arguments": "{\"reason\": \"未读告警为 critical 级 CTR 波动，触发对 #101、#102 的两窗核对与《点击率下降复核》v1 条文核对。\", \"comparison_goal\": {\"plan_id\": 101, \"start_date\": \"2026-10-17\", \"end_date\": \"2026-10-30\", \"windows\": {\"baseline\": {\"start_date\": \"2026-10-17\", \"end_date\": \"2026-10-23\"}, \"current\": {\"start_date\": \"2026-10-24\", \"end_date\": \"2026-10-30\"}}}, \"tasks\": [{\"task_id\": \"metrics101\", \"objective\": \"读取计划 #101 在基准窗 2026-10-17~2026-10-23 与当前窗 2026-10-24~2026-10-30 的计划级曝光、点击、覆盖日期与缺报日期，并计算各窗 CTR 与相对变化。\", \"capabilities\": [\"get_plan_metrics_by_date\"], \"expected_output\": \"逐窗：起止日、覆盖日期列表、缺报日期、曝光、点击、CTR（两位小数）、相对变化；覆盖不完整时明确标注该窗合计与 CTR 未知。\", \"stop_condition\": \"两窗各读取一次即停止，不扩展日期范围。\"}, {\"task_id\": \"metrics102\", \"objective\": \"读取计划 #102 在基准窗 2026-10-17~2026-10-23 与当前窗 2026-10-24~2026-10-30 的计划级曝光、点击、覆盖日期与缺报日期，并计算各窗 CTR 与相对变化。\", \"capabilities\": [\"get_plan_metrics_by_date\"], \"expected_output\": \"逐窗：起止日、覆盖日期列表、缺报日期、曝光、点击、CTR（两位小数）、相对变化；覆盖不完整时明确标注该窗合计与 CTR 未知。\", \"stop_condition\": \"两窗各读取一次即停止，不扩展日期范围。\"}, {\"task_id\": \"rule_v1\", \"objective\": \"检索《点击率下降复核》v1 条文，提取分块编号（chunk_id）、曝光门槛与 CTR 下降门槛的原文表述。\", \"capabilities\": [\"search_knowledge\"], \"expected_output\": \"条文分块编号、曝光门槛、下降门槛原文摘录；若未找到该版本需明确说明缺项。\", \"stop_condition\": \"取得该版本条文或确认不存在即停止。\"}, {\"task_id\": \"plans_detail\", \"objective\": \"读取计划 #101 与 #102 的当前状态与日预算。\", \"capabilities\": [\"get_plan_detail\"], \"expected_output\": \"两计划的编号、名称、当前状态、日预算。\", \"stop_condition\": \"两计划各读取一次即停止。\"}]}"
+          }
+        },
+        "detail_worker_first_attempt": 110,
+        "detail_worker_first_input": {
+          "task": {
+            "task_id": "plans_detail",
+            "objective": "读取计划 #101 与 #102 的当前状态与日预算。",
+            "input_refs": [],
+            "artifact_refs": [],
+            "direct_refs": [],
+            "capabilities": [
+              "get_plan_detail"
+            ],
+            "dependencies": [],
+            "expected_output": "两计划的编号、名称、当前状态、日预算。",
+            "stop_condition": "两计划各读取一次即停止。"
+          },
+          "inputs": {}
+        },
+        "detail_worker_sdk_actions": [
+          {
+            "attempt": 110,
+            "role": "team_worker",
+            "step": "team_worker",
+            "worker_id": "f1ccac5c20534d8fa08972bc39f3a0bc",
+            "index": 0,
+            "id": "call_00_ZFP26hsQB17SQl6GYvt84790",
+            "type": "function",
+            "function": {
+              "name": "get_plan_detail",
+              "arguments": "{\"plan_id\": 101}"
+            }
+          },
+          {
+            "attempt": 110,
+            "role": "team_worker",
+            "step": "team_worker",
+            "worker_id": "f1ccac5c20534d8fa08972bc39f3a0bc",
+            "index": 1,
+            "id": "call_01_ZSMOOEAFqTuA54quHsTN9176",
+            "type": "function",
+            "function": {
+              "name": "get_plan_detail",
+              "arguments": "{\"plan_id\": 102}"
+            }
+          }
+        ],
+        "actual_details": [
+          {
+            "trace_id": "80f4e1ded97c",
+            "role": "team_worker",
+            "tool_call_id": "call_00_ZFP26hsQB17SQl6GYvt84790",
+            "runtime_call_id": "9a15c45c03c04d68b787640b45847ffc",
+            "parent_call_id": "f1ccac5c20534d8fa08972bc39f3a0bc",
+            "retry_of": null,
+            "case": "gap-1",
+            "tool": "get_plan_detail",
+            "arguments": {
+              "plan_id": 101,
+              "user_id": 17
+            },
+            "start_ns": 625979644322500,
+            "nested_under": null,
+            "result": {
+              "id": 101,
+              "plan_name": "北岸搜索",
+              "platform": null,
+              "daily_budget": 310.0,
+              "status": "active",
+              "impressions": 0,
+              "clicks": 0,
+              "cost": 0.0,
+              "sales": 0.0,
+              "start_date": null,
+              "end_date": null,
+              "account_id": null,
+              "user_id": 17,
+              "created_at": "2026-11-10 07:04:25",
+              "account_name": null,
+              "ctr": 0,
+              "cpc": 0,
+              "roas": 0
+            },
+            "end_ns": 625979650238400
+          },
+          {
+            "trace_id": "80f4e1ded97c",
+            "role": "team_worker",
+            "tool_call_id": "call_01_ZSMOOEAFqTuA54quHsTN9176",
+            "runtime_call_id": "29ecd059813b4de69927c1768a9ceba4",
+            "parent_call_id": "f1ccac5c20534d8fa08972bc39f3a0bc",
+            "retry_of": null,
+            "case": "gap-1",
+            "tool": "get_plan_detail",
+            "arguments": {
+              "plan_id": 102,
+              "user_id": 17
+            },
+            "start_ns": 625979661906100,
+            "nested_under": null,
+            "result": {
+              "id": 102,
+              "plan_name": "南桥搜索",
+              "platform": null,
+              "daily_budget": 720.0,
+              "status": "paused",
+              "impressions": 0,
+              "clicks": 0,
+              "cost": 0.0,
+              "sales": 0.0,
+              "start_date": null,
+              "end_date": null,
+              "account_id": null,
+              "user_id": 17,
+              "created_at": "2026-11-10 07:04:25",
+              "account_name": null,
+              "ctr": 0,
+              "cpc": 0,
+              "roas": 0
+            },
+            "end_ns": 625979668095900
+          }
+        ]
+      },
+      "explicit_condition": {
+        "trace_id": "9b2d222758da",
+        "message": "周例会需要核销 CTR 监控告警。先看我当前未读告警的级别；若发现严重 CTR 波动，请调查 #101 和 #102。历史基准窗为 2026-10-17 至 2026-10-23，当前窗为 2026-10-24 至 2026-10-30。逐计划核对两窗的覆盖、曝光、点击、CTR 和相对变化。独立核对《点击率下降复核》 v1 条文，给出分块编号、曝光与下降门槛，并据此形成复核清单。先完成两条计划的四份窗口指标和指定版本条文核验，再确定复核清单。清单确定之后，只读取入选计划的详情，并将编号、名称、当前状态和日预算写入清单。任一必要窗口或条文缺项时，跳过详情读取，保留可核实的窗口和条文，说明缺项并暂缓出清单。",
+        "sdk_delegate": {
+          "attempt": 147,
+          "role": "orchestrator",
+          "step": "main",
+          "worker_id": null,
+          "index": 0,
+          "id": "call_00_WdoggIiBKUJ5H0DVW6re8898",
+          "type": "function",
+          "function": {
+            "name": "delegate_tasks",
+            "arguments": "{\"reason\": \"未读告警为 critical 级 CTR 波动，触发对 #101、#102 的两窗指标核对与《点击率下降复核》v1 条文核验。\", \"comparison_goal\": {\"plan_id\": 101, \"start_date\": \"2026-10-17\", \"end_date\": \"2026-10-30\", \"windows\": {\"baseline\": {\"start_date\": \"2026-10-17\", \"end_date\": \"2026-10-23\"}, \"current\": {\"start_date\": \"2026-10-24\", \"end_date\": \"2026-10-30\"}}}, \"tasks\": [{\"task_id\": \"metrics_101\", \"objective\": \"读取计划 #101 在基准窗 2026-10-17~2026-10-23 与当前窗 2026-10-24~2026-10-30 的曝光、点击、覆盖日期与缺报日，分别计算各窗 CTR 及相对变化。\", \"capabilities\": [\"get_plan_metrics_by_date\"], \"expected_output\": \"两窗各自的起止日期、覆盖日期列表、缺报日期、曝光、点击、CTR（两位小数）、相对变化百分比；若某窗缺报则标注该窗合计与CTR未知。\", \"stop_condition\": \"两窗各读取一次并给出上述字段即停止，不读取计划详情。\"}, {\"task_id\": \"metrics_102\", \"objective\": \"读取计划 #102 在基准窗 2026-10-17~2026-10-23 与当前窗 2026-10-24~2026-10-30 的曝光、点击、覆盖日期与缺报日，分别计算各窗 CTR 及相对变化。\", \"capabilities\": [\"get_plan_metrics_by_date\"], \"expected_output\": \"两窗各自的起止日期、覆盖日期列表、缺报日期、曝光、点击、CTR（两位小数）、相对变化百分比；若某窗缺报则标注该窗合计与CTR未知。\", \"stop_condition\": \"两窗各读取一次并给出上述字段即停止，不读取计划详情。\"}, {\"task_id\": \"rule_v1\", \"objective\": \"检索并核对《点击率下降复核》v1 条文，提取分块编号、曝光门槛与 CTR 下降门槛。\", \"capabilities\": [\"search_knowledge\"], \"expected_output\": \"条文标题与版本、各分块 chunk_id、曝光门槛数值、CTR 下降（相对变化）门槛数值及适用条件原文摘要。\", \"stop_condition\": \"取得 v1 条文分块与两项门槛即停止；若未找到 v1 明确条文，报告缺项。\"}]}"
+          }
+        },
+        "decision_attempt": 154,
+        "decision_start_ns": 626975808313200,
+        "worker_artifacts_in_main_input": [
+          {
+            "artifact_id": "9ba1590476a04d8281918aa4676cbf56",
+            "task_id": "rule_v1",
+            "worker_id": "c6de2abb9d50407f9fb9667791873d8a",
+            "source": "search_knowledge",
+            "status": "succeeded",
+            "tool_call_id": "4bc67449eab74b8187b9e71078308d69",
+            "arguments": {
+              "query": "点击率下降复核 v1"
+            },
+            "error_code": null,
+            "ns": 626973648258300
+          },
+          {
+            "artifact_id": "a8c81004fac940d18df4922b1f73c167",
+            "task_id": "rule_v1",
+            "worker_id": "c6de2abb9d50407f9fb9667791873d8a",
+            "source": "search_knowledge",
+            "status": "succeeded",
+            "tool_call_id": "8e01f9f996fc40ea9d1976b99f0c9679",
+            "arguments": {
+              "query": "CTR 复核规则 v1 曝光门槛 CTR 下降门槛"
+            },
+            "error_code": null,
+            "ns": 626973662718800
+          },
+          {
+            "artifact_id": "61b51f449206461bae0655a594f22d7f",
+            "task_id": "metrics_101",
+            "worker_id": "d8c49f4b8f8d467db3e6071a95993e94",
+            "source": "get_plan_metrics_by_date",
+            "status": "succeeded",
+            "tool_call_id": "18d7a0a0013c46928754b28b89f18c80",
+            "arguments": {
+              "start_date": "2026-10-17",
+              "end_date": "2026-10-23",
+              "plan_id": 101
+            },
+            "error_code": null,
+            "ns": 626974030307800
+          },
+          {
+            "artifact_id": "f5fa9a5ba3e44092becedfb5ead3ae9c",
+            "task_id": "metrics_101",
+            "worker_id": "d8c49f4b8f8d467db3e6071a95993e94",
+            "source": "get_plan_metrics_by_date",
+            "status": "succeeded",
+            "tool_call_id": "7ca601f08d494458823c030b312541ff",
+            "arguments": {
+              "start_date": "2026-10-24",
+              "end_date": "2026-10-30",
+              "plan_id": 101
+            },
+            "error_code": null,
+            "ns": 626974045643700
+          },
+          {
+            "artifact_id": "10e355bf1e7746dca62a8057030063b4",
+            "task_id": "metrics_102",
+            "worker_id": "aad9fb9df5914be3ab3cf598e5944fcb",
+            "source": "get_plan_metrics_by_date",
+            "status": "failed",
+            "tool_call_id": "efb7d7d4788149cea88224739a93e31c",
+            "arguments": {
+              "start_date": "2026-10-17",
+              "end_date": "2026-10-23",
+              "plan_id": 102
+            },
+            "error_code": "plan_history_not_mapped",
+            "ns": 626973730968800
+          },
+          {
+            "artifact_id": "020523e76a4a49d6a2d8c6a45e192b0e",
+            "task_id": "metrics_102",
+            "worker_id": "aad9fb9df5914be3ab3cf598e5944fcb",
+            "source": "get_plan_metrics_by_date",
+            "status": "failed",
+            "tool_call_id": "e12a4bdafb1b437fbe79287007ec8ee4",
+            "arguments": {
+              "start_date": "2026-10-24",
+              "end_date": "2026-10-30",
+              "plan_id": 102
+            },
+            "error_code": "plan_history_not_mapped",
+            "ns": 626973746684900
+          },
+          {
+            "artifact_id": "7b9c523261b445638e2cf689d7de8d7f",
+            "task_id": "metrics_102",
+            "worker_id": "aad9fb9df5914be3ab3cf598e5944fcb",
+            "source": "worker_model",
+            "status": "failed",
+            "tool_call_id": "aad9fb9df5914be3ab3cf598e5944fcb",
+            "arguments": null,
+            "error_code": "plan_history_not_mapped",
+            "ns": 626975147107100
+          }
+        ],
+        "actual_details": []
+      },
+      "rule_output_scope_failure": {
+        "expected": "报告指定 v1 条文和门槛",
+        "sdk_rule_worker_attempt": 150,
+        "rule_worker_actions": [
+          {
+            "attempt": 150,
+            "role": "team_worker",
+            "step": "team_worker",
+            "worker_id": "c6de2abb9d50407f9fb9667791873d8a",
+            "index": 0,
+            "id": "call_00_NqDLQKC5f7yaC3k2Aywo8857",
+            "type": "function",
+            "function": {
+              "name": "search_knowledge",
+              "arguments": "{\"query\": \"点击率下降复核 v1\"}"
+            }
+          },
+          {
+            "attempt": 150,
+            "role": "team_worker",
+            "step": "team_worker",
+            "worker_id": "c6de2abb9d50407f9fb9667791873d8a",
+            "index": 1,
+            "id": "call_01_i4kNVvkDpLRT5pVGyQdV8079",
+            "type": "function",
+            "function": {
+              "name": "search_knowledge",
+              "arguments": "{\"query\": \"CTR 复核规则 v1 曝光门槛 CTR 下降门槛\"}"
+            }
+          }
+        ],
+        "bottom_reads": [
+          {
+            "trace_id": "9b2d222758da",
+            "role": "team_worker",
+            "tool_call_id": "call_00_NqDLQKC5f7yaC3k2Aywo8857",
+            "runtime_call_id": "4bc67449eab74b8187b9e71078308d69",
+            "parent_call_id": "c6de2abb9d50407f9fb9667791873d8a",
+            "retry_of": null,
+            "case": "gap-1",
+            "tool": "search_knowledge",
+            "arguments": {
+              "query": "ctr-review-v1#low-ctr"
+            },
+            "start_ns": 626973637582000,
+            "nested_under": null,
+            "result": {
+              "context": "两个可比窗口各达到 1,000 次计划曝光，且当前 CTR 较基准窗口相对下降至少 20% 时，标记为待复核。先核对同一计划的历史曝光和点击，确认后检查素材与流量构成。用户级汇总不得代替计划指标。",
+              "sources": [
+                "广告投放复核手册（演示）"
+              ],
+              "evidence": [
+                {
+                  "chunk_id": "ctr-review-v1-low-ctr-01",
+                  "rule_id": "ctr-review#low-ctr",
+                  "version": "v1",
+                  "title": "点击率下降复核",
+                  "source": "广告投放复核手册（演示）",
+                  "content": "两个可比窗口各达到 1,000 次计划曝光，且当前 CTR 较基准窗口相对下降至少 20% 时，标记为待复核。先核对同一计划的历史曝光和点击，确认后检查素材与流量构成。用户级汇总不得代替计划指标。"
+                }
+              ]
+            },
+            "end_ns": 626973638888200
+          },
+          {
+            "trace_id": "9b2d222758da",
+            "role": "team_worker",
+            "tool_call_id": "call_01_i4kNVvkDpLRT5pVGyQdV8079",
+            "runtime_call_id": "8e01f9f996fc40ea9d1976b99f0c9679",
+            "parent_call_id": "c6de2abb9d50407f9fb9667791873d8a",
+            "retry_of": null,
+            "case": "gap-1",
+            "tool": "search_knowledge",
+            "arguments": {
+              "query": "CTR 复核规则 v1 曝光门槛 CTR 下降门槛"
+            },
+            "start_ns": 626973648547400,
+            "nested_under": null,
+            "result": {
+              "context": "两个可比窗口各达到 2,000 次计划曝光，且当前 CTR 较基准窗口相对下降至少 15% 时，标记为待复核。先核对同一计划的历史曝光和点击，确认后检查素材与流量构成。用户级汇总不得代替计划指标。\n\n---\n\n两个可比窗口各达到 1,000 次计划曝光，且当前 CTR 较基准窗口相对下降至少 20% 时，标记为待复核。先核对同一计划的历史曝光和点击，确认后检查素材与流量构成。用户级汇总不得代替计划指标。\n\n---\n\n任一窗口的计划曝光不足 1,000 次时，记为样本不足。补齐曝光和点击数据后再比较点击率。",
+              "sources": [
+                "广告投放复核手册（演示）",
+                "广告投放复核手册（演示）",
+                "广告投放复核手册（演示）"
+              ],
+              "evidence": [
+                {
+                  "chunk_id": "ctr-review-v2-low-ctr-01",
+                  "rule_id": "ctr-review#low-ctr",
+                  "version": "v2",
+                  "title": "点击率下降复核",
+                  "source": "广告投放复核手册（演示）",
+                  "content": "两个可比窗口各达到 2,000 次计划曝光，且当前 CTR 较基准窗口相对下降至少 15% 时，标记为待复核。先核对同一计划的历史曝光和点击，确认后检查素材与流量构成。用户级汇总不得代替计划指标。"
+                },
+                {
+                  "chunk_id": "ctr-review-v1-low-ctr-01",
+                  "rule_id": "ctr-review#low-ctr",
+                  "version": "v1",
+                  "title": "点击率下降复核",
+                  "source": "广告投放复核手册（演示）",
+                  "content": "两个可比窗口各达到 1,000 次计划曝光，且当前 CTR 较基准窗口相对下降至少 20% 时，标记为待复核。先核对同一计划的历史曝光和点击，确认后检查素材与流量构成。用户级汇总不得代替计划指标。"
+                },
+                {
+                  "chunk_id": "ctr-review-v1-low-volume-01",
+                  "rule_id": "ctr-review#low-volume",
+                  "version": "v1",
+                  "title": "点击率样本量",
+                  "source": "广告投放复核手册（演示）",
+                  "content": "任一窗口的计划曝光不足 1,000 次时，记为样本不足。补齐曝光和点击数据后再比较点击率。"
+                }
+              ]
+            },
+            "end_ns": 626973652950800
+          }
+        ],
+        "final_main_attempt": 154,
+        "final_sse_excerpt": "- 注意：v2 门槛为 2,000 次曝光、15% 下降，本轮按用户指定 v1 执行，不混用。"
+      }
+    }
+  ]
+}

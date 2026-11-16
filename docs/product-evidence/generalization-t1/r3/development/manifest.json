@@ -1,0 +1,107 @@
+{
+  "catalog": [
+    {
+      "principal": "owner",
+      "target": {
+        "shop_id": "r3-development",
+        "marketplace_id": "US",
+        "sku": "LUMA-71"
+      },
+      "title": "Luma inspection beacon"
+    },
+    {
+      "principal": "owner",
+      "target": {
+        "shop_id": "r3-development",
+        "marketplace_id": "US",
+        "sku": "RILL-60"
+      },
+      "title": "Rill cleaning sprayer"
+    }
+  ],
+  "releases": [
+    {
+      "target": {
+        "shop_id": "r3-development",
+        "marketplace_id": "US",
+        "sku": "LUMA-71"
+      },
+      "version": "v1",
+      "documents": [
+        {
+          "id": "specs",
+          "kind": "specs",
+          "file": "lamp-specs.tsv"
+        }
+      ],
+      "evidence_rules": [
+        {
+          "pattern": ".*检修灯.*电芯.*",
+          "requires": [
+            [
+              "specs",
+              "row:11"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:folded|闭合).*",
+          "requires": [
+            [
+              "specs",
+              "row:21"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "target": {
+        "shop_id": "r3-development",
+        "marketplace_id": "US",
+        "sku": "RILL-60"
+      },
+      "version": "v1",
+      "documents": [
+        {
+          "id": "specs",
+          "kind": "specs",
+          "file": "pump-specs.tsv"
+        },
+        {
+          "id": "manual",
+          "kind": "manual",
+          "file": "pump-manual.md"
+        }
+      ],
+      "evidence_rules": [
+        {
+          "pattern": ".*(?:额定容积|tank capacity).*",
+          "requires": [
+            [
+              "specs",
+              "row:11"
+            ],
+            [
+              "manual",
+              "page:1"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:inlet temperature|进水温度).*",
+          "requires": [
+            [
+              "manual",
+              "page:2"
+            ],
+            [
+              "specs",
+              "row:21"
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

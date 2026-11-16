@@ -1,19 +1,24 @@
 ﻿"""中文 Embedding — bge-small-zh-v1.5（BAAI 中文语义模型，512维）"""
 import os
-import numpy as np
+from threading import Lock
+
 from chromadb.api.types import EmbeddingFunction
+from chromadb.utils.embedding_functions import register_embedding_function
 
-# 全局单例
-_MODEL = None
+# 按设备复用编码器。
+_MODELS = {}
+_MODEL_LOCK = Lock()
+BGE_REVISION = "7999e1d3359715c523056ef9478215996d62a620"
 
-def _get_model():
-    global _MODEL
-    if _MODEL is None:
-        os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
-        os.environ.setdefault("HF_HUB_OFFLINE", "1")
-        from sentence_transformers import SentenceTransformer
-        _MODEL = SentenceTransformer("BAAI/bge-small-zh-v1.5")
-    return _MODEL
+def _get_model(device=None):
+    with _MODEL_LOCK:
+        if device not in _MODELS:
+            os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+            os.environ.setdefault("HF_HUB_OFFLINE", "1")
+            from sentence_transformers import SentenceTransformer
+            _MODELS[device] = SentenceTransformer("BAAI/bge-small-zh-v1.5", revision=BGE_REVISION,
+                                                  local_files_only=True, device=device)
+        return _MODELS[device]
 
 
 def _to_list(texts):
@@ -23,39 +28,40 @@ def _to_list(texts):
     return list(texts)
 
 
+@register_embedding_function
 class BGEEmbedding(EmbeddingFunction):
     """
     ChromaDB 兼容中文 Embedding — BAAI/bge-small-zh-v1.5
-    - 512 维, COSINE 距离, 已 L2 归一化
+    - 512 维，已 L2 归一化
     - query 自动加 BGE 检索前缀
     """
 
-    def __init__(self):
+    def __init__(self, *, device=None):
         self._dim = 512
-        self._name = "bge-small-zh-v1.5"
-        self._model = _get_model()
+        self._device = device
 
     # ── ChromaDB 协议（input= 关键字参数） ──────────────────
 
     def __call__(self, input):
         """文档 embedding"""
         texts = _to_list(input)
-        embs = self._model.encode(texts, normalize_embeddings=True, show_progress_bar=False)
+        model = _get_model() if self._device is None else _get_model(self._device)
+        embs = model.encode(texts, normalize_embeddings=True, show_progress_bar=False)
         return [e.tolist() for e in embs]
 
     def embed_query(self, input):
         """查询 embedding（加 BGE 检索前缀）"""
-        prefixed = f"为这个句子生成表示以用于检索相关文章：{input}"
-        emb = self._model.encode(prefixed, normalize_embeddings=True, show_progress_bar=False)
-        return [emb.tolist()]
+        texts = [f"为这个句子生成表示以用于检索相关文章：{text}" for text in _to_list(input)]
+        return self(texts)
 
     def embed_with_retries(self, input):
         return self(input)
 
     # ── 元信息 ──────────────────────────────────────────────
 
-    def name(self):
-        return self._name
+    @staticmethod
+    def name():
+        return "bge-small-zh-v1.5"
 
     @property
     def dim(self):
@@ -64,14 +70,9 @@ class BGEEmbedding(EmbeddingFunction):
     def get_config(self):
         return {"dim": self._dim}
 
-    def build_from_config(self, config):
-        return self
-
-    def validate_config(self, config):
-        pass
-
-    def validate_config_update(self, old_config, new_config):
-        pass
+    @staticmethod
+    def build_from_config(config):
+        return BGEEmbedding()
 
 
 # ── 别名 ──────────────────────────────────────────────────

@@ -1,0 +1,26 @@
+[project]
+name = "ad-agent"
+version = "3.0.0"
+description = "Advertising diagnosis Agent and reproducible acceptance suite"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "fastapi==0.162.0",
+  "uvicorn==0.54.0",
+  "python-dotenv==1.2.4",
+  "pydantic-settings==2.16.2",
+  "Flask==3.1.3",
+  "PyJWT==2.15.1",
+  "openai==3.46.0",
+  "requests==2.34.2",
+  "pandas==3.0.1",
+  "Pillow==13.0.0",
+  "chromadb==1.5.9",
+  "scikit-learn==1.9.1",
+]
+
+[project.optional-dependencies]
+acceptance = ["httpx==0.28.1", "mcp==1.30.0"]
+bge = ["torch==2.8.0", "sentence-transformers==5.1.2", "transformers==4.57.1"]
+
+[tool.uv]
+package = false

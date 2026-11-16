@@ -1,9 +1,18 @@
 ﻿"""四层记忆系统 v4: 滑动窗口 + 短期/长期/业务记忆"""
 import os, json
+from contextlib import closing
 from datetime import datetime, timedelta
+from functools import wraps
+from pathlib import Path
+from tempfile import NamedTemporaryFile
+from threading import Lock, RLock
+from weakref import WeakValueDictionary
+
 from backend.memory.importance import build_important_window
 
 MEMORY_DIR = os.path.join(os.path.dirname(__file__), "user_memory")
+_memory_locks = WeakValueDictionary()
+_memory_locks_guard = Lock()
 
 # ── 分层配置 ──
 LAYER_CONFIG = {
@@ -13,9 +22,21 @@ LAYER_CONFIG = {
 }
 
 
+def memory_root():
+    from backend.database.database import sandbox_memory_root
+    from backend.database import chat_storage, mysql_diagnosis
+
+    if mysql_diagnosis.settings.DIAGNOSIS_MYSQL_ENABLED:
+        with closing(chat_storage.connect(read_only=True)) as conn:
+            return mysql_diagnosis.chat_memory_root(conn)
+    return sandbox_memory_root()
+
+
 def _get_path(user_id):
-    os.makedirs(MEMORY_DIR, exist_ok=True)
-    return os.path.join(MEMORY_DIR, f"user_{user_id}.json")
+    root = memory_root()
+    directory = root / "user_memory" if root is not None else Path(MEMORY_DIR)
+    directory.mkdir(parents=True, exist_ok=True)
+    return os.path.join(directory, f"user_{user_id}.json")
 
 
 def _now():
@@ -28,7 +49,15 @@ def _now_str():
 
 # ==================== 持久化 ====================
 
-
+def _serialize_user_memory(fn):
+    """同一用户的各层记忆共用一个文件，读改写期间持有同一把锁。"""
+    @wraps(fn)
+    def locked(user_id, *args, **kwargs):
+        with _memory_locks_guard:
+            lock = _memory_locks.setdefault(str(user_id), RLock())
+        with lock:
+            return fn(user_id, *args, **kwargs)
+    return locked
 
 def _apply_decay(memory):
     """时间衰减：删除超过保留期限的旧记录"""
@@ -70,6 +99,7 @@ def _apply_decay(memory):
     return memory
 
 
+@_serialize_user_memory
 def _load(user_id):
     path = _get_path(user_id)
     if os.path.exists(path):
@@ -97,8 +127,13 @@ def _load(user_id):
 
 def _save(user_id, memory):
     path = _get_path(user_id)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(memory, f, ensure_ascii=False, indent=2)
+    tmp = NamedTemporaryFile(mode="w", encoding="utf-8", dir=Path(path).parent, delete=False)
+    try:
+        with tmp:
+            json.dump(memory, tmp, ensure_ascii=False, indent=2)
+        os.replace(tmp.name, path)
+    finally:
+        Path(tmp.name).unlink(missing_ok=True)
 
 
 # ==================== L1: 滑动窗口 — 在 orchestrator 内存中维护 ====================
@@ -119,6 +154,7 @@ def build_sliding_window(messages, max_turns=6):
 
 # ==================== L2: 短期记忆 ====================
 
+@_serialize_user_memory
 def add_short_term(user_id, user_msg, ai_reply):
     """存储一次对话摘要到短期记忆"""
     memory = _load(user_id)
@@ -155,8 +191,21 @@ def get_short_term(user_id):
     return "【近期对话】\n" + "\n".join(items[-8:])
 
 
+def short_term_from_history(messages):
+    """从本次请求可见的先前 SQLite 消息提取短期上下文。"""
+    lines = []
+    for message in messages[-16:]:
+        content = message.get("content") or ""
+        if message["role"] == "user" and content:
+            lines.append("用户: " + content[:30])
+        elif message["role"] == "assistant" and content:
+            lines.append("AI: " + content[:60])
+    return "【近期对话】\n" + "\n".join(lines) if lines else ""
+
+
 # ==================== L3: 长期画像 ====================
 
+@_serialize_user_memory
 def update_profile(user_id, action_name, action_args=None):
     """更新用户长期画像"""
     memory = _load(user_id)
@@ -224,6 +273,7 @@ def get_profile_text(user_id):
 
 # ==================== L4: 业务记忆 ====================
 
+@_serialize_user_memory
 def update_business_memory(user_id, category, data):
     """更新业务记忆"""
     memory = _load(user_id)
@@ -297,8 +347,8 @@ def get_business_text(user_id):
 
 # ==================== 整合：给 orchestrator 调用 ====================
 
-def compose_context(user_id, messages=None):
-    """组合所有层级的记忆上下文"""
+def compose_context(user_id, messages=None, *, short_term_context=None):
+    """组合记忆上下文。空字符串表示本次请求没有可见的短期历史。"""
     layers = []
 
     # L1: 滑动窗口
@@ -316,9 +366,15 @@ def compose_context(user_id, messages=None):
             layers.append("【最近对话】\n" + "\n".join(parts))
 
     # L2: 短期
-    st = get_short_term(user_id)
+    st = get_short_term(user_id) if short_term_context is None else short_term_context
     if st:
         layers.append(st)
+
+    # Homepage callers supply bounded SQL history. Legacy JSON profiles
+    # and business facts have no message IDs, so cannot prove visibility at that
+    # boundary (including concurrent tool updates). Keep them out of this path.
+    if short_term_context is not None:
+        return "\n\n".join(layers)
 
     # L3: 长期画像
     prof = get_profile_text(user_id)
@@ -335,9 +391,9 @@ def compose_context(user_id, messages=None):
 
 # ==================== 兼容旧接口 ====================
 
-def get_compact_memory(user_id):
+def get_compact_memory(user_id, *, short_term_context=None):
     """保持旧接口兼容"""
-    return compose_context(user_id)
+    return compose_context(user_id, short_term_context=short_term_context)
 
 
 def store_conversation_summary(user_id, user_msg, ai_reply):

@@ -1,0 +1,537 @@
+{
+  "input_sha256": "fb76bb6616ecbed4729c371919de3cdabdfac93e5d1cc58f90ea01df33a15eba",
+  "r1_both_sha256": "6298a3f3047ddd91ccffa5b618ed8d96a3a99ad41cdc5cc2bd82747fffd271d6",
+  "frozen_candidates_sha256": "abe84019633d14eaf1de8f6f42473749c27f5b3e5a95c05ab4287ac624884ef8",
+  "frozen_questions": 54,
+  "authorized_candidate_occurrences": 1040,
+  "unique_chunks": 221,
+  "retrieval_model": "BAAI/bge-small-zh-v1.5@7999e1d3359715c523056ef9478215996d62a620",
+  "groups": {
+    "baseline": {
+      "p95_ms": 30.648,
+      "evidence_at_5": [
+        28,
+        52
+      ],
+      "multi_all_at_5": [
+        1,
+        7
+      ],
+      "evidence_at_20": [
+        48,
+        52
+      ],
+      "multi_all_at_20": [
+        5,
+        7
+      ],
+      "false_citations": [],
+      "incorrect_citations": []
+    },
+    "rerank": {
+      "p95_ms": 4377.025,
+      "evidence_at_5": [
+        47,
+        52
+      ],
+      "multi_all_at_5": [
+        4,
+        7
+      ],
+      "evidence_at_20": [
+        48,
+        52
+      ],
+      "multi_all_at_20": [
+        5,
+        7
+      ],
+      "false_citations": [],
+      "incorrect_citations": []
+    }
+  },
+  "timed_pairs": 260,
+  "rerank_p95_ms": 4356.538,
+  "paired_delta_p95_ms": 4359.496,
+  "entered_top_5": [
+    {
+      "id": "Q06",
+      "source": [
+        "manual",
+        "page:5"
+      ],
+      "baseline_rank": 15,
+      "rerank_rank": 3
+    },
+    {
+      "id": "Q07",
+      "source": [
+        "manual",
+        "page:5"
+      ],
+      "baseline_rank": 19,
+      "rerank_rank": 3
+    },
+    {
+      "id": "Q11",
+      "source": [
+        "specs",
+        "row:4"
+      ],
+      "baseline_rank": 10,
+      "rerank_rank": 1
+    },
+    {
+      "id": "Q12",
+      "source": [
+        "specs",
+        "row:5"
+      ],
+      "baseline_rank": 8,
+      "rerank_rank": 1
+    },
+    {
+      "id": "Q13",
+      "source": [
+        "manual",
+        "page:5"
+      ],
+      "baseline_rank": 6,
+      "rerank_rank": 4
+    },
+    {
+      "id": "Q13",
+      "source": [
+        "manual",
+        "page:6"
+      ],
+      "baseline_rank": 7,
+      "rerank_rank": 3
+    },
+    {
+      "id": "Q14",
+      "source": [
+        "manual",
+        "page:5"
+      ],
+      "baseline_rank": 7,
+      "rerank_rank": 4
+    },
+    {
+      "id": "Q14",
+      "source": [
+        "manual",
+        "page:6"
+      ],
+      "baseline_rank": 6,
+      "rerank_rank": 3
+    },
+    {
+      "id": "Q16",
+      "source": [
+        "manual",
+        "page:6"
+      ],
+      "baseline_rank": 9,
+      "rerank_rank": 3
+    },
+    {
+      "id": "Q25",
+      "source": [
+        "specs",
+        "row:13"
+      ],
+      "baseline_rank": 14,
+      "rerank_rank": 1
+    },
+    {
+      "id": "Q27",
+      "source": [
+        "manual",
+        "page:11"
+      ],
+      "baseline_rank": 6,
+      "rerank_rank": 1
+    },
+    {
+      "id": "Q34",
+      "source": [
+        "faq",
+        "faq:brush"
+      ],
+      "baseline_rank": 12,
+      "rerank_rank": 1
+    },
+    {
+      "id": "Q35",
+      "source": [
+        "manual",
+        "page:7"
+      ],
+      "baseline_rank": 10,
+      "rerank_rank": 1
+    },
+    {
+      "id": "Q39",
+      "source": [
+        "specs",
+        "row:3"
+      ],
+      "baseline_rank": 8,
+      "rerank_rank": 2
+    },
+    {
+      "id": "Q39",
+      "source": [
+        "specs",
+        "row:4"
+      ],
+      "baseline_rank": 16,
+      "rerank_rank": 1
+    },
+    {
+      "id": "Q40",
+      "source": [
+        "specs",
+        "row:2"
+      ],
+      "baseline_rank": 13,
+      "rerank_rank": 2
+    },
+    {
+      "id": "Q40",
+      "source": [
+        "specs",
+        "row:5"
+      ],
+      "baseline_rank": 6,
+      "rerank_rank": 1
+    },
+    {
+      "id": "Q42",
+      "source": [
+        "specs",
+        "row:12"
+      ],
+      "baseline_rank": 20,
+      "rerank_rank": 1
+    },
+    {
+      "id": "Q44",
+      "source": [
+        "specs",
+        "row:23"
+      ],
+      "baseline_rank": 6,
+      "rerank_rank": 1
+    }
+  ],
+  "exited_top_5": [],
+  "lost_complete_evidence": [],
+  "still_missing_top_20": [
+    {
+      "id": "Q21",
+      "source": [
+        "faq",
+        "faq:share"
+      ],
+      "baseline_rank": null,
+      "rerank_rank": null
+    },
+    {
+      "id": "Q21",
+      "source": [
+        "specs",
+        "row:7"
+      ],
+      "baseline_rank": null,
+      "rerank_rank": null
+    },
+    {
+      "id": "Q26",
+      "source": [
+        "manual",
+        "page:10"
+      ],
+      "baseline_rank": null,
+      "rerank_rank": null
+    },
+    {
+      "id": "Q39",
+      "source": [
+        "manual",
+        "page:15"
+      ],
+      "baseline_rank": null,
+      "rerank_rank": null
+    }
+  ],
+  "multi": [
+    {
+      "id": "Q13",
+      "ranks": [
+        {
+          "id": "Q13",
+          "source": [
+            "manual",
+            "page:5"
+          ],
+          "baseline_rank": 6,
+          "rerank_rank": 4
+        },
+        {
+          "id": "Q13",
+          "source": [
+            "manual",
+            "page:6"
+          ],
+          "baseline_rank": 7,
+          "rerank_rank": 3
+        }
+      ],
+      "baseline": false,
+      "rerank": true
+    },
+    {
+      "id": "Q14",
+      "ranks": [
+        {
+          "id": "Q14",
+          "source": [
+            "manual",
+            "page:5"
+          ],
+          "baseline_rank": 7,
+          "rerank_rank": 4
+        },
+        {
+          "id": "Q14",
+          "source": [
+            "manual",
+            "page:6"
+          ],
+          "baseline_rank": 6,
+          "rerank_rank": 3
+        }
+      ],
+      "baseline": false,
+      "rerank": true
+    },
+    {
+      "id": "Q15",
+      "ranks": [
+        {
+          "id": "Q15",
+          "source": [
+            "manual",
+            "page:5"
+          ],
+          "baseline_rank": 1,
+          "rerank_rank": 2
+        },
+        {
+          "id": "Q15",
+          "source": [
+            "manual",
+            "page:6"
+          ],
+          "baseline_rank": 2,
+          "rerank_rank": 1
+        }
+      ],
+      "baseline": true,
+      "rerank": true
+    },
+    {
+      "id": "Q21",
+      "ranks": [
+        {
+          "id": "Q21",
+          "source": [
+            "faq",
+            "faq:share"
+          ],
+          "baseline_rank": null,
+          "rerank_rank": null
+        },
+        {
+          "id": "Q21",
+          "source": [
+            "specs",
+            "row:7"
+          ],
+          "baseline_rank": null,
+          "rerank_rank": null
+        }
+      ],
+      "baseline": false,
+      "rerank": false
+    },
+    {
+      "id": "Q29",
+      "ranks": [
+        {
+          "id": "Q29",
+          "source": [
+            "faq",
+            "faq:seal"
+          ],
+          "baseline_rank": 1,
+          "rerank_rank": 1
+        },
+        {
+          "id": "Q29",
+          "source": [
+            "manual",
+            "page:13"
+          ],
+          "baseline_rank": 19,
+          "rerank_rank": 12
+        }
+      ],
+      "baseline": false,
+      "rerank": false
+    },
+    {
+      "id": "Q39",
+      "ranks": [
+        {
+          "id": "Q39",
+          "source": [
+            "specs",
+            "row:3"
+          ],
+          "baseline_rank": 8,
+          "rerank_rank": 2
+        },
+        {
+          "id": "Q39",
+          "source": [
+            "specs",
+            "row:4"
+          ],
+          "baseline_rank": 16,
+          "rerank_rank": 1
+        },
+        {
+          "id": "Q39",
+          "source": [
+            "manual",
+            "page:15"
+          ],
+          "baseline_rank": null,
+          "rerank_rank": null
+        }
+      ],
+      "baseline": false,
+      "rerank": false
+    },
+    {
+      "id": "Q40",
+      "ranks": [
+        {
+          "id": "Q40",
+          "source": [
+            "specs",
+            "row:2"
+          ],
+          "baseline_rank": 13,
+          "rerank_rank": 2
+        },
+        {
+          "id": "Q40",
+          "source": [
+            "specs",
+            "row:5"
+          ],
+          "baseline_rank": 6,
+          "rerank_rank": 1
+        }
+      ],
+      "baseline": false,
+      "rerank": true
+    }
+  ],
+  "no_answer": [
+    {
+      "id": "Q45",
+      "baseline": "unsupported_question",
+      "rerank": "unsupported_question"
+    },
+    {
+      "id": "Q46",
+      "baseline": "unsupported_question",
+      "rerank": "unsupported_question"
+    },
+    {
+      "id": "Q47",
+      "baseline": "unsupported_question",
+      "rerank": "unsupported_question"
+    },
+    {
+      "id": "Q48",
+      "baseline": "unsupported_question",
+      "rerank": "unsupported_question"
+    },
+    {
+      "id": "Q49",
+      "baseline": "unsupported_question",
+      "rerank": "unsupported_question"
+    },
+    {
+      "id": "Q50",
+      "baseline": "unsupported_question",
+      "rerank": "unsupported_question"
+    },
+    {
+      "id": "Q51",
+      "baseline": "unsupported_question",
+      "rerank": "unsupported_question"
+    },
+    {
+      "id": "Q52",
+      "baseline": "unsupported_question",
+      "rerank": "unsupported_question"
+    }
+  ],
+  "denied": [
+    {
+      "id": "Q53",
+      "passes": 5,
+      "scored_chunks": 0
+    },
+    {
+      "id": "Q54",
+      "passes": 5,
+      "scored_chunks": 0
+    }
+  ],
+  "model": {
+    "id": "BAAI/bge-reranker-v2-m3",
+    "revision": "953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e",
+    "weight_sha256": "d9e3e081faff1eefb84019509b2f5558fd74c1a05a2c7db22f74174fcedb5286",
+    "device": "cpu",
+    "processor": "Intel64 Family 6 Model 198 Stepping 2, GenuineIntel",
+    "dtype": "float32",
+    "threads": 4,
+    "interop_threads": 1,
+    "batch_size": 16,
+    "max_length": 512,
+    "torch": "2.8.0+cpu",
+    "transformers": "4.57.1",
+    "python": "3.12.14",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "weight_verification_ms": 1772.221599938348,
+    "local_load_ms": 1187.3592999763787,
+    "first_20_pairs_ms": 3364.7863999940455,
+    "local_cold_start_ms": 4552.145699970424
+  },
+  "repetitions": 5,
+  "question_warmups_per_group": 1,
+  "rerank_question_calls": 312,
+  "scope_errors": {
+    "model_inputs": 0,
+    "citations": 0
+  },
+  "candidate_source_lookups": 1040
+}

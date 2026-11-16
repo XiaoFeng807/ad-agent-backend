@@ -1,16 +1,19 @@
 """LLM 适配器层：统一接口，支持多 Provider 切换"""
 
 from abc import ABC, abstractmethod
-import os, json, time
-from dotenv import load_dotenv
+from uuid import uuid4
 from backend.config.config import settings
-
-load_dotenv(os.path.join(os.path.dirname(__file__), "..", "..", ".env"))
+from backend.agent.fault_tolerance import TIMEOUT_CONFIG
+from backend.observability import add_trace_step
 
 
 # ==================== 抽象基类 ====================
 class LLMProvider(ABC):
     """所有 LLM Provider 的抽象基类"""
+
+    @property
+    def model(self):
+        return self._model
     
     @abstractmethod
     def chat(self, messages, tools=None, stream=False, temperature=0):
@@ -29,29 +32,119 @@ class LLMProvider(ABC):
         pass
 
 
-# ==================== DeepSeek 适配器 ====================
-class DeepSeekProvider(LLMProvider):
-    """DeepSeek API 适配器"""
-    
-    def __init__(self):
-        from openai import OpenAI
-        self._client = OpenAI(
-            api_key=settings.API_KEY or settings.DEEPSEEK_API_KEY or "",
-            base_url=settings.BASE_URL
+# ==================== OpenAI 兼容适配器 ====================
+class _NonThinkingCompletions:
+    """Keep tool continuations in non-thinking mode until reasoning history is supported."""
+
+    def __init__(self, completions, *, supports_tool_choice_none):
+        self._completions = completions
+        self._supports_tool_choice_none = supports_tool_choice_none
+
+    def with_defaults(self, kwargs):
+        extra_body = dict(kwargs.get("extra_body") or {})
+        extra_body.setdefault("thinking", {"type": "disabled"})
+        kwargs["extra_body"] = extra_body
+        if not self._supports_tool_choice_none and kwargs.get("tool_choice") == "none":
+            # GLM expects auto when tools are offered. Omit them for a text-only turn.
+            kwargs.pop("tool_choice")
+            kwargs.pop("tools", None)
+        return kwargs
+
+    def create(self, **kwargs):
+        return self._completions.create(**self.with_defaults(kwargs))
+
+    def __getattr__(self, name):
+        return getattr(self._completions, name)
+
+
+class _NonThinkingChat:
+    def __init__(self, chat, *, supports_tool_choice_none):
+        self._chat = chat
+        self.completions = _NonThinkingCompletions(
+            chat.completions, supports_tool_choice_none=supports_tool_choice_none,
         )
-        self._model = settings.MODEL
+
+    def __getattr__(self, name):
+        return getattr(self._chat, name)
+
+
+def create_completion(provider, budget, *, role, step, without_memory=None,
+                      optional=False, preflight=False, sdk_max_retries=None, **payload):
+    """Apply provider defaults, then guard the last payload before the SDK call."""
+    from backend.agent.request_budget import ExecutionStopped
+
+    execution = budget.execution if budget is not None else None
+    if execution is not None:
+        sdk_max_retries = 0
+    completions = provider.chat.completions
+    if isinstance(completions, _NonThinkingCompletions):
+        payload = completions.with_defaults(payload)
+        completions = completions._completions
+    if (sdk_max_retries is not None and isinstance(provider, _OpenAICompatibleProvider)
+            and provider._client.max_retries != sdk_max_retries):
+        completions = provider._client.with_options(max_retries=sdk_max_retries).chat.completions
+    if budget is not None:
+        payload = budget.prepare(payload, role=role, step=step, without_memory=without_memory,
+                                 optional=optional, preflight=preflight)
+    if not preflight:
+        if execution is None:
+            return completions.create(**payload)
+        if not execution.reserve("model", keep=int(role != "orchestrator")):
+            raise ExecutionStopped(execution.stop_code() or "model_budget_exhausted")
+        payload["timeout"] = max(0.001, min(payload.get("timeout", TIMEOUT_CONFIG["llm_call"]),
+                                            execution.seconds_left()))
+        call_id = uuid4().hex
+        link = {"role": role, "runtime_call_id": call_id}
+        add_trace_step(budget.trace_id, "model_call", step, **link)
+        try:
+            response = completions.create(**payload)
+        except Exception:
+            code = execution.stop_code()
+            add_trace_step(budget.trace_id, "model_result", step, status="error",
+                           error_code=code or "model_failure", **link)
+            if code:
+                raise ExecutionStopped(code) from None
+            raise
+        if code := execution.stop_code():
+            if payload.get("stream") and hasattr(response, "close"):
+                response.close()
+            add_trace_step(budget.trace_id, "model_result", step, status="error",
+                           error_code="expired_receipt", **link)
+            raise ExecutionStopped(code)
+        add_trace_step(budget.trace_id, "model_result", step, **link)
+        return response
+
+
+class _OpenAICompatibleProvider(LLMProvider):
+    _disable_thinking = False
+    _supports_tool_choice_none = True
+
+    def __init__(self, config=None):
+        from openai import OpenAI
+        config = config or settings.llm_config(self._provider_name)
+        self._client = OpenAI(
+            api_key=config.api_key,
+            base_url=config.base_url,
+            timeout=TIMEOUT_CONFIG["llm_call"],
+        )
+        self._model = config.model
+        self._chat_api = self._client.chat
+        if self._disable_thinking:
+            self._chat_api = _NonThinkingChat(
+                self._chat_api, supports_tool_choice_none=self._supports_tool_choice_none,
+            )
     
     @property
     def name(self):
-        return f"DeepSeek({self._model})"
+        return f"{self._label}({self._model})"
     
     @property
     def chat(self):
         """兼容 OpenAI SDK 的 chat.completions.create 调用方式"""
-        return self._client.chat
+        return self._chat_api
     
     def _chat(self, messages, tools=None, stream=False, temperature=0):
-        return self._client.chat.completions.create(
+        return self.chat.completions.create(
             model=self._model,
             messages=messages,
             tools=tools,
@@ -60,7 +153,7 @@ class DeepSeekProvider(LLMProvider):
         )
     
     def chat_stream(self, messages, tools=None):
-        return self._client.chat.completions.create(
+        return self.chat.completions.create(
             model=self._model,
             messages=messages,
             tools=tools,
@@ -68,39 +161,28 @@ class DeepSeekProvider(LLMProvider):
         )
 
 
-# ==================== OpenAI 适配器 ====================
-class OpenAIProvider(LLMProvider):
-    """OpenAI API 适配器"""
-    
-    def __init__(self):
-        from openai import OpenAI
-        self._client = OpenAI(api_key=settings.OPENAI_API_KEY)
-        self._model = settings.OPENAI_MODEL
-    
-    @property
-    def name(self):
-        return f"OpenAI({self._model})"
-    
-    @property
-    def chat(self):
-        return self._client.chat
-    
-    def _chat(self, messages, tools=None, stream=False, temperature=0):
-        return self._client.chat.completions.create(
-            model=self._model,
-            messages=messages,
-            tools=tools,
-            stream=stream,
-            temperature=temperature
-        )
-    
-    def chat_stream(self, messages, tools=None):
-        return self._client.chat.completions.create(
-            model=self._model,
-            messages=messages,
-            tools=tools,
-            stream=True
-        )
+class OpenAIProvider(_OpenAICompatibleProvider):
+    _provider_name = "openai"
+    _label = "OpenAI"
+
+
+class DeepSeekProvider(_OpenAICompatibleProvider):
+    _provider_name = "deepseek"
+    _label = "DeepSeek"
+    _disable_thinking = True
+
+
+class GLMProvider(_OpenAICompatibleProvider):
+    _provider_name = "glm"
+    _label = "GLM"
+    _disable_thinking = True
+    _supports_tool_choice_none = False
+
+    def __init__(self, config=None):
+        config = config or settings.llm_config("glm")
+        if not config.api_key:
+            raise ValueError("GLM 缺少 API Key，请在仓库根目录的 .env 填写 GLM_API_KEY")
+        super().__init__(config)
 
 
 # ==================== Mock 适配器（测试用） ====================
@@ -122,7 +204,8 @@ class _MockCompletions:
 class MockProvider(LLMProvider):
     """Mock 适配器：不调 API，返回固定回复（用于测试）"""
     
-    def __init__(self):
+    def __init__(self, config=None):
+        self._model = "mock"
         self._call_count = 0
         self._mock_completions = _MockCompletions()
     
@@ -240,15 +323,17 @@ class ProviderFactory:
     @classmethod
     def create(cls, provider_name=None):
         """创建 Provider 实例"""
-        name = provider_name or settings.LLM_PROVIDER.lower()
+        config = settings.llm_config(provider_name)
+        name = config.provider
         
         # 缓存实例（避免重复创建）
-        if name in cls._instances:
-            return cls._instances[name]
+        if config in cls._instances:
+            return cls._instances[config]
         
         providers = {
             "deepseek": DeepSeekProvider,
             "openai": OpenAIProvider,
+            "glm": GLMProvider,
             "mock": MockProvider,
         }
         
@@ -256,9 +341,14 @@ class ProviderFactory:
         if not provider_class:
             raise ValueError(f"不支持的 Provider: {name}，可选: {list(providers.keys())}")
         
-        instance = provider_class()
-        cls._instances[name] = instance
+        instance = provider_class(config)
+        cls._instances[config] = instance
         return instance
+
+    @staticmethod
+    def model_for(provider):
+        # Keep SDK-compatible test doubles and downstream custom providers working.
+        return getattr(provider, "model", None) or settings.llm_config().model
     
     @classmethod
     def list_providers(cls):
@@ -266,6 +356,7 @@ class ProviderFactory:
         return {
             "deepseek": "DeepSeek API（默认，需配置 API_KEY）",
             "openai": "OpenAI API（需配置 OPENAI_API_KEY）",
+            "glm": "智谱 GLM API（需配置 GLM_API_KEY）",
             "mock": "Mock 模式（不调 API，测试用）",
         }
 

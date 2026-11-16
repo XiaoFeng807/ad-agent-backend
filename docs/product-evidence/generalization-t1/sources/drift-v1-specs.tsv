@@ -1,0 +1,14 @@
+attribute	value	unit	conditions	product
+Maximum working pressure	2.6	bar	Wide nozzle, pump running	DRIFT-P12
+Reservoir rated volume	4.2	L	Cold water to the fill line	DRIFT-P12
+Replacement hose order code	DP-H08	code	Service hose assembly	DRIFT-P12
+Nozzle clip replacement code	DP-NC4	code	Clip only, supplied without spray head	DRIFT-P12
+Power adapter output	12	V DC	Indoor adapter to charging dock	DRIFT-P12
+Maximum hose length	1.8	m	Supplied hose fitted, no extension	DRIFT-P12
+Inlet basket mesh	0.8	mm	Stock filter screen	DRIFT-P12
+Motor idle current	0.24	A	Bench test with pump dry and relay off	DRIFT-P12
+Wand bayonet turn	45	degrees	Installation twist	DRIFT-P12
+Reservoir drain bore	14	mm	Empty pump	DRIFT-P12
+Detachable caddy volume	3.0	L	Accessory only	DRIFT-P12
+Temporary service pressure	3.8	bar	With a closed bench gauge, not spray pressure	DRIFT-P12
+Wide nozzle fan angle	31	degrees	At rated working pressure	DRIFT-P12

@@ -85,7 +85,7 @@ def build_important_window(messages, max_turns=6):
             user_content = messages[i].get("content", "")
             ai_content = ""
             if i + 1 < len(messages) and messages[i + 1].get("role") == "assistant":
-                ai_content = messages[i + 1].get("content", "")
+                ai_content = messages[i + 1].get("content") or ""
             s = score_turn(user_content, ai_content)
             pairs.append((s, messages[i], messages[i + 1] if ai_content else None))
             i += 2 if ai_content else 1

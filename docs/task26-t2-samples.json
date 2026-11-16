@@ -1,0 +1,2738 @@
+{
+  "seed": 2602009,
+  "data_version": "b0dba3715c56871fad76d6b570520b9ea29a25a62af16bf1d9780451dc1ecf78",
+  "source_plans": 90,
+  "count": 100,
+  "cases": [
+    {
+      "id": "T2-001",
+      "source_plan_id": "289466",
+      "plan_id": 1001,
+      "stratum": "review",
+      "history_category": "review",
+      "expected": "review",
+      "request": "overall",
+      "transport": "chromium",
+      "windows": [
+        {
+          "start_date": "2026-10-16",
+          "end_date": "2026-10-22",
+          "observed_days": 7,
+          "impressions": 1303,
+          "clicks": 522
+        },
+        {
+          "start_date": "2026-10-23",
+          "end_date": "2026-10-29",
+          "observed_days": 7,
+          "impressions": 5250,
+          "clicks": 1663
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1001 在 2026-10-16 至 2026-10-29 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-002",
+      "source_plan_id": "2077112",
+      "plan_id": 1002,
+      "stratum": "review",
+      "history_category": "review",
+      "expected": "review",
+      "request": "explicit",
+      "transport": "chromium",
+      "windows": [
+        {
+          "start_date": "2026-10-13",
+          "end_date": "2026-10-19",
+          "observed_days": 7,
+          "impressions": 1751,
+          "clicks": 612
+        },
+        {
+          "start_date": "2026-10-20",
+          "end_date": "2026-10-26",
+          "observed_days": 7,
+          "impressions": 5684,
+          "clicks": 1586
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1002 在 基准 2026-10-13 至 2026-10-19，当前 2026-10-20 至 2026-10-26 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-003",
+      "source_plan_id": "4293600",
+      "plan_id": 1003,
+      "stratum": "review",
+      "history_category": "review",
+      "expected": "review",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-14",
+          "end_date": "2026-10-20",
+          "observed_days": 7,
+          "impressions": 10172,
+          "clicks": 2792
+        },
+        {
+          "start_date": "2026-10-21",
+          "end_date": "2026-10-27",
+          "observed_days": 7,
+          "impressions": 3803,
+          "clicks": 786
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1003 在 2026-10-14 至 2026-10-27 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-004",
+      "source_plan_id": "5061823",
+      "plan_id": 1004,
+      "stratum": "review",
+      "history_category": "review",
+      "expected": "review",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-14",
+          "end_date": "2026-10-20",
+          "observed_days": 7,
+          "impressions": 1138,
+          "clicks": 431
+        },
+        {
+          "start_date": "2026-10-21",
+          "end_date": "2026-10-27",
+          "observed_days": 7,
+          "impressions": 1692,
+          "clicks": 508
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1004 在 基准 2026-10-14 至 2026-10-20，当前 2026-10-21 至 2026-10-27 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-005",
+      "source_plan_id": "5544859",
+      "plan_id": 1005,
+      "stratum": "review",
+      "history_category": "review",
+      "expected": "review",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-17",
+          "end_date": "2026-10-23",
+          "observed_days": 7,
+          "impressions": 13056,
+          "clicks": 6619
+        },
+        {
+          "start_date": "2026-10-24",
+          "end_date": "2026-10-30",
+          "observed_days": 7,
+          "impressions": 1218,
+          "clicks": 457
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1005 在 2026-10-17 至 2026-10-30 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-006",
+      "source_plan_id": "7336381",
+      "plan_id": 1006,
+      "stratum": "review",
+      "history_category": "review",
+      "expected": "review",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-09",
+          "end_date": "2026-10-15",
+          "observed_days": 7,
+          "impressions": 1226,
+          "clicks": 434
+        },
+        {
+          "start_date": "2026-10-16",
+          "end_date": "2026-10-22",
+          "observed_days": 7,
+          "impressions": 1127,
+          "clicks": 305
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1006 在 基准 2026-10-09 至 2026-10-15，当前 2026-10-16 至 2026-10-22 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-007",
+      "source_plan_id": "13289562",
+      "plan_id": 1007,
+      "stratum": "review",
+      "history_category": "review",
+      "expected": "review",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-15",
+          "end_date": "2026-10-21",
+          "observed_days": 7,
+          "impressions": 7544,
+          "clicks": 2835
+        },
+        {
+          "start_date": "2026-10-22",
+          "end_date": "2026-10-28",
+          "observed_days": 7,
+          "impressions": 9723,
+          "clicks": 2784
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1007 在 2026-10-15 至 2026-10-28 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-008",
+      "source_plan_id": "15959625",
+      "plan_id": 1008,
+      "stratum": "review",
+      "history_category": "review",
+      "expected": "review",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-17",
+          "end_date": "2026-10-23",
+          "observed_days": 7,
+          "impressions": 7944,
+          "clicks": 2494
+        },
+        {
+          "start_date": "2026-10-24",
+          "end_date": "2026-10-30",
+          "observed_days": 7,
+          "impressions": 6828,
+          "clicks": 1473
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1008 在 基准 2026-10-17 至 2026-10-23，当前 2026-10-24 至 2026-10-30 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-009",
+      "source_plan_id": "17132183",
+      "plan_id": 1009,
+      "stratum": "review",
+      "history_category": "review",
+      "expected": "review",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-12",
+          "end_date": "2026-10-18",
+          "observed_days": 7,
+          "impressions": 3618,
+          "clicks": 1350
+        },
+        {
+          "start_date": "2026-10-19",
+          "end_date": "2026-10-25",
+          "observed_days": 7,
+          "impressions": 1546,
+          "clicks": 459
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1009 在 2026-10-12 至 2026-10-25 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-010",
+      "source_plan_id": "19129845",
+      "plan_id": 1010,
+      "stratum": "review",
+      "history_category": "review",
+      "expected": "review",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-13",
+          "end_date": "2026-10-19",
+          "observed_days": 7,
+          "impressions": 1055,
+          "clicks": 267
+        },
+        {
+          "start_date": "2026-10-20",
+          "end_date": "2026-10-26",
+          "observed_days": 7,
+          "impressions": 1135,
+          "clicks": 215
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1010 在 基准 2026-10-13 至 2026-10-19，当前 2026-10-20 至 2026-10-26 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-011",
+      "source_plan_id": "26998434",
+      "plan_id": 1011,
+      "stratum": "review",
+      "history_category": "review",
+      "expected": "review",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-17",
+          "end_date": "2026-10-23",
+          "observed_days": 7,
+          "impressions": 3238,
+          "clicks": 1629
+        },
+        {
+          "start_date": "2026-10-24",
+          "end_date": "2026-10-30",
+          "observed_days": 7,
+          "impressions": 5625,
+          "clicks": 2261
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1011 在 2026-10-17 至 2026-10-30 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-012",
+      "source_plan_id": "27684173",
+      "plan_id": 1012,
+      "stratum": "review",
+      "history_category": "review",
+      "expected": "review",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-13",
+          "end_date": "2026-10-19",
+          "observed_days": 7,
+          "impressions": 3549,
+          "clicks": 1289
+        },
+        {
+          "start_date": "2026-10-20",
+          "end_date": "2026-10-26",
+          "observed_days": 7,
+          "impressions": 2772,
+          "clicks": 799
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1012 在 基准 2026-10-13 至 2026-10-19，当前 2026-10-20 至 2026-10-26 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-013",
+      "source_plan_id": "29903689",
+      "plan_id": 1013,
+      "stratum": "review",
+      "history_category": "review",
+      "expected": "review",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-17",
+          "end_date": "2026-10-23",
+          "observed_days": 7,
+          "impressions": 2043,
+          "clicks": 173
+        },
+        {
+          "start_date": "2026-10-24",
+          "end_date": "2026-10-30",
+          "observed_days": 7,
+          "impressions": 1340,
+          "clicks": 81
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1013 在 2026-10-17 至 2026-10-30 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-014",
+      "source_plan_id": "30676243",
+      "plan_id": 1014,
+      "stratum": "review",
+      "history_category": "review",
+      "expected": "review",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-08",
+          "end_date": "2026-10-14",
+          "observed_days": 7,
+          "impressions": 1943,
+          "clicks": 795
+        },
+        {
+          "start_date": "2026-10-15",
+          "end_date": "2026-10-21",
+          "observed_days": 7,
+          "impressions": 1617,
+          "clicks": 516
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1014 在 基准 2026-10-08 至 2026-10-14，当前 2026-10-15 至 2026-10-21 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-015",
+      "source_plan_id": "30729721",
+      "plan_id": 1015,
+      "stratum": "review",
+      "history_category": "review",
+      "expected": "review",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-11",
+          "end_date": "2026-10-17",
+          "observed_days": 7,
+          "impressions": 9633,
+          "clicks": 3169
+        },
+        {
+          "start_date": "2026-10-18",
+          "end_date": "2026-10-24",
+          "observed_days": 7,
+          "impressions": 6722,
+          "clicks": 1708
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1015 在 2026-10-11 至 2026-10-24 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-016",
+      "source_plan_id": "32135670",
+      "plan_id": 1016,
+      "stratum": "review",
+      "history_category": "review",
+      "expected": "review",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-12",
+          "end_date": "2026-10-18",
+          "observed_days": 7,
+          "impressions": 5475,
+          "clicks": 1998
+        },
+        {
+          "start_date": "2026-10-19",
+          "end_date": "2026-10-25",
+          "observed_days": 7,
+          "impressions": 18794,
+          "clicks": 4873
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1016 在 基准 2026-10-12 至 2026-10-18，当前 2026-10-19 至 2026-10-25 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-017",
+      "source_plan_id": "26874680",
+      "plan_id": 1017,
+      "stratum": "near_threshold",
+      "history_category": "below_threshold",
+      "expected": "below_threshold",
+      "request": "overall",
+      "transport": "chromium",
+      "windows": [
+        {
+          "start_date": "2026-10-06",
+          "end_date": "2026-10-12",
+          "observed_days": 7,
+          "impressions": 2157,
+          "clicks": 743
+        },
+        {
+          "start_date": "2026-10-13",
+          "end_date": "2026-10-19",
+          "observed_days": 7,
+          "impressions": 4581,
+          "clicks": 1271
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1017 在 2026-10-06 至 2026-10-19 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-018",
+      "source_plan_id": "10383101",
+      "plan_id": 1018,
+      "stratum": "near_threshold",
+      "history_category": "below_threshold",
+      "expected": "below_threshold",
+      "request": "explicit",
+      "transport": "chromium",
+      "windows": [
+        {
+          "start_date": "2026-10-16",
+          "end_date": "2026-10-22",
+          "observed_days": 7,
+          "impressions": 1512,
+          "clicks": 666
+        },
+        {
+          "start_date": "2026-10-23",
+          "end_date": "2026-10-29",
+          "observed_days": 7,
+          "impressions": 2250,
+          "clicks": 816
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1018 在 基准 2026-10-16 至 2026-10-22，当前 2026-10-23 至 2026-10-29 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-019",
+      "source_plan_id": "3073305",
+      "plan_id": 1019,
+      "stratum": "near_threshold",
+      "history_category": "below_threshold",
+      "expected": "below_threshold",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-13",
+          "end_date": "2026-10-19",
+          "observed_days": 7,
+          "impressions": 1594,
+          "clicks": 495
+        },
+        {
+          "start_date": "2026-10-20",
+          "end_date": "2026-10-26",
+          "observed_days": 7,
+          "impressions": 2513,
+          "clicks": 639
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1019 在 2026-10-13 至 2026-10-26 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-020",
+      "source_plan_id": "32135680",
+      "plan_id": 1020,
+      "stratum": "near_threshold",
+      "history_category": "below_threshold",
+      "expected": "below_threshold",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-15",
+          "end_date": "2026-10-21",
+          "observed_days": 7,
+          "impressions": 1340,
+          "clicks": 488
+        },
+        {
+          "start_date": "2026-10-22",
+          "end_date": "2026-10-28",
+          "observed_days": 7,
+          "impressions": 1978,
+          "clicks": 595
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1020 在 基准 2026-10-15 至 2026-10-21，当前 2026-10-22 至 2026-10-28 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-021",
+      "source_plan_id": "19661713",
+      "plan_id": 1021,
+      "stratum": "near_threshold",
+      "history_category": "below_threshold",
+      "expected": "below_threshold",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-06",
+          "end_date": "2026-10-12",
+          "observed_days": 7,
+          "impressions": 2334,
+          "clicks": 564
+        },
+        {
+          "start_date": "2026-10-13",
+          "end_date": "2026-10-19",
+          "observed_days": 7,
+          "impressions": 2396,
+          "clicks": 471
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1021 在 2026-10-06 至 2026-10-19 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-022",
+      "source_plan_id": "20496139",
+      "plan_id": 1022,
+      "stratum": "near_threshold",
+      "history_category": "below_threshold",
+      "expected": "below_threshold",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-08",
+          "end_date": "2026-10-14",
+          "observed_days": 7,
+          "impressions": 1390,
+          "clicks": 253
+        },
+        {
+          "start_date": "2026-10-15",
+          "end_date": "2026-10-21",
+          "observed_days": 7,
+          "impressions": 1452,
+          "clicks": 216
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1022 在 基准 2026-10-08 至 2026-10-14，当前 2026-10-15 至 2026-10-21 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-023",
+      "source_plan_id": "22419532",
+      "plan_id": 1023,
+      "stratum": "near_threshold",
+      "history_category": "below_threshold",
+      "expected": "below_threshold",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-02",
+          "end_date": "2026-10-08",
+          "observed_days": 7,
+          "impressions": 5946,
+          "clicks": 2174
+        },
+        {
+          "start_date": "2026-10-09",
+          "end_date": "2026-10-15",
+          "observed_days": 7,
+          "impressions": 13126,
+          "clicks": 3957
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1023 在 2026-10-02 至 2026-10-15 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-024",
+      "source_plan_id": "26614035",
+      "plan_id": 1024,
+      "stratum": "near_threshold",
+      "history_category": "below_threshold",
+      "expected": "below_threshold",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-11",
+          "end_date": "2026-10-17",
+          "observed_days": 7,
+          "impressions": 1589,
+          "clicks": 567
+        },
+        {
+          "start_date": "2026-10-18",
+          "end_date": "2026-10-24",
+          "observed_days": 7,
+          "impressions": 1036,
+          "clicks": 303
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1024 在 基准 2026-10-11 至 2026-10-17，当前 2026-10-18 至 2026-10-24 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-025",
+      "source_plan_id": "28031695",
+      "plan_id": 1025,
+      "stratum": "near_threshold",
+      "history_category": "below_threshold",
+      "expected": "below_threshold",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-12",
+          "end_date": "2026-10-18",
+          "observed_days": 7,
+          "impressions": 2164,
+          "clicks": 906
+        },
+        {
+          "start_date": "2026-10-19",
+          "end_date": "2026-10-25",
+          "observed_days": 7,
+          "impressions": 2309,
+          "clicks": 801
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1025 在 2026-10-12 至 2026-10-25 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-026",
+      "source_plan_id": "13104554",
+      "plan_id": 1026,
+      "stratum": "near_threshold",
+      "history_category": "below_threshold",
+      "expected": "below_threshold",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-02",
+          "end_date": "2026-10-08",
+          "observed_days": 7,
+          "impressions": 2639,
+          "clicks": 870
+        },
+        {
+          "start_date": "2026-10-09",
+          "end_date": "2026-10-15",
+          "observed_days": 7,
+          "impressions": 2475,
+          "clicks": 669
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1026 在 基准 2026-10-02 至 2026-10-08，当前 2026-10-09 至 2026-10-15 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-027",
+      "source_plan_id": "22695010",
+      "plan_id": 1027,
+      "stratum": "near_threshold",
+      "history_category": "below_threshold",
+      "expected": "below_threshold",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-16",
+          "end_date": "2026-10-22",
+          "observed_days": 7,
+          "impressions": 1203,
+          "clicks": 429
+        },
+        {
+          "start_date": "2026-10-23",
+          "end_date": "2026-10-29",
+          "observed_days": 7,
+          "impressions": 1993,
+          "clicks": 576
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1027 在 2026-10-16 至 2026-10-29 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-028",
+      "source_plan_id": "7299461",
+      "plan_id": 1028,
+      "stratum": "near_threshold",
+      "history_category": "below_threshold",
+      "expected": "below_threshold",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-10",
+          "end_date": "2026-10-16",
+          "observed_days": 7,
+          "impressions": 3651,
+          "clicks": 686
+        },
+        {
+          "start_date": "2026-10-17",
+          "end_date": "2026-10-23",
+          "observed_days": 7,
+          "impressions": 5317,
+          "clicks": 828
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1028 在 基准 2026-10-10 至 2026-10-16，当前 2026-10-17 至 2026-10-23 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-029",
+      "source_plan_id": "12765785",
+      "plan_id": 1029,
+      "stratum": "clear_rise",
+      "history_category": "flat_or_rising",
+      "expected": "flat_or_rising",
+      "request": "overall",
+      "transport": "chromium",
+      "windows": [
+        {
+          "start_date": "2026-10-08",
+          "end_date": "2026-10-14",
+          "observed_days": 7,
+          "impressions": 3844,
+          "clicks": 1212
+        },
+        {
+          "start_date": "2026-10-15",
+          "end_date": "2026-10-21",
+          "observed_days": 7,
+          "impressions": 1800,
+          "clicks": 693
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1029 在 2026-10-08 至 2026-10-21 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-030",
+      "source_plan_id": "16491630",
+      "plan_id": 1030,
+      "stratum": "clear_rise",
+      "history_category": "flat_or_rising",
+      "expected": "flat_or_rising",
+      "request": "explicit",
+      "transport": "chromium",
+      "windows": [
+        {
+          "start_date": "2026-10-05",
+          "end_date": "2026-10-11",
+          "observed_days": 7,
+          "impressions": 1913,
+          "clicks": 625
+        },
+        {
+          "start_date": "2026-10-12",
+          "end_date": "2026-10-18",
+          "observed_days": 7,
+          "impressions": 1250,
+          "clicks": 541
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1030 在 基准 2026-10-05 至 2026-10-11，当前 2026-10-12 至 2026-10-18 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-031",
+      "source_plan_id": "22431924",
+      "plan_id": 1031,
+      "stratum": "clear_rise",
+      "history_category": "flat_or_rising",
+      "expected": "flat_or_rising",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-02",
+          "end_date": "2026-10-08",
+          "observed_days": 7,
+          "impressions": 3840,
+          "clicks": 914
+        },
+        {
+          "start_date": "2026-10-09",
+          "end_date": "2026-10-15",
+          "observed_days": 7,
+          "impressions": 3106,
+          "clicks": 925
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1031 在 2026-10-02 至 2026-10-15 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-032",
+      "source_plan_id": "2953712",
+      "plan_id": 1032,
+      "stratum": "clear_rise",
+      "history_category": "flat_or_rising",
+      "expected": "flat_or_rising",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-04",
+          "end_date": "2026-10-10",
+          "observed_days": 7,
+          "impressions": 1301,
+          "clicks": 372
+        },
+        {
+          "start_date": "2026-10-11",
+          "end_date": "2026-10-17",
+          "observed_days": 7,
+          "impressions": 1161,
+          "clicks": 418
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1032 在 基准 2026-10-04 至 2026-10-10，当前 2026-10-11 至 2026-10-17 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-033",
+      "source_plan_id": "11803618",
+      "plan_id": 1033,
+      "stratum": "clear_rise",
+      "history_category": "flat_or_rising",
+      "expected": "flat_or_rising",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-05",
+          "end_date": "2026-10-11",
+          "observed_days": 7,
+          "impressions": 4395,
+          "clicks": 1045
+        },
+        {
+          "start_date": "2026-10-12",
+          "end_date": "2026-10-18",
+          "observed_days": 7,
+          "impressions": 3082,
+          "clicks": 905
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1033 在 2026-10-05 至 2026-10-18 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-034",
+      "source_plan_id": "14104562",
+      "plan_id": 1034,
+      "stratum": "clear_rise",
+      "history_category": "flat_or_rising",
+      "expected": "flat_or_rising",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-07",
+          "end_date": "2026-10-13",
+          "observed_days": 7,
+          "impressions": 2371,
+          "clicks": 702
+        },
+        {
+          "start_date": "2026-10-14",
+          "end_date": "2026-10-20",
+          "observed_days": 7,
+          "impressions": 1512,
+          "clicks": 612
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1034 在 基准 2026-10-07 至 2026-10-13，当前 2026-10-14 至 2026-10-20 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-035",
+      "source_plan_id": "1586481",
+      "plan_id": 1035,
+      "stratum": "clear_rise",
+      "history_category": "flat_or_rising",
+      "expected": "flat_or_rising",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-06",
+          "end_date": "2026-10-12",
+          "observed_days": 7,
+          "impressions": 5167,
+          "clicks": 1460
+        },
+        {
+          "start_date": "2026-10-13",
+          "end_date": "2026-10-19",
+          "observed_days": 7,
+          "impressions": 3089,
+          "clicks": 1055
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1035 在 2026-10-06 至 2026-10-19 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-036",
+      "source_plan_id": "11387831",
+      "plan_id": 1036,
+      "stratum": "clear_rise",
+      "history_category": "flat_or_rising",
+      "expected": "flat_or_rising",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-08",
+          "end_date": "2026-10-14",
+          "observed_days": 7,
+          "impressions": 1220,
+          "clicks": 416
+        },
+        {
+          "start_date": "2026-10-15",
+          "end_date": "2026-10-21",
+          "observed_days": 7,
+          "impressions": 1099,
+          "clicks": 451
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1036 在 基准 2026-10-08 至 2026-10-14，当前 2026-10-15 至 2026-10-21 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-037",
+      "source_plan_id": "22589171",
+      "plan_id": 1037,
+      "stratum": "clear_rise",
+      "history_category": "flat_or_rising",
+      "expected": "flat_or_rising",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-02",
+          "end_date": "2026-10-08",
+          "observed_days": 7,
+          "impressions": 3451,
+          "clicks": 490
+        },
+        {
+          "start_date": "2026-10-09",
+          "end_date": "2026-10-15",
+          "observed_days": 7,
+          "impressions": 4124,
+          "clicks": 844
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1037 在 2026-10-02 至 2026-10-15 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-038",
+      "source_plan_id": "25259856",
+      "plan_id": 1038,
+      "stratum": "clear_rise",
+      "history_category": "flat_or_rising",
+      "expected": "flat_or_rising",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-03",
+          "end_date": "2026-10-09",
+          "observed_days": 7,
+          "impressions": 2057,
+          "clicks": 415
+        },
+        {
+          "start_date": "2026-10-10",
+          "end_date": "2026-10-16",
+          "observed_days": 7,
+          "impressions": 1271,
+          "clicks": 317
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1038 在 基准 2026-10-03 至 2026-10-09，当前 2026-10-10 至 2026-10-16 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-039",
+      "source_plan_id": "15746419",
+      "plan_id": 1039,
+      "stratum": "clear_rise",
+      "history_category": "flat_or_rising",
+      "expected": "flat_or_rising",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-08",
+          "end_date": "2026-10-14",
+          "observed_days": 7,
+          "impressions": 15726,
+          "clicks": 5688
+        },
+        {
+          "start_date": "2026-10-15",
+          "end_date": "2026-10-21",
+          "observed_days": 7,
+          "impressions": 8259,
+          "clicks": 3741
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1039 在 2026-10-08 至 2026-10-21 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-040",
+      "source_plan_id": "9610626",
+      "plan_id": 1040,
+      "stratum": "clear_rise",
+      "history_category": "flat_or_rising",
+      "expected": "flat_or_rising",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-02",
+          "end_date": "2026-10-08",
+          "observed_days": 7,
+          "impressions": 3470,
+          "clicks": 906
+        },
+        {
+          "start_date": "2026-10-09",
+          "end_date": "2026-10-15",
+          "observed_days": 7,
+          "impressions": 11948,
+          "clicks": 3831
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1040 在 基准 2026-10-02 至 2026-10-08，当前 2026-10-09 至 2026-10-15 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-041",
+      "source_plan_id": "7544834",
+      "plan_id": 1041,
+      "stratum": "clear_rise",
+      "history_category": "flat_or_rising",
+      "expected": "flat_or_rising",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-06",
+          "end_date": "2026-10-12",
+          "observed_days": 7,
+          "impressions": 2328,
+          "clicks": 275
+        },
+        {
+          "start_date": "2026-10-13",
+          "end_date": "2026-10-19",
+          "observed_days": 7,
+          "impressions": 1907,
+          "clicks": 277
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1041 在 2026-10-06 至 2026-10-19 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-042",
+      "source_plan_id": "27891651",
+      "plan_id": 1042,
+      "stratum": "clear_rise",
+      "history_category": "flat_or_rising",
+      "expected": "flat_or_rising",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-08",
+          "end_date": "2026-10-14",
+          "observed_days": 7,
+          "impressions": 7677,
+          "clicks": 2637
+        },
+        {
+          "start_date": "2026-10-15",
+          "end_date": "2026-10-21",
+          "observed_days": 7,
+          "impressions": 2053,
+          "clicks": 918
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1042 在 基准 2026-10-08 至 2026-10-14，当前 2026-10-15 至 2026-10-21 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-043",
+      "source_plan_id": "25064375",
+      "plan_id": 1043,
+      "stratum": "clear_rise",
+      "history_category": "flat_or_rising",
+      "expected": "flat_or_rising",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-03",
+          "end_date": "2026-10-09",
+          "observed_days": 7,
+          "impressions": 5006,
+          "clicks": 1252
+        },
+        {
+          "start_date": "2026-10-10",
+          "end_date": "2026-10-16",
+          "observed_days": 7,
+          "impressions": 1347,
+          "clicks": 406
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1043 在 2026-10-03 至 2026-10-16 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-044",
+      "source_plan_id": "12288258",
+      "plan_id": 1044,
+      "stratum": "clear_rise",
+      "history_category": "flat_or_rising",
+      "expected": "flat_or_rising",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-17",
+          "end_date": "2026-10-23",
+          "observed_days": 7,
+          "impressions": 1956,
+          "clicks": 468
+        },
+        {
+          "start_date": "2026-10-24",
+          "end_date": "2026-10-30",
+          "observed_days": 7,
+          "impressions": 3667,
+          "clicks": 1094
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1044 在 基准 2026-10-17 至 2026-10-23，当前 2026-10-24 至 2026-10-30 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-045",
+      "source_plan_id": "28729609",
+      "plan_id": 1045,
+      "stratum": "clear_rise",
+      "history_category": "flat_or_rising",
+      "expected": "flat_or_rising",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-01",
+          "end_date": "2026-10-07",
+          "observed_days": 7,
+          "impressions": 3056,
+          "clicks": 788
+        },
+        {
+          "start_date": "2026-10-08",
+          "end_date": "2026-10-14",
+          "observed_days": 7,
+          "impressions": 2407,
+          "clicks": 753
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1045 在 2026-10-01 至 2026-10-14 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-046",
+      "source_plan_id": "22496144",
+      "plan_id": 1046,
+      "stratum": "low_exposure",
+      "history_category": "low_exposure",
+      "expected": "low_exposure",
+      "request": "overall",
+      "transport": "chromium",
+      "windows": [
+        {
+          "start_date": "2026-10-04",
+          "end_date": "2026-10-10",
+          "observed_days": 7,
+          "impressions": 463,
+          "clicks": 158
+        },
+        {
+          "start_date": "2026-10-11",
+          "end_date": "2026-10-17",
+          "observed_days": 7,
+          "impressions": 405,
+          "clicks": 146
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1046 在 2026-10-04 至 2026-10-17 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-047",
+      "source_plan_id": "12042241",
+      "plan_id": 1047,
+      "stratum": "low_exposure",
+      "history_category": "low_exposure",
+      "expected": "low_exposure",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-15",
+          "end_date": "2026-10-21",
+          "observed_days": 7,
+          "impressions": 269,
+          "clicks": 98
+        },
+        {
+          "start_date": "2026-10-22",
+          "end_date": "2026-10-28",
+          "observed_days": 7,
+          "impressions": 186,
+          "clicks": 75
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1047 在 基准 2026-10-15 至 2026-10-21，当前 2026-10-22 至 2026-10-28 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-048",
+      "source_plan_id": "21005924",
+      "plan_id": 1048,
+      "stratum": "low_exposure",
+      "history_category": "low_exposure",
+      "expected": "low_exposure",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-04",
+          "end_date": "2026-10-10",
+          "observed_days": 7,
+          "impressions": 261,
+          "clicks": 122
+        },
+        {
+          "start_date": "2026-10-11",
+          "end_date": "2026-10-17",
+          "observed_days": 7,
+          "impressions": 260,
+          "clicks": 100
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1048 在 2026-10-04 至 2026-10-17 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-049",
+      "source_plan_id": "29513915",
+      "plan_id": 1049,
+      "stratum": "low_exposure",
+      "history_category": "low_exposure",
+      "expected": "low_exposure",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-13",
+          "end_date": "2026-10-19",
+          "observed_days": 7,
+          "impressions": 567,
+          "clicks": 260
+        },
+        {
+          "start_date": "2026-10-20",
+          "end_date": "2026-10-26",
+          "observed_days": 7,
+          "impressions": 547,
+          "clicks": 274
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1049 在 基准 2026-10-13 至 2026-10-19，当前 2026-10-20 至 2026-10-26 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-050",
+      "source_plan_id": "30487330",
+      "plan_id": 1050,
+      "stratum": "low_exposure",
+      "history_category": "low_exposure",
+      "expected": "low_exposure",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-07",
+          "end_date": "2026-10-13",
+          "observed_days": 7,
+          "impressions": 769,
+          "clicks": 278
+        },
+        {
+          "start_date": "2026-10-14",
+          "end_date": "2026-10-20",
+          "observed_days": 7,
+          "impressions": 719,
+          "clicks": 274
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1050 在 2026-10-07 至 2026-10-20 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-051",
+      "source_plan_id": "1871873",
+      "plan_id": 1051,
+      "stratum": "low_exposure",
+      "history_category": "low_exposure",
+      "expected": "low_exposure",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-04",
+          "end_date": "2026-10-10",
+          "observed_days": 7,
+          "impressions": 633,
+          "clicks": 129
+        },
+        {
+          "start_date": "2026-10-11",
+          "end_date": "2026-10-17",
+          "observed_days": 7,
+          "impressions": 627,
+          "clicks": 139
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1051 在 基准 2026-10-04 至 2026-10-10，当前 2026-10-11 至 2026-10-17 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-052",
+      "source_plan_id": "18916125",
+      "plan_id": 1052,
+      "stratum": "low_exposure",
+      "history_category": "low_exposure",
+      "expected": "low_exposure",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-15",
+          "end_date": "2026-10-21",
+          "observed_days": 7,
+          "impressions": 776,
+          "clicks": 190
+        },
+        {
+          "start_date": "2026-10-22",
+          "end_date": "2026-10-28",
+          "observed_days": 7,
+          "impressions": 736,
+          "clicks": 223
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1052 在 2026-10-15 至 2026-10-28 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-053",
+      "source_plan_id": "25998434",
+      "plan_id": 1053,
+      "stratum": "low_exposure",
+      "history_category": "low_exposure",
+      "expected": "low_exposure",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-14",
+          "end_date": "2026-10-20",
+          "observed_days": 7,
+          "impressions": 819,
+          "clicks": 254
+        },
+        {
+          "start_date": "2026-10-21",
+          "end_date": "2026-10-27",
+          "observed_days": 7,
+          "impressions": 837,
+          "clicks": 244
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1053 在 基准 2026-10-14 至 2026-10-20，当前 2026-10-21 至 2026-10-27 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-054",
+      "source_plan_id": "9700342",
+      "plan_id": 1054,
+      "stratum": "low_exposure",
+      "history_category": "low_exposure",
+      "expected": "low_exposure",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-10",
+          "end_date": "2026-10-16",
+          "observed_days": 7,
+          "impressions": 989,
+          "clicks": 446
+        },
+        {
+          "start_date": "2026-10-17",
+          "end_date": "2026-10-23",
+          "observed_days": 7,
+          "impressions": 918,
+          "clicks": 385
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1054 在 2026-10-10 至 2026-10-23 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-055",
+      "source_plan_id": "31452108",
+      "plan_id": 1055,
+      "stratum": "low_exposure",
+      "history_category": "low_exposure",
+      "expected": "low_exposure",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-14",
+          "end_date": "2026-10-20",
+          "observed_days": 7,
+          "impressions": 1029,
+          "clicks": 323
+        },
+        {
+          "start_date": "2026-10-21",
+          "end_date": "2026-10-27",
+          "observed_days": 7,
+          "impressions": 962,
+          "clicks": 308
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1055 在 基准 2026-10-14 至 2026-10-20，当前 2026-10-21 至 2026-10-27 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-056",
+      "source_plan_id": "7892338",
+      "plan_id": 1056,
+      "stratum": "low_exposure",
+      "history_category": "low_exposure",
+      "expected": "low_exposure",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-07",
+          "end_date": "2026-10-13",
+          "observed_days": 7,
+          "impressions": 464,
+          "clicks": 140
+        },
+        {
+          "start_date": "2026-10-14",
+          "end_date": "2026-10-20",
+          "observed_days": 7,
+          "impressions": 612,
+          "clicks": 151
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1056 在 2026-10-07 至 2026-10-20 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-057",
+      "source_plan_id": "18899195",
+      "plan_id": 1057,
+      "stratum": "low_exposure",
+      "history_category": "low_exposure",
+      "expected": "low_exposure",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-03",
+          "end_date": "2026-10-09",
+          "observed_days": 7,
+          "impressions": 761,
+          "clicks": 461
+        },
+        {
+          "start_date": "2026-10-10",
+          "end_date": "2026-10-16",
+          "observed_days": 7,
+          "impressions": 472,
+          "clicks": 282
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1057 在 基准 2026-10-03 至 2026-10-09，当前 2026-10-10 至 2026-10-16 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-058",
+      "source_plan_id": "24942663",
+      "plan_id": 1058,
+      "stratum": "low_exposure",
+      "history_category": "low_exposure",
+      "expected": "low_exposure",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-01",
+          "end_date": "2026-10-07",
+          "observed_days": 7,
+          "impressions": 909,
+          "clicks": 242
+        },
+        {
+          "start_date": "2026-10-08",
+          "end_date": "2026-10-14",
+          "observed_days": 7,
+          "impressions": 549,
+          "clicks": 141
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1058 在 2026-10-01 至 2026-10-14 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-059",
+      "source_plan_id": "28795047",
+      "plan_id": 1059,
+      "stratum": "low_exposure",
+      "history_category": "low_exposure",
+      "expected": "low_exposure",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-17",
+          "end_date": "2026-10-23",
+          "observed_days": 7,
+          "impressions": 326,
+          "clicks": 123
+        },
+        {
+          "start_date": "2026-10-24",
+          "end_date": "2026-10-30",
+          "observed_days": 7,
+          "impressions": 365,
+          "clicks": 138
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1059 在 基准 2026-10-17 至 2026-10-23，当前 2026-10-24 至 2026-10-30 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-060",
+      "source_plan_id": "23254639",
+      "plan_id": 1060,
+      "stratum": "zero_impressions",
+      "history_category": "zero_impressions",
+      "expected": "zero_impressions",
+      "request": "overall",
+      "transport": "chromium",
+      "windows": [
+        {
+          "start_date": "2026-10-07",
+          "end_date": "2026-10-13",
+          "observed_days": 7,
+          "impressions": 713,
+          "clicks": 286
+        },
+        {
+          "start_date": "2026-10-14",
+          "end_date": "2026-10-20",
+          "observed_days": 7,
+          "impressions": 0,
+          "clicks": 0
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1060 在 2026-10-07 至 2026-10-20 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-061",
+      "source_plan_id": "26321366",
+      "plan_id": 1061,
+      "stratum": "zero_impressions",
+      "history_category": "zero_impressions",
+      "expected": "zero_impressions",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-14",
+          "end_date": "2026-10-20",
+          "observed_days": 7,
+          "impressions": 14731,
+          "clicks": 4324
+        },
+        {
+          "start_date": "2026-10-21",
+          "end_date": "2026-10-27",
+          "observed_days": 7,
+          "impressions": 0,
+          "clicks": 0
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1061 在 基准 2026-10-14 至 2026-10-20，当前 2026-10-21 至 2026-10-27 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-062",
+      "source_plan_id": "30405203",
+      "plan_id": 1062,
+      "stratum": "zero_impressions",
+      "history_category": "zero_impressions",
+      "expected": "zero_impressions",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-15",
+          "end_date": "2026-10-21",
+          "observed_days": 7,
+          "impressions": 0,
+          "clicks": 0
+        },
+        {
+          "start_date": "2026-10-22",
+          "end_date": "2026-10-28",
+          "observed_days": 7,
+          "impressions": 11,
+          "clicks": 3
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1062 在 2026-10-15 至 2026-10-28 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-063",
+      "source_plan_id": "12474087",
+      "plan_id": 1063,
+      "stratum": "zero_impressions",
+      "history_category": "zero_impressions",
+      "expected": "zero_impressions",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-08",
+          "end_date": "2026-10-14",
+          "observed_days": 7,
+          "impressions": 0,
+          "clicks": 0
+        },
+        {
+          "start_date": "2026-10-15",
+          "end_date": "2026-10-21",
+          "observed_days": 7,
+          "impressions": 522,
+          "clicks": 177
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1063 在 基准 2026-10-08 至 2026-10-14，当前 2026-10-15 至 2026-10-21 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-064",
+      "source_plan_id": "15959620",
+      "plan_id": 1064,
+      "stratum": "zero_impressions",
+      "history_category": "zero_impressions",
+      "expected": "zero_impressions",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-01",
+          "end_date": "2026-10-07",
+          "observed_days": 7,
+          "impressions": 0,
+          "clicks": 0
+        },
+        {
+          "start_date": "2026-10-08",
+          "end_date": "2026-10-14",
+          "observed_days": 7,
+          "impressions": 901,
+          "clicks": 367
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1064 在 2026-10-01 至 2026-10-14 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-065",
+      "source_plan_id": "26383493",
+      "plan_id": 1065,
+      "stratum": "zero_impressions",
+      "history_category": "zero_impressions",
+      "expected": "zero_impressions",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-16",
+          "end_date": "2026-10-22",
+          "observed_days": 7,
+          "impressions": 3299,
+          "clicks": 1443
+        },
+        {
+          "start_date": "2026-10-23",
+          "end_date": "2026-10-29",
+          "observed_days": 7,
+          "impressions": 0,
+          "clicks": 0
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1065 在 基准 2026-10-16 至 2026-10-22，当前 2026-10-23 至 2026-10-29 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-066",
+      "source_plan_id": "12089529",
+      "plan_id": 1066,
+      "stratum": "zero_impressions",
+      "history_category": "zero_impressions",
+      "expected": "zero_impressions",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-15",
+          "end_date": "2026-10-21",
+          "observed_days": 7,
+          "impressions": 8173,
+          "clicks": 2994
+        },
+        {
+          "start_date": "2026-10-22",
+          "end_date": "2026-10-28",
+          "observed_days": 7,
+          "impressions": 0,
+          "clicks": 0
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1066 在 2026-10-15 至 2026-10-28 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-067",
+      "source_plan_id": "8287704",
+      "plan_id": 1067,
+      "stratum": "zero_impressions",
+      "history_category": "zero_impressions",
+      "expected": "zero_impressions",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-03",
+          "end_date": "2026-10-09",
+          "observed_days": 7,
+          "impressions": 0,
+          "clicks": 0
+        },
+        {
+          "start_date": "2026-10-10",
+          "end_date": "2026-10-16",
+          "observed_days": 7,
+          "impressions": 219,
+          "clicks": 50
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1067 在 基准 2026-10-03 至 2026-10-09，当前 2026-10-10 至 2026-10-16 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-068",
+      "source_plan_id": "27009843",
+      "plan_id": 1068,
+      "stratum": "zero_impressions",
+      "history_category": "zero_impressions",
+      "expected": "zero_impressions",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-14",
+          "end_date": "2026-10-20",
+          "observed_days": 7,
+          "impressions": 0,
+          "clicks": 0
+        },
+        {
+          "start_date": "2026-10-21",
+          "end_date": "2026-10-27",
+          "observed_days": 7,
+          "impressions": 507,
+          "clicks": 122
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1068 在 2026-10-14 至 2026-10-27 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-069",
+      "source_plan_id": "27491436",
+      "plan_id": 1069,
+      "stratum": "zero_impressions",
+      "history_category": "zero_impressions",
+      "expected": "zero_impressions",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-06",
+          "end_date": "2026-10-12",
+          "observed_days": 7,
+          "impressions": 692,
+          "clicks": 208
+        },
+        {
+          "start_date": "2026-10-13",
+          "end_date": "2026-10-19",
+          "observed_days": 7,
+          "impressions": 0,
+          "clicks": 0
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1069 在 基准 2026-10-06 至 2026-10-12，当前 2026-10-13 至 2026-10-19 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-070",
+      "source_plan_id": "3877978",
+      "plan_id": 1070,
+      "stratum": "zero_impressions",
+      "history_category": "zero_impressions",
+      "expected": "zero_impressions",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-15",
+          "end_date": "2026-10-21",
+          "observed_days": 7,
+          "impressions": 0,
+          "clicks": 0
+        },
+        {
+          "start_date": "2026-10-22",
+          "end_date": "2026-10-28",
+          "observed_days": 7,
+          "impressions": 0,
+          "clicks": 0
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1070 在 2026-10-15 至 2026-10-28 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-071",
+      "source_plan_id": "2407403",
+      "plan_id": 1071,
+      "stratum": "zero_impressions",
+      "history_category": "zero_impressions",
+      "expected": "zero_impressions",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-03",
+          "end_date": "2026-10-09",
+          "observed_days": 7,
+          "impressions": 0,
+          "clicks": 0
+        },
+        {
+          "start_date": "2026-10-10",
+          "end_date": "2026-10-16",
+          "observed_days": 7,
+          "impressions": 2247,
+          "clicks": 383
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1071 在 基准 2026-10-03 至 2026-10-09，当前 2026-10-10 至 2026-10-16 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-072",
+      "source_plan_id": "23254639",
+      "plan_id": 1072,
+      "stratum": "zero_impressions",
+      "history_category": "zero_impressions",
+      "expected": "zero_impressions",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-16",
+          "end_date": "2026-10-22",
+          "observed_days": 7,
+          "impressions": 0,
+          "clicks": 0
+        },
+        {
+          "start_date": "2026-10-23",
+          "end_date": "2026-10-29",
+          "observed_days": 7,
+          "impressions": 0,
+          "clicks": 0
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1072 在 2026-10-16 至 2026-10-29 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-073",
+      "source_plan_id": "30405203",
+      "plan_id": 1073,
+      "stratum": "zero_impressions",
+      "history_category": "zero_impressions",
+      "expected": "zero_impressions",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-16",
+          "end_date": "2026-10-22",
+          "observed_days": 7,
+          "impressions": 0,
+          "clicks": 0
+        },
+        {
+          "start_date": "2026-10-23",
+          "end_date": "2026-10-29",
+          "observed_days": 7,
+          "impressions": 70,
+          "clicks": 27
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1073 在 基准 2026-10-16 至 2026-10-22，当前 2026-10-23 至 2026-10-29 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-074",
+      "source_plan_id": "13442456",
+      "plan_id": 1074,
+      "stratum": "zero_baseline_ctr",
+      "history_category": "zero_baseline_ctr",
+      "expected": "zero_baseline_ctr",
+      "request": "overall",
+      "transport": "chromium",
+      "windows": [
+        {
+          "start_date": "2026-10-05",
+          "end_date": "2026-10-11",
+          "observed_days": 7,
+          "impressions": 1,
+          "clicks": 0
+        },
+        {
+          "start_date": "2026-10-12",
+          "end_date": "2026-10-18",
+          "observed_days": 7,
+          "impressions": 1,
+          "clicks": 1
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1074 在 2026-10-05 至 2026-10-18 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-075",
+      "source_plan_id": "13442456",
+      "plan_id": 1075,
+      "stratum": "zero_baseline_ctr",
+      "history_category": "zero_baseline_ctr",
+      "expected": "zero_baseline_ctr",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-16",
+          "end_date": "2026-10-22",
+          "observed_days": 7,
+          "impressions": 3,
+          "clicks": 0
+        },
+        {
+          "start_date": "2026-10-23",
+          "end_date": "2026-10-29",
+          "observed_days": 7,
+          "impressions": 10,
+          "clicks": 5
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1075 在 基准 2026-10-16 至 2026-10-22，当前 2026-10-23 至 2026-10-29 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-076",
+      "source_plan_id": "13442456",
+      "plan_id": 1076,
+      "stratum": "zero_baseline_ctr",
+      "history_category": "zero_baseline_ctr",
+      "expected": "zero_baseline_ctr",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-01",
+          "end_date": "2026-10-07",
+          "observed_days": 7,
+          "impressions": 3,
+          "clicks": 0
+        },
+        {
+          "start_date": "2026-10-08",
+          "end_date": "2026-10-14",
+          "observed_days": 7,
+          "impressions": 1,
+          "clicks": 1
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1076 在 2026-10-01 至 2026-10-14 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-077",
+      "source_plan_id": "13442456",
+      "plan_id": 1077,
+      "stratum": "zero_baseline_ctr",
+      "history_category": "zero_baseline_ctr",
+      "expected": "zero_baseline_ctr",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-02",
+          "end_date": "2026-10-08",
+          "observed_days": 7,
+          "impressions": 3,
+          "clicks": 0
+        },
+        {
+          "start_date": "2026-10-09",
+          "end_date": "2026-10-15",
+          "observed_days": 7,
+          "impressions": 1,
+          "clicks": 1
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1077 在 基准 2026-10-02 至 2026-10-08，当前 2026-10-09 至 2026-10-15 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-078",
+      "source_plan_id": "13442456",
+      "plan_id": 1078,
+      "stratum": "zero_baseline_ctr",
+      "history_category": "zero_baseline_ctr",
+      "expected": "zero_baseline_ctr",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-07",
+          "end_date": "2026-10-13",
+          "observed_days": 7,
+          "impressions": 1,
+          "clicks": 0
+        },
+        {
+          "start_date": "2026-10-14",
+          "end_date": "2026-10-20",
+          "observed_days": 7,
+          "impressions": 2,
+          "clicks": 1
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1078 在 2026-10-07 至 2026-10-20 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-079",
+      "source_plan_id": "13442456",
+      "plan_id": 1079,
+      "stratum": "zero_baseline_ctr",
+      "history_category": "zero_baseline_ctr",
+      "expected": "zero_baseline_ctr",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-06",
+          "end_date": "2026-10-12",
+          "observed_days": 7,
+          "impressions": 1,
+          "clicks": 0
+        },
+        {
+          "start_date": "2026-10-13",
+          "end_date": "2026-10-19",
+          "observed_days": 7,
+          "impressions": 2,
+          "clicks": 1
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1079 在 基准 2026-10-06 至 2026-10-12，当前 2026-10-13 至 2026-10-19 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-080",
+      "source_plan_id": "13442456",
+      "plan_id": 1080,
+      "stratum": "zero_baseline_ctr",
+      "history_category": "zero_baseline_ctr",
+      "expected": "zero_baseline_ctr",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-04",
+          "end_date": "2026-10-10",
+          "observed_days": 7,
+          "impressions": 2,
+          "clicks": 0
+        },
+        {
+          "start_date": "2026-10-11",
+          "end_date": "2026-10-17",
+          "observed_days": 7,
+          "impressions": 1,
+          "clicks": 1
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1080 在 2026-10-04 至 2026-10-17 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-081",
+      "source_plan_id": "13442456",
+      "plan_id": 1081,
+      "stratum": "zero_baseline_ctr",
+      "history_category": "zero_baseline_ctr",
+      "expected": "zero_baseline_ctr",
+      "request": "explicit",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-15",
+          "end_date": "2026-10-21",
+          "observed_days": 7,
+          "impressions": 2,
+          "clicks": 0
+        },
+        {
+          "start_date": "2026-10-22",
+          "end_date": "2026-10-28",
+          "observed_days": 7,
+          "impressions": 9,
+          "clicks": 5
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1081 在 基准 2026-10-15 至 2026-10-21，当前 2026-10-22 至 2026-10-28 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-082",
+      "source_plan_id": "13442456",
+      "plan_id": 1082,
+      "stratum": "zero_baseline_ctr",
+      "history_category": "zero_baseline_ctr",
+      "expected": "zero_baseline_ctr",
+      "request": "overall",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-03",
+          "end_date": "2026-10-09",
+          "observed_days": 7,
+          "impressions": 2,
+          "clicks": 0
+        },
+        {
+          "start_date": "2026-10-10",
+          "end_date": "2026-10-16",
+          "observed_days": 7,
+          "impressions": 1,
+          "clicks": 1
+        }
+      ],
+      "missing_date": null,
+      "message": "请复盘计划 #1082 在 2026-10-03 至 2026-10-16 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-083",
+      "source_plan_id": "25998433",
+      "plan_id": 1083,
+      "stratum": "single",
+      "history_category": "flat_or_rising",
+      "expected": "single",
+      "request": "single",
+      "transport": "chromium",
+      "windows": [
+        {
+          "start_date": "2026-10-12",
+          "end_date": "2026-10-18",
+          "observed_days": 7,
+          "impressions": 6575,
+          "clicks": 2186
+        }
+      ],
+      "missing_date": null,
+      "message": "请直接查 #1083 在 2026-10-12 至 2026-10-18 这个单一窗口的总曝光、总点击、CTR 和日期覆盖，引用知识库 v1 的窗口口径（给出引用编号）。只看该窗口的合计。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-084",
+      "source_plan_id": "20817326",
+      "plan_id": 1084,
+      "stratum": "single",
+      "history_category": "flat_or_rising",
+      "expected": "single",
+      "request": "single",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-19",
+          "end_date": "2026-10-25",
+          "observed_days": 7,
+          "impressions": 8300,
+          "clicks": 3578
+        }
+      ],
+      "missing_date": null,
+      "message": "请直接查 #1084 在 2026-10-19 至 2026-10-25 这个单一窗口的总曝光、总点击、CTR 和日期覆盖，引用知识库 v1 的窗口口径（给出引用编号）。只看该窗口的合计。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-085",
+      "source_plan_id": "5743167",
+      "plan_id": 1085,
+      "stratum": "single",
+      "history_category": "flat_or_rising",
+      "expected": "single",
+      "request": "single",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-13",
+          "end_date": "2026-10-19",
+          "observed_days": 7,
+          "impressions": 1556,
+          "clicks": 616
+        }
+      ],
+      "missing_date": null,
+      "message": "请直接查 #1085 在 2026-10-13 至 2026-10-19 这个单一窗口的总曝光、总点击、CTR 和日期覆盖，引用知识库 v1 的窗口口径（给出引用编号）。只看该窗口的合计。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-086",
+      "source_plan_id": "9500303",
+      "plan_id": 1086,
+      "stratum": "single",
+      "history_category": "flat_or_rising",
+      "expected": "single",
+      "request": "single",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-06",
+          "end_date": "2026-10-12",
+          "observed_days": 7,
+          "impressions": 2594,
+          "clicks": 1156
+        }
+      ],
+      "missing_date": null,
+      "message": "请直接查 #1086 在 2026-10-06 至 2026-10-12 这个单一窗口的总曝光、总点击、CTR 和日期覆盖，引用知识库 v1 的窗口口径（给出引用编号）。只看该窗口的合计。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-087",
+      "source_plan_id": "22891673",
+      "plan_id": 1087,
+      "stratum": "single",
+      "history_category": "flat_or_rising",
+      "expected": "single",
+      "request": "single",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-08",
+          "end_date": "2026-10-14",
+          "observed_days": 7,
+          "impressions": 1953,
+          "clicks": 742
+        }
+      ],
+      "missing_date": null,
+      "message": "请直接查 #1087 在 2026-10-08 至 2026-10-14 这个单一窗口的总曝光、总点击、CTR 和日期覆盖，引用知识库 v1 的窗口口径（给出引用编号）。只看该窗口的合计。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-088",
+      "source_plan_id": "23852343",
+      "plan_id": 1088,
+      "stratum": "single",
+      "history_category": "flat_or_rising",
+      "expected": "single",
+      "request": "single",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-06",
+          "end_date": "2026-10-12",
+          "observed_days": 7,
+          "impressions": 3409,
+          "clicks": 1383
+        }
+      ],
+      "missing_date": null,
+      "message": "请直接查 #1088 在 2026-10-06 至 2026-10-12 这个单一窗口的总曝光、总点击、CTR 和日期覆盖，引用知识库 v1 的窗口口径（给出引用编号）。只看该窗口的合计。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-089",
+      "source_plan_id": "23852330",
+      "plan_id": 1089,
+      "stratum": "single",
+      "history_category": "flat_or_rising",
+      "expected": "single",
+      "request": "single",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-12",
+          "end_date": "2026-10-18",
+          "observed_days": 7,
+          "impressions": 1565,
+          "clicks": 652
+        }
+      ],
+      "missing_date": null,
+      "message": "请直接查 #1089 在 2026-10-12 至 2026-10-18 这个单一窗口的总曝光、总点击、CTR 和日期覆盖，引用知识库 v1 的窗口口径（给出引用编号）。只看该窗口的合计。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-090",
+      "source_plan_id": "9097339",
+      "plan_id": 1090,
+      "stratum": "single",
+      "history_category": "flat_or_rising",
+      "expected": "single",
+      "request": "single",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-23",
+          "end_date": "2026-10-29",
+          "observed_days": 7,
+          "impressions": 2116,
+          "clicks": 966
+        }
+      ],
+      "missing_date": null,
+      "message": "请直接查 #1090 在 2026-10-23 至 2026-10-29 这个单一窗口的总曝光、总点击、CTR 和日期覆盖，引用知识库 v1 的窗口口径（给出引用编号）。只看该窗口的合计。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-091",
+      "source_plan_id": "26372320",
+      "plan_id": 1091,
+      "stratum": "single",
+      "history_category": "flat_or_rising",
+      "expected": "single",
+      "request": "single",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-02",
+          "end_date": "2026-10-08",
+          "observed_days": 7,
+          "impressions": 1472,
+          "clicks": 501
+        }
+      ],
+      "missing_date": null,
+      "message": "请直接查 #1091 在 2026-10-02 至 2026-10-08 这个单一窗口的总曝光、总点击、CTR 和日期覆盖，引用知识库 v1 的窗口口径（给出引用编号）。只看该窗口的合计。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-092",
+      "source_plan_id": "5044698",
+      "plan_id": 1092,
+      "stratum": "single",
+      "history_category": "flat_or_rising",
+      "expected": "single",
+      "request": "single",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-21",
+          "end_date": "2026-10-27",
+          "observed_days": 7,
+          "impressions": 23078,
+          "clicks": 8679
+        }
+      ],
+      "missing_date": null,
+      "message": "请直接查 #1092 在 2026-10-21 至 2026-10-27 这个单一窗口的总曝光、总点击、CTR 和日期覆盖，引用知识库 v1 的窗口口径（给出引用编号）。只看该窗口的合计。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-093",
+      "source_plan_id": "3828354",
+      "plan_id": 1093,
+      "stratum": "injected_missing",
+      "history_category": "flat_or_rising",
+      "expected": "missing",
+      "request": "missing",
+      "transport": "chromium",
+      "windows": [
+        {
+          "start_date": "2026-10-03",
+          "end_date": "2026-10-09",
+          "observed_days": 7,
+          "impressions": 5203,
+          "clicks": 1480
+        },
+        {
+          "start_date": "2026-10-10",
+          "end_date": "2026-10-16",
+          "observed_days": 7,
+          "impressions": 4966,
+          "clicks": 1535
+        }
+      ],
+      "missing_date": "2026-10-13",
+      "message": "请复盘计划 #1093 在 2026-10-03 至 2026-10-16 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-094",
+      "source_plan_id": "6686704",
+      "plan_id": 1094,
+      "stratum": "injected_missing",
+      "history_category": "flat_or_rising",
+      "expected": "missing",
+      "request": "missing",
+      "transport": "chromium",
+      "windows": [
+        {
+          "start_date": "2026-10-01",
+          "end_date": "2026-10-07",
+          "observed_days": 7,
+          "impressions": 14009,
+          "clicks": 4633
+        },
+        {
+          "start_date": "2026-10-08",
+          "end_date": "2026-10-14",
+          "observed_days": 7,
+          "impressions": 13548,
+          "clicks": 4500
+        }
+      ],
+      "missing_date": "2026-10-11",
+      "message": "请复盘计划 #1094 在 2026-10-01 至 2026-10-14 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-095",
+      "source_plan_id": "12042373",
+      "plan_id": 1095,
+      "stratum": "injected_missing",
+      "history_category": "flat_or_rising",
+      "expected": "missing",
+      "request": "missing",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-05",
+          "end_date": "2026-10-11",
+          "observed_days": 7,
+          "impressions": 6279,
+          "clicks": 1851
+        },
+        {
+          "start_date": "2026-10-12",
+          "end_date": "2026-10-18",
+          "observed_days": 7,
+          "impressions": 6788,
+          "clicks": 2005
+        }
+      ],
+      "missing_date": "2026-10-15",
+      "message": "请复盘计划 #1095 在 2026-10-05 至 2026-10-18 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-096",
+      "source_plan_id": "8980584",
+      "plan_id": 1096,
+      "stratum": "injected_missing",
+      "history_category": "flat_or_rising",
+      "expected": "missing",
+      "request": "missing",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-08",
+          "end_date": "2026-10-14",
+          "observed_days": 7,
+          "impressions": 8013,
+          "clicks": 2576
+        },
+        {
+          "start_date": "2026-10-15",
+          "end_date": "2026-10-21",
+          "observed_days": 7,
+          "impressions": 8200,
+          "clicks": 2740
+        }
+      ],
+      "missing_date": "2026-10-18",
+      "message": "请复盘计划 #1096 在 2026-10-08 至 2026-10-21 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-097",
+      "source_plan_id": "25866076",
+      "plan_id": 1097,
+      "stratum": "injected_missing",
+      "history_category": "flat_or_rising",
+      "expected": "missing",
+      "request": "missing",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-08",
+          "end_date": "2026-10-14",
+          "observed_days": 7,
+          "impressions": 6066,
+          "clicks": 2282
+        },
+        {
+          "start_date": "2026-10-15",
+          "end_date": "2026-10-21",
+          "observed_days": 7,
+          "impressions": 4617,
+          "clicks": 1785
+        }
+      ],
+      "missing_date": "2026-10-18",
+      "message": "请复盘计划 #1097 在 2026-10-08 至 2026-10-21 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-098",
+      "source_plan_id": "73325",
+      "plan_id": 1098,
+      "stratum": "injected_missing",
+      "history_category": "flat_or_rising",
+      "expected": "missing",
+      "request": "missing",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-08",
+          "end_date": "2026-10-14",
+          "observed_days": 7,
+          "impressions": 1322,
+          "clicks": 345
+        },
+        {
+          "start_date": "2026-10-15",
+          "end_date": "2026-10-21",
+          "observed_days": 7,
+          "impressions": 1264,
+          "clicks": 345
+        }
+      ],
+      "missing_date": "2026-10-18",
+      "message": "请复盘计划 #1098 在 2026-10-08 至 2026-10-21 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-099",
+      "source_plan_id": "16321090",
+      "plan_id": 1099,
+      "stratum": "injected_missing",
+      "history_category": "flat_or_rising",
+      "expected": "missing",
+      "request": "missing",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-08",
+          "end_date": "2026-10-14",
+          "observed_days": 7,
+          "impressions": 7649,
+          "clicks": 1851
+        },
+        {
+          "start_date": "2026-10-15",
+          "end_date": "2026-10-21",
+          "observed_days": 7,
+          "impressions": 5315,
+          "clicks": 1300
+        }
+      ],
+      "missing_date": "2026-10-18",
+      "message": "请复盘计划 #1099 在 2026-10-08 至 2026-10-21 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    },
+    {
+      "id": "T2-100",
+      "source_plan_id": "2144729",
+      "plan_id": 1100,
+      "stratum": "injected_missing",
+      "history_category": "below_threshold",
+      "expected": "missing",
+      "request": "missing",
+      "transport": "asgi",
+      "windows": [
+        {
+          "start_date": "2026-10-17",
+          "end_date": "2026-10-23",
+          "observed_days": 7,
+          "impressions": 2807,
+          "clicks": 328
+        },
+        {
+          "start_date": "2026-10-24",
+          "end_date": "2026-10-30",
+          "observed_days": 7,
+          "impressions": 2956,
+          "clicks": 314
+        }
+      ],
+      "missing_date": "2026-10-27",
+      "message": "请复盘计划 #1100 在 2026-10-17 至 2026-10-30 的 CTR。按相邻等长七天比较，核实每窗日期覆盖、曝光、点击和 CTR。完整且相对变化有定义时给出相对变化，按知识库 CTR 复核规则 v1 判定并给出引用编号。如果缺报，请指出日期和哪些结论不能得出。请写清结论及依据。只用计划历史曝光、点击和日期覆盖作为业务证据。"
+    }
+  ]
+}

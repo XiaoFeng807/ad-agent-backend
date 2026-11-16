@@ -1,0 +1,45 @@
+{
+  "lwa": {"access_token": "fixture-access-token", "token_type": "bearer", "expires_in": 3600, "refresh_token": "fixture-refresh-token"},
+  "pages": [
+    {
+      "orders": [
+        {
+          "orderId": "111-0000000-0000001", "createdTime": "2026-01-01T08:00:00-05:00",
+          "lastUpdatedTime": "2026-01-02T15:30:00Z",
+          "salesChannel": {"channelName": "AMAZON", "marketplaceId": "ATVPDKIKX0DER"},
+          "fulfillment": {"fulfilledBy": "MERCHANT", "fulfillmentStatus": "SHIPPED", "shipByWindow": {"latestDateTime": "2026-01-04T23:59:00Z"}},
+          "orderItems": [{"orderItemId": "line-1", "quantityOrdered": 2, "product": {"sellerSku": "SKU-1", "asin": "B000000001"}}]
+        },
+        {
+          "orderId": "111-0000000-0000002", "createdTime": "2026-01-01T13:00:00Z",
+          "lastUpdatedTime": "2026-01-02T10:00:00Z",
+          "salesChannel": {"channelName": "AMAZON", "marketplaceId": "A2EUQ1WTGCTBG2"},
+          "fulfillment": {"fulfilledBy": "MERCHANT", "fulfillmentStatus": "UNSHIPPED"},
+          "orderItems": []
+        },
+        {
+          "orderId": "111-0000000-0000003", "createdTime": "2026-01-01T13:00:00Z",
+          "lastUpdatedTime": "2026-01-02T10:00:00Z",
+          "salesChannel": {"channelName": "AMAZON", "marketplaceId": "ATVPDKIKX0DER"},
+          "fulfillment": {"fulfilledBy": "AMAZON", "fulfillmentStatus": "SHIPPED"},
+          "orderItems": []
+        }
+      ],
+      "pagination": {"nextToken": "fixture+page/2="}
+    },
+    {
+      "orders": [
+        {
+          "orderId": "111-0000000-0000004", "createdTime": "2026-01-02T06:00:00Z",
+          "lastUpdatedTime": "2026-01-03T09:00:00Z",
+          "salesChannel": {"channelName": "AMAZON", "marketplaceId": "ATVPDKIKX0DER"},
+          "fulfillment": {"fulfilledBy": "MERCHANT", "fulfillmentStatus": "PENDING", "shipByWindow": {"latestDateTime": null}},
+          "orderItems": [{"orderItemId": "line-4", "quantityOrdered": 1, "product": {"asin": "B000000004"}}]
+        }
+      ]
+    }
+  ],
+  "denied": {"errors": [{"code": "Unauthorized", "message": "Fixture authorization error"}]},
+  "limited": {"errors": [{"code": "QuotaExceeded", "message": "Fixture rate limit"}]},
+  "unavailable": {"errors": [{"code": "ServiceUnavailable", "message": "Fixture page unavailable"}]}
+}

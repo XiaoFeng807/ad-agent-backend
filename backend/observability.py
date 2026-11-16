@@ -6,6 +6,7 @@ import threading
 import os
 import uuid
 from collections import defaultdict
+from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 
@@ -15,6 +16,7 @@ LOG_DIR = Path(__file__).parent.parent / "logs"
 TRACE_LOG_FILE = LOG_DIR / "traces.jsonl"
 FUNC_LOG_FILE = LOG_DIR / "functions.jsonl"
 ERROR_LOG_FILE = LOG_DIR / "errors.jsonl"
+PRODUCT_RERANK_LATE_FILE = LOG_DIR / "product-rerank-late.jsonl"
 
 # 确保日志目录存在
 LOG_DIR.mkdir(parents=True, exist_ok=True)
@@ -23,64 +25,118 @@ LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 _traces = {}       # trace_id -> trace_data
 _trace_lock = threading.Lock()
+_trace_write_lock = threading.Lock()
 MAX_TRACES = 500   # 内存保留上限
 
 def new_trace_id():
     return uuid.uuid4().hex[:12]
 
-def start_trace(user_id, message):
-    trace_id = new_trace_id()
+def start_trace(user_id=None, message=None, *, source=None, trace_id=None):
+    trace_id = trace_id or new_trace_id()
     trace = {
         "trace_id": trace_id,
-        "user_id": user_id,
-        "message": message[:100],
         "start_time": time.time(),
         "start_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "steps": [],       # ReAct 各步骤
         "status": "running",
         "total_duration": 0,
     }
+    if user_id is not None:
+        trace["user_id"] = user_id
+    if message is not None:
+        trace["message"] = message[:100]
+    if source is not None:
+        trace["source"] = source
     with _trace_lock:
         _traces[trace_id] = trace
         # 控制内存上限
         if len(_traces) > MAX_TRACES:
-            oldest = sorted(_traces.keys(), key=lambda k: _traces[k]["start_time"])[:50]
+            # SSE 有明确的收尾路径，执行期间保留其工具记录。
+            oldest = [key for key, value in _traces.items()
+                      if value["status"] != "running" or "source" not in value][:50]
             for k in oldest:
                 del _traces[k]
     return trace_id
 
-def add_trace_step(trace_id, stage, action, detail="", duration=0, status="ok"):
+def add_trace_step(trace_id, stage, action, detail="", duration=0, status="ok", *,
+                   role=None, tool_call_id=None, runtime_call_id=None, error_code=None,
+                   parent_call_id=None, retry_of=None, budget=None, evidence=None):
     """记录一个ReAct步骤"""
     if not trace_id:
         return
     with _trace_lock:
         trace = _traces.get(trace_id)
-        if not trace:
+        if not trace or trace["status"] != "running":
             return
-        trace["steps"].append({
+        step = {
             "stage": stage,        # think / act / observe
             "action": action,      # 调用了什么函数 / LLM回复
             "detail": str(detail)[:200],
             "duration": round(duration, 3),
             "time": datetime.now().strftime("%H:%M:%S"),
             "status": status,
-        })
+        }
+        if role is not None:
+            step["role"] = role
+        if tool_call_id is not None:
+            step["tool_call_id"] = tool_call_id
+        if runtime_call_id is not None:
+            step["runtime_call_id"] = runtime_call_id
+        if parent_call_id is not None:
+            step["parent_call_id"] = parent_call_id
+        if retry_of is not None:
+            step["retry_of"] = retry_of
+        if error_code is not None:
+            step["error_code"] = error_code
+        if budget is not None:
+            step["budget"] = budget
+        if evidence is not None:
+            step["evidence"] = evidence
+        trace["steps"].append(step)
+
+
+@contextmanager
+def trace_tool_call(trace_id, role, tool_name, tool_call_id=None, *, runtime_call_id=None,
+                    parent_call_id=None, retry_of=None):
+    """记录工具调用的元数据。调用方可设置固定错误码表示工具返回失败。"""
+    started = time.perf_counter()
+    result = {"error_code": None}
+    link = {"role": role, "tool_call_id": tool_call_id, "runtime_call_id": runtime_call_id,
+            "parent_call_id": parent_call_id, "retry_of": retry_of}
+    add_trace_step(trace_id, "tool_call", tool_name, **link)
+    try:
+        yield result
+    except BaseException:
+        result["error_code"] = "tool_exception"
+        raise
+    finally:
+        error_code = result["error_code"]
+        add_trace_step(trace_id, "tool_result", tool_name, duration=time.perf_counter() - started,
+                       status="error" if error_code else "ok", error_code=error_code,
+                       evidence=result.get("evidence"), **link)
 
 def end_trace(trace_id, status="completed"):
     if not trace_id:
         return
     with _trace_lock:
         trace = _traces.get(trace_id)
-        if not trace:
+        if not trace or trace["status"] != "running":
             return
         trace["total_duration"] = round(time.time() - trace["start_time"], 3)
         trace["status"] = status
-    # 持久化写入
-    _append_jsonl(TRACE_LOG_FILE, trace)
+    # 写盘单独加锁，避免并发追加同一文件时影响内存追踪。
+    with _trace_write_lock:
+        _append_jsonl(TRACE_LOG_FILE, trace)
 
 def get_trace(trace_id):
     with _trace_lock:
         return _traces.get(trace_id)
+
+
+def record_late_product_rerank(trace_id, reason, timing):
+    if trace_id:
+        with _trace_write_lock:
+            _append_jsonl(PRODUCT_RERANK_LATE_FILE, {"trace_id": trace_id, "reason": reason, **timing})
 
 def list_recent_traces(limit=20):
     with _trace_lock:
@@ -239,7 +295,7 @@ def get_system_status(start_time):
             "running": running,
             "recent": [{
                 "trace_id": t["trace_id"],
-                "message": t["message"],
+                "message": t.get("message", ""),
                 "steps": len(t["steps"]),
                 "duration": t["total_duration"],
                 "status": t["status"],

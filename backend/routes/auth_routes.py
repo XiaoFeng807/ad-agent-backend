@@ -1,7 +1,7 @@
 """认证路由：验证码生成、登录、注册"""
 import io, base64, hashlib, datetime
 from flask import request, jsonify, current_app
-from backend.auth.auth import login_required  # 登录检查装饰器
+from backend.auth.auth import JWTConfigurationError, login_required
 from backend.database.database import hash_password
 from .blueprints import auth_bp
 from . import shared as _shared  # 共享状态（数据库、认证实例等）
@@ -56,7 +56,10 @@ def api_login():
         return jsonify({"code": 400, "msg": "验证码错误"}), 400
 
     # 调用认证模块验证用户名密码
-    result = _shared.auth_instance.login(username, password)
+    try:
+        result = _shared.auth_instance.login(username, password)
+    except JWTConfigurationError as exc:
+        return jsonify({"code": 503, "msg": str(exc)}), 503
     if not result:
         return jsonify({"code": 400, "msg": "用户名或密码错误"}), 400
 

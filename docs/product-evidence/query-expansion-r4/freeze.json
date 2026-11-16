@@ -1,0 +1,30 @@
+{
+  "model": "BAAI/bge-small-zh-v1.5@7999e1d3359715c523056ef9478215996d62a620",
+  "development_sha256": "f45b0448d3c892ed7320e3cf90b31a2fe22ad9cac5ae28339846dc64cdce3b1c",
+  "query_expansion_sha256": "a95e6874461c10d60566e02c185625077a0fb6e08ec9193ee5097d95bd719fb2",
+  "policies": {
+    "r1": {
+      "original_slots": 5,
+      "english_part_terms": true,
+      "catalog_intents": false
+    },
+    "r4": {
+      "original_slots": 5,
+      "english_part_terms": true,
+      "catalog_intents": true
+    }
+  },
+  "sources_sha256": {
+    "manifest.json": "8ff17b70c22db17b836e2252e51b968f0b84c3ed02acace68f399637b1795342",
+    "sources/faq.md": "9c240e48d172a892d65e19c6e38b7ffafefa4fc529f9a8a5644a7b2c3635078e",
+    "sources/manual-500-v1.md": "b0a9bf9d102b638c71910e970fc7bc6b747220c5afcacf9c0242a9d6ff4496ed",
+    "sources/manual-500-v2.md": "a00da75b38512f1a38fccbfbd6ebc6b149c5bd69cff3de043e4edd59aaab3901",
+    "sources/manual-750-v1.md": "a9ff6300eec65b8b944115bcea249ef6de0f8eb51e1cd0dab2ef707eb04ecae0",
+    "sources/manual-other-v1.md": "51fd027d15ec5b0b079c6c18c95371d53e965f5fa9df311d9bf3f065bf389270",
+    "sources/specs-500-v1.tsv": "b22abb6116a416d3d016392614603a57a94030b5b46de056209e0be5027c5948",
+    "sources/specs-500-v2.tsv": "f0239da37ae8f31f8df36fde76bbd152322a94cca5cbff4ae14578a250aeb17c",
+    "sources/specs-750-v1.tsv": "f3c845a36dd4cbd07956832f35c04dafe2f8c7aae432f8d85bcfac5a7af3678d",
+    "sources/specs-ca-v1.tsv": "50e1b5442bcb73fa92d90f9b0cbdc8305b551d33ae2f1d603879726e5b7e0e0b",
+    "sources/specs-other-v1.tsv": "eeb55c08da77d116f432c696d75bb269ba0e0f1a847590baee20ade52ca3459b"
+  }
+}

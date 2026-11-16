@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>智能广告投放助手</title><style>
+﻿<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>StorePilot Agent</title><style>
 :root{--navy:#0F1E32;--blue:#1A6DFF;--blue-hover:#1557D4;--card-shadow:0 2px 10px rgba(0,0,0,0.08);--text:#1a1a2e;--text-light:#6b7280;--bg:#f0f4f8;--white:#fff;--danger:#ef4444;--success:#10b981;--warning:#f59e0b;--border:#e5e7eb;--radius:8px;--sidebar-w:220px;--header-h:56px}
 *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
 body{background:var(--bg);color:var(--text);overflow-y:auto;overflow-x:hidden;min-height:100vh}
@@ -59,6 +59,65 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
 .chat-input-row input{flex:1}
 .thinking-indicator{padding:8px 16px;color:var(--text-light);font-size:13px;display:none;align-items:center;gap:8px}
 .thinking-indicator .dot-pulse span{width:6px;height:6px;border-radius:50%;background:var(--blue);display:inline-block;animation:pulse 1.4s infinite}
+.chat-container [hidden]{display:none}
+.chat-view{display:flex;flex:1;min-height:0;flex-direction:column}
+.chat-actions,.diagnosis-actions,.diagnosis-trace{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.group-progress{clear:both;margin:0 0 10px;border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;background:var(--card,#fff);font-size:13px;overflow-wrap:anywhere}
+.group-progress summary,.group-evidence summary{cursor:pointer;font-weight:600;color:var(--blue)}
+.group-task{margin-top:7px;border-top:1px solid var(--border)}
+.group-task > summary{padding:7px 0 0;color:var(--text)}
+.group-task[data-state="running"] > summary{color:var(--blue)}
+.group-task[data-state="blocked"] > summary,.group-task[data-state="failed"] > summary{color:#a22a20}
+.group-task ol{list-style:none;margin:7px 0 0;padding:0 0 0 12px}
+.chat-messages .group-progress .msg{display:block;float:none;margin:0;max-width:none;padding:7px 0;border:0;border-top:1px solid var(--border);background:none;border-radius:0;font-size:inherit}
+.group-progress small,.group-evidence small{display:block;color:var(--text-light);font-size:12px}
+.group-progress code,.group-evidence code{font-size:11px;overflow-wrap:anywhere}
+.group-progress small code{user-select:all}
+.group-evidence li > code{display:block;color:var(--text-light)}
+.group-scope{margin:8px 0;color:var(--text-light)}
+.group-evidence{border-top:1px solid var(--border);margin-top:10px;padding-top:8px}
+.group-evidence ul{padding-left:20px;margin:8px 0}
+.group-evidence li{margin-bottom:8px;overflow-wrap:anywhere}
+.group-pause{border-top:1px solid var(--border);margin-top:10px;padding-top:8px;overflow-wrap:anywhere}
+.group-pause p{margin:4px 0 8px}
+.chat-messages .msg:has(.group-listing-evidence,.group-listing-action){width:min(100%,740px);max-width:100%}
+.group-listing-evidence,.group-listing-action{white-space:normal;overflow-wrap:anywhere}
+.group-listing-evidence h4,.group-listing-action p{margin:8px 0}
+.group-listing-action{border-top:1px solid var(--border);margin-top:10px;padding-top:8px}
+.group-listing-chart{margin:8px 0;background:var(--white,#fff);border:1px solid var(--border);border-radius:8px;padding:8px 10px}
+.group-listing-chart figcaption{font-weight:600;margin-bottom:8px}
+.group-listing-bars{display:flex;align-items:flex-end;gap:6px;overflow:auto;list-style:none;padding:0 0 4px;margin:0}
+.group-listing-bars li{flex:1 0 30px;display:grid;grid-template-rows:auto 58px auto;align-items:end;text-align:center;margin:0;font-size:11px;line-height:1.3}
+.group-listing-bar-track{display:flex;align-items:flex-end;justify-content:center;height:100%;border-bottom:1px solid var(--border)}
+.group-listing-bar{display:block;width:min(70%,24px);height:max(2px,var(--units-ratio));background:var(--blue);border-radius:3px 3px 0 0}
+.group-listing-bars [data-units="unknown"] .group-listing-bar{background:transparent;border-top:1px dashed var(--text-light)}
+.group-listing-bars time{color:var(--text-light);margin-top:4px}
+.group-listing-diff{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:12px}
+.group-listing-diff ol,.group-listing-receipt ol{margin:4px 0;padding-left:20px}
+.group-listing-diff li,.group-listing-receipt li{margin-bottom:6px}
+.group-listing-facts{margin-top:8px}
+.diagnosis-view{overflow:auto;padding:16px 20px;gap:14px;font-size:14px}
+.diagnosis-form fieldset{border:0;min-width:0}
+.diagnosis-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));gap:12px;margin:12px 0}
+.diagnosis-dates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.diagnosis-dates legend{font-weight:600;margin-bottom:4px}
+.diagnosis-form label{display:block}
+.diagnosis-form input{margin-top:4px}
+.diagnosis-form input[readonly]{background:var(--bg)}
+.diagnosis-form button:disabled{opacity:.6;cursor:default}
+.diagnosis-meta{color:var(--text-light);font-size:13px;overflow-wrap:anywhere}
+.diagnosis-round{border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px;display:grid;gap:8px;overflow-wrap:anywhere}
+.diagnosis-round header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.diagnosis-round ul{padding-left:20px}
+.diagnosis-output{display:grid;gap:4px}
+.diagnosis-output h4:not(:first-child){margin-top:6px}
+.diagnosis-round pre,.diagnosis-reply{white-space:pre-wrap;font:inherit;line-height:1.6}
+.diagnosis-status[data-state="done"]{color:#065f46}
+.diagnosis-status[data-state="error"],#diagnosisValidation{color:#b91c1c}
+.diagnosis-citation{margin:6px 0}
+.diagnosis-citation summary{color:var(--blue-hover);cursor:pointer}
+.diagnosis-citation pre{background:var(--bg);border-radius:6px;padding:10px;margin-top:4px}
+.diagnosis-review,.diagnosis-pause{border-top:1px solid var(--border);padding-top:10px;display:grid;gap:6px}
 @keyframes pulse{0%,80%,100%{opacity:0.4}40%{opacity:1}}
 .filter-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
 .filter-row input,.filter-row select{width:auto;min-width:140px}
@@ -73,13 +132,16 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
   .stat-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
   .chat-layout{flex-direction:column;height:auto}.chat-sidebar{width:100%;flex-direction:row;flex-wrap:wrap}.chat-main{height:500px}
 }
+#chatMessages .msg[data-reply-status]::after{content:attr(data-reply-status);display:block;margin-top:6px;font-size:11px;color:var(--text-light)}
 </style>
+<link rel="stylesheet" href="/static/product-shell.css">
+<link rel="stylesheet" href="/static/workbench.css">
 </head>
 <body>
 
 <div class="login-wrapper" id="loginPage">
   <div class="login-box">
-    <h2>📊 智能广告投放助手</h2>
+    <h2>StorePilot Agent</h2>
     <div class="form-group"><label>用户名</label><input id="loginUser" placeholder="请输入用户名"></div>
     <div class="form-group"><label>密码</label><input id="loginPass" type="password" placeholder="请输入密码"></div>
     <div class="form-group"><label>验证码</label>
@@ -91,37 +153,42 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
 </div>
 
 <div class="app-layout" id="appLayout">
-<aside class="sidebar" id="sidebar">
-<div class="logo">📈 <span>Ad</span>Agent</div>
-<nav id="sidebarNav">
-<a href="#" data-page="dashboard" class="active" onclick="showPage('dashboard',this)">📊 仪表盘</a>
-<a href="#" data-page="plans" onclick="showPage('plans',this)">📋 投放计划</a>
-<a href="#" data-page="budget" onclick="showPage('budget',this)">💰 预算管理</a>
-<a href="#" data-page="alerts" onclick="showPage('alerts',this)">🔔 告警中心</a>
-<a href="#" data-page="materials" onclick="showPage('materials',this)">📁 素材管理</a>
-<a href="#" data-page="chat" onclick="showPage('chat',this)">🤖 AI投放助手</a>
-<a href="#" data-page="users" id="navUsers" onclick="showPage('users',this)">👥 账户管理</a>
-<a href="#" data-page="logs" onclick="showPage('logs',this)">📝 操作日志</a>
-<a href="#" data-page="decisions" onclick="showPage('decisions',this)">🧠 决策记录</a>
-<a href="#" data-page="timeline" onclick="showPage('timeline',this)">📅 活动时间轴</a>
+<aside class="sidebar product-sidebar" id="sidebar">
+<div class="product-brand"><span aria-hidden="true">✦</span><strong>StorePilot Agent</strong></div>
+<button class="product-nav-close" type="button" aria-label="关闭全局导航" onclick="toggleProductNav(false, true)">×</button>
+<nav id="sidebarNav" aria-label="全局导航">
+<a href="#" data-page="chat" class="active" aria-current="page" onclick="showPage('chat',this)"><span aria-hidden="true">✧</span>AI 工作台</a>
+<a href="#" data-page="dashboard" onclick="showPage('dashboard',this)"><span aria-hidden="true">▥</span>仪表盘</a>
+<a href="#" data-page="plans" onclick="showPage('plans',this)"><span aria-hidden="true">◎</span>投放计划</a>
+<a href="/orders"><span aria-hidden="true">◇</span>店铺订单</a>
+<a href="#" data-page="budget" onclick="showPage('budget',this)"><span aria-hidden="true">▣</span>预算管理</a>
+<a href="#" data-page="alerts" onclick="showPage('alerts',this)"><span aria-hidden="true">△</span>告警中心</a>
+<a href="#" data-page="materials" onclick="showPage('materials',this)"><span aria-hidden="true">▱</span>素材管理</a>
+<a href="#" data-page="users" id="navUsers" onclick="showPage('users',this)"><span aria-hidden="true">◉</span>账户管理</a>
+<a href="#" data-page="logs" onclick="showPage('logs',this)"><span aria-hidden="true">▤</span>操作日志</a>
+<a href="#" data-page="decisions" onclick="showPage('decisions',this)"><span aria-hidden="true">◆</span>决策记录</a>
+<a href="#" data-page="timeline" onclick="showPage('timeline',this)"><span aria-hidden="true">◷</span>活动时间轴</a>
 </nav>
 <div class="user-info" id="userInfo" style="display:none">
 <div><span class="un" id="navUsername"></span><span class="role-tag" id="navRole" style="background:var(--blue);padding:2px 8px;border-radius:10px;font-size:11px;color:#fff;margin-left:6px"></span></div>
 </div>
-<button class="logout-btn" onclick="doLogout()">🚪 退出登录</button>
+<button class="logout-btn" onclick="doLogout()">退出登录</button>
 </aside>
 
 <div class="main-area">
 <header class="main-header">
 <div style="display:flex;align-items:center;gap:12px">
-<button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
-<h1 id="pageTitle">仪表盘</h1>
+<button class="menu-toggle" type="button" aria-label="全局导航" aria-controls="sidebar" aria-expanded="false" onclick="toggleProductNav()">☰</button>
+<h1 id="pageTitle">AI 工作台</h1>
 </div>
-<div style="font-size:14px;color:var(--text-light)"><span id="headerTime"></span></div>
+<div class="product-header-actions">
+  <button type="button" id="diagnosisToggle" class="btn btn-outline btn-sm" aria-controls="diagnosisView" aria-expanded="false" onclick="toggleDiagnosis(byId('diagnosisView').hidden)">投放诊断</button>
+  <button type="button" class="chat-clear-btn" id="chatClear" aria-label="清空聊天" onclick="if(confirm('确定清空?')){byId('chatMessages').replaceChildren();}" hidden>清空聊天</button>
+</div>
 </header>
 <div class="content">
 <!-- Dashboard -->
-<div class="page active" id="page-dashboard">
+<div class="page" id="page-dashboard">
 <div class="stat-grid" id="dashStats"></div>
 <div class="card" style="margin-top:16px">
 <div class="card-header"><h3>投放趋势</h3>
@@ -160,17 +227,34 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
 <div class="card-header"><h3>素材管理</h3><button class="btn btn-primary btn-sm" onclick="showModal('materialModal')">+ 上传素材</button></div>
 <div id="materialsWrap"></div></div></div>
 <!-- Chat -->
-<div class="page" id="page-chat">
+<div class="page active" id="page-chat">
 <div class="chat-container">
-<div class="chat-header">
-  <div class="chat-header-info">
-    <span class="chat-avatar">🤖</span>
-    <div>
-      <div class="chat-agent-name">AI 投放助手</div>
-      <div class="chat-agent-status">在线 · 可调用知识库</div>
-    </div>
+<div class="chat-view" id="ordinaryChatView">
+<aside id="chatGroupControls" aria-label="工作群" hidden>
+  <div class="workbench-rail-heading">
+    <button type="button" class="btn btn-outline btn-sm" id="chatGroupNew" aria-label="新建工作群" aria-haspopup="dialog" onclick="openChatGroupCreate()">＋ 新建</button>
   </div>
-  <button class="chat-clear-btn" onclick="if(confirm('确定清空?')){byId('chatMessages').innerHTML='';}">🗑</button>
+  <div id="chatGroupList"></div>
+  <div class="workbench-rail-footer">
+    <button type="button" class="btn btn-outline btn-sm" id="chatGroupArchive" onclick="changeChatGroupArchive()">归档当前群</button>
+    <span id="chatGroupStatus" role="status"></span>
+  </div>
+</aside>
+<section class="workbench-conversation" aria-labelledby="chatGroupTitle">
+<div class="workbench-thread-heading" id="chatGroupHeading" hidden>
+  <button type="button" class="btn btn-outline btn-sm" id="chatGroupToggle" aria-controls="chatGroupControls" aria-expanded="false" onclick="toggleGroupList()">工作群</button>
+  <h2 id="chatGroupTitle">工作群</h2>
+  <button type="button" class="btn btn-outline btn-sm" id="chatGroupListing" aria-pressed="false" onclick="setGroupListingMode(this.getAttribute('aria-pressed')==='false')" hidden>商品运营</button>
+  <button class="btn btn-outline btn-sm" id="chatGroupChangeDates" onclick="openGroupDateChange()" hidden>修改要求</button>
+  <button type="button" class="btn btn-outline btn-sm" id="chatGroupDetailsButton" aria-label="群详情" title="群详情" aria-haspopup="dialog" onclick="openChatGroupDetails()" hidden>···</button>
+</div>
+<div id="chatGroupDateEditor" hidden>
+  <label for="chatGroupDateRequest">新的对比要求</label>
+  <input id="chatGroupDateRequest" type="text" maxlength="2000" placeholder="保留日期和规则，把 #102 换成 #103">
+  <button class="btn btn-outline btn-sm" id="chatGroupDatePreview" onclick="previewGroupDates()">预览修改</button>
+  <button class="btn btn-outline btn-sm" id="chatGroupDateConfirm" onclick="confirmGroupDates()" hidden>确认修改</button>
+  <button class="btn btn-outline btn-sm" onclick="closeGroupDateChange()">关闭</button>
+  <p id="chatGroupDateFeedback" role="status" style="white-space:pre-line"></p>
 </div>
 <div class="chat-messages" id="chatMessages"></div>
 <div class="chat-thinking" id="chatThinking" style="display:none">AI 正在思考<span class="dots">...</span></div>
@@ -181,9 +265,135 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
   <button class="sug-btn" onclick="sendSug('对比本周与上周')">📅 周对比</button>
 </div>
 <div class="chat-input-area">
-  <input class="chat-input" id="chatInput" placeholder="输入问题..." onkeydown="if(event.key==='Enter')sendChat()">
-  <button class="chat-send-btn" onclick="sendChat()">发送</button>
-</div></div></div>
+  <textarea class="chat-input" id="chatInput" rows="1" aria-label="工作群消息" placeholder="输入问题…"
+    onkeydown="if(event.key==='Enter' && !event.shiftKey && !event.isComposing){event.preventDefault();sendChat()}"></textarea>
+  <button class="chat-send-btn" id="chatSend" onclick="sendChat()">发送</button>
+  <button type="button" class="chat-send-btn" id="chatGroupStop" onclick="stopGroupRun(activeChatGroup, this.dataset.runId, this)" hidden><span aria-hidden="true"></span>停止本轮</button>
+</div>
+</section>
+<dialog id="chatGroupCreateDialog" class="workbench-create-dialog" aria-labelledby="chatGroupCreateTitle">
+  <form id="chatGroupCreateForm" novalidate>
+    <header class="workbench-create-heading">
+      <h2 id="chatGroupCreateTitle">新建工作群</h2>
+      <button type="button" class="btn btn-outline btn-sm" id="chatGroupCreateClose" onclick="closeChatGroupCreate()">关闭</button>
+    </header>
+    <div class="workbench-create-fields">
+      <label for="chatGroupCreateName">工作群名称</label>
+      <input type="text" id="chatGroupCreateName" name="title" autocomplete="off" aria-describedby="chatGroupCreateFeedback" required autofocus>
+      <p id="chatGroupCreateFeedback" role="alert" hidden></p>
+    </div>
+    <footer class="workbench-create-actions">
+      <button type="button" class="btn btn-outline" id="chatGroupCreateCancel" onclick="closeChatGroupCreate()">取消</button>
+      <button type="submit" class="btn btn-primary" id="chatGroupCreateSubmit">创建工作群</button>
+    </footer>
+  </form>
+</dialog>
+<dialog id="chatGroupDetailsDialog" class="workbench-create-dialog" aria-labelledby="chatGroupDetailsHeading">
+  <header class="workbench-create-heading">
+    <h2 id="chatGroupDetailsHeading">工作群详情</h2>
+    <button type="button" class="btn btn-outline btn-sm" onclick="closeChatGroupDetails()">关闭</button>
+  </header>
+  <div class="workbench-create-fields">
+    <dl>
+      <dt>工作群名称</dt><dd id="chatGroupDetailsName"></dd>
+      <dt>工作群 ID</dt><dd><code id="chatGroupDetailsId"></code></dd>
+    </dl>
+    <p id="chatGroupDetailsFeedback" role="status" hidden></p>
+  </div>
+  <footer class="workbench-create-actions">
+    <button type="button" class="btn btn-primary" id="chatGroupDetailsCopy" onclick="copyChatGroupId()">复制工作群 ID</button>
+  </footer>
+</dialog>
+<dialog id="workbenchDetail" aria-labelledby="workbenchDetailTitle">
+  <header class="workbench-detail-header">
+    <div><p id="workbenchDetailContext"></p><h2 id="workbenchDetailTitle"></h2></div>
+    <button type="button" class="btn btn-outline btn-sm" id="workbenchDetailClose" onclick="closeGroupDetail()" autofocus>关闭</button>
+  </header>
+  <div id="workbenchDetailBody" tabindex="0"></div>
+</dialog>
+</div>
+<section class="chat-view diagnosis-view" id="diagnosisView" aria-labelledby="diagnosisTitle" hidden>
+  <div class="diagnosis-actions">
+    <label for="diagnosisHistory">我的诊断任务</label>
+    <select id="diagnosisHistory" aria-describedby="diagnosisHistoryStatus"><option value="">选择历史任务</option></select>
+    <button type="button" id="diagnosisHistoryMore" class="btn btn-outline btn-sm" hidden>加载更多任务</button>
+    <span id="diagnosisHistoryStatus" class="diagnosis-meta" role="status"></span>
+  </div>
+  <form id="diagnosisForm" class="diagnosis-form" novalidate>
+    <h2 id="diagnosisTitle">投放诊断</h2>
+    <fieldset id="diagnosisInputs">
+      <div id="diagnosisNaturalFields" class="diagnosis-fields">
+        <label>诊断需求<input name="message" maxlength="2000" placeholder="帮我找出最近点击率下滑最明显、值得暂停复核的一条投放计划。"></label>
+      </div>
+      <div id="diagnosisStructuredFields" hidden>
+      <div class="diagnosis-fields">
+        <label>本人计划 ID<input name="plan_id" maxlength="128" required></label>
+        <label>版本化规则 ID<input name="rule_id" maxlength="128" placeholder="ctr-review-v1#low-ctr" required></label>
+      </div>
+      <div class="diagnosis-fields">
+        <fieldset class="diagnosis-dates">
+          <legend>基准窗口</legend>
+          <label>基准开始<input type="date" name="baseline_start" required></label>
+          <label>基准结束<input type="date" name="baseline_end" required></label>
+        </fieldset>
+        <fieldset class="diagnosis-dates">
+          <legend>当前窗口</legend>
+          <label>当前开始<input type="date" name="current_start" required></label>
+          <label>当前结束<input type="date" name="current_end" required></label>
+        </fieldset>
+      </div>
+      </div>
+      <div class="diagnosis-actions">
+        <button type="submit" id="diagnosisSubmit" class="btn btn-primary">开始诊断</button>
+        <button type="button" id="diagnosisMode" class="btn btn-outline">手动指定计划与日期</button>
+        <button type="button" id="diagnosisNew" class="btn btn-outline" onclick="resetDiagnosis()" hidden>新建诊断</button>
+        <span id="diagnosisTask" class="diagnosis-meta"></span>
+      </div>
+    </fieldset>
+    <p id="diagnosisValidation" role="alert"></p>
+  </form>
+  <div id="diagnosisRounds"></div>
+</section>
+<template id="diagnosisRound">
+  <article class="diagnosis-round">
+    <header><h3></h3><span class="diagnosis-status" role="status"></span></header>
+    <p class="diagnosis-message" hidden></p>
+    <p class="diagnosis-windows diagnosis-meta"></p>
+    <p class="diagnosis-missing-trace diagnosis-meta" hidden>Trace ID 不可恢复</p>
+    <div class="diagnosis-trace diagnosis-meta" hidden>
+      <span>Trace ID <code></code></span>
+      <button type="button" class="btn btn-outline btn-sm">复制 Trace ID</button>
+      <span role="status"></span>
+    </div>
+    <div class="diagnosis-output" hidden>
+      <h4>回复</h4><p class="diagnosis-reply"></p>
+      <h4>诊断证据</h4><ul class="diagnosis-evidence"></ul>
+      <h4>证据缺项</h4><ul class="diagnosis-gaps"></ul>
+      <h4>规则引用</h4><div class="diagnosis-citations"></div>
+    </div>
+    <section class="diagnosis-review" hidden>
+      <h4>待确认 · 提交人工复核</h4>
+      <p class="diagnosis-review-snapshot diagnosis-meta" data-diagnosis-snapshot></p>
+      <ul class="diagnosis-review-evidence" data-diagnosis-evidence></ul>
+      <div class="diagnosis-actions">
+        <button type="button" class="btn btn-primary btn-sm">确认创建本地复核单</button>
+        <span role="status"></span>
+      </div>
+    </section>
+    <section class="diagnosis-pause" hidden>
+      <h4>待审批 · 暂停沙箱计划</h4>
+      <p class="diagnosis-pause-target"></p>
+      <p class="diagnosis-meta" data-diagnosis-snapshot></p>
+      <ul data-diagnosis-evidence></ul>
+      <div class="diagnosis-actions">
+        <button type="button" class="btn btn-primary btn-sm">批准暂停沙箱计划</button>
+        <span role="status"></span>
+      </div>
+      <p class="diagnosis-pause-receipt diagnosis-meta" hidden></p>
+    </section>
+  </article>
+</template>
+</div></div>
 
 <!-- Users -->
 <div class="page" id="page-users">
@@ -229,6 +439,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
 <button class="btn btn-outline" onclick="closeModal('materialModal')">取消</button>
 <button class="btn btn-primary" onclick="createMaterial()">上传</button></div></div></div>
 <script async src="/static/echarts.min.js"></script>
+<script src="/static/workbench.js"></script>
 <script>
 var TOKEN = "";
 var USER = null;
@@ -236,14 +447,17 @@ var trendChart = null;
 
 function api(method, path, body) {
   var opts = {method:method, headers:{"Content-Type":"application/json"}};
-  if (TOKEN) opts.headers["Authorization"] = "Bearer " + TOKEN;
+  var token = TOKEN;
+  var viewId = chatViewId;
+  if (token) opts.headers["Authorization"] = "Bearer " + token;
   if (body) opts.body = JSON.stringify(body);
   return fetch(path, opts).then(function(r){
-    if(r.status===401){
-      TOKEN=null; USER=null;
-      byId("page-login").style.display="flex";
-      document.querySelector(".app").style.display="none";
-      showToast("账号已在其他地方登录");
+    if(r.status===401 && token){
+      if(token===TOKEN && viewId===chatViewId){
+        doLogout();
+        byId("loginErr").textContent = "登录已失效，请重新登录";
+        byId("loginErr").style.display = "block";
+      }
       return {code:401,msg:"unauthorized"};
     }
     return r.json();
@@ -251,12 +465,47 @@ function api(method, path, body) {
 }
 function byId(id){return document.getElementById(id);}
 
-function updateTime(){
-  var n = new Date();
-  var s = n.toLocaleDateString("zh-CN",{timeZone:"Asia/Shanghai"}) + " " + n.toLocaleTimeString("zh-CN",{timeZone:"Asia/Shanghai",hour12:false});
-  byId("headerTime").textContent = "\u23f0 " + s;
+async function sessionRequest(method, path, body, applyResult){
+  var token = TOKEN;
+  var sessionId = chatViewId;
+  if(!token) return;
+  var result;
+  try {
+    result = await api(method, path, body);
+  } catch {
+    result = {msg:"网络错误，请重试"};
+  }
+  if(token === TOKEN && sessionId === chatViewId) applyResult(result);
 }
-setInterval(updateTime,1000); updateTime();
+
+function planAccountError(result, fallback){
+  return (typeof result.detail === "string" && result.detail) || result.msg || fallback;
+}
+
+function clearPlanAccountViews(){
+  byId("plansTableWrap").replaceChildren();
+  byId("budgetTableWrap").replaceChildren();
+  closeModal("planModal");
+  byId("planName").value = "";
+  byId("planPlatform").selectedIndex = 0;
+  byId("planBudget").value = byId("planBudget").defaultValue;
+  byId("planSearch").value = "";
+}
+
+function clearBusinessViews(){
+  if(trendChart){
+    trendChart.dispose();
+    trendChart = null;
+  }
+  ["dashStats","trendChart","timelineWrap","materialsWrap","decisionsWrap","usersTableWrap","alertsWrap","logsWrap"].forEach(function(id){
+    byId(id).replaceChildren();
+  });
+  closeModal("materialModal");
+  closeModal("userModal");
+  ["matName","matUrl","matPlanId","newUserName","newUserPass"].forEach(function(id){byId(id).value = "";});
+  byId("matType").selectedIndex = 0;
+  byId("newUserRole").selectedIndex = 0;
+}
 
 function loadCaptcha(){
   var img = byId("captchaImg");
@@ -280,42 +529,96 @@ function doLogin(){
   if(!cid){ byId("loginErr").textContent="验证码已过期，请刷新"; byId("loginErr").style.display="block"; loadCaptcha(); return; }
   api("POST","/api/login",{username:u,password:p,captcha_id:cid,captcha_text:c}).then(function(r){
     if(r.code===200){
-      TOKEN = r.data.token; USER = r.data.user;
-      byId("loginPage").style.display="none"; byId("appLayout").style.display="flex";
-      byId("navUsername").textContent = USER.username; byId("navRole").textContent = USER.role; byId("userInfo").style.display="block";
-      if(USER.role==="user"){ byId("navUsers").style.display="none"; if(byId("createUserBtn")) byId("createUserBtn").style.display="none"; }
-      if(USER.role==="admin"){
-        var sel = byId("newUserRole");
-        for(var i=0;i<sel.options.length;i++){ if(sel.options[i].value==="boss"||sel.options[i].value==="admin") sel.options[i].style.display="none"; }
-      }
-      initApp();
+      sessionStorage.setItem("ad.login", JSON.stringify(r.data));
+      openSession(r.data);
     } else {
       byId("loginErr").textContent=r.msg||"登录失败"; byId("loginErr").style.display="block"; loadCaptcha();
     }
   }).catch(function(){ byId("loginErr").textContent="网络错误"; byId("loginErr").style.display="block"; });
 }
+function openSession(login, page){
+  clearDiagnosisSession();
+  TOKEN = login.token; USER = login.user;
+  chatViewId = crypto.getRandomValues(new Uint32Array(4)).join("-");
+  clearPlanAccountViews();
+  clearBusinessViews();
+  resetChatGroups();
+  toggleDiagnosis(false);
+  byId("loginErr").textContent = "";
+  byId("loginErr").style.display = "none";
+  byId("loginPage").style.display = "none";
+  byId("appLayout").style.display = "flex";
+  byId("navUsername").textContent = USER.username;
+  byId("navRole").textContent = USER.role;
+  byId("userInfo").style.display = "block";
+  var canViewUsers = USER.role==="admin" || USER.role==="boss";
+  byId("navUsers").style.display = canViewUsers ? "" : "none";
+  byId("createUserBtn").style.display = canViewUsers ? "" : "none";
+  Array.from(byId("newUserRole").options).forEach(function(option){
+    option.style.display = USER.role==="admin" && option.value!=="user" ? "none" : "";
+  });
+  initApp(page);
+}
 function doLogout(){
   TOKEN=""; USER=null; byId("appLayout").style.display="none"; byId("loginPage").style.display="flex";
+  sessionStorage.removeItem("ad.login");
+  sessionStorage.removeItem("ad.chatPage");
+  clearInterval(refreshTimers.dashboard);
+  clearInterval(refreshTimers.alerts);
+  clearPlanAccountViews();
+  clearBusinessViews();
+  clearDiagnosisSession();
+  toggleDiagnosis(false);
+  resetChatGroups();
+  byId("loginErr").textContent = "";
+  byId("loginErr").style.display = "none";
   byId("loginCaptcha").value=""; byId("loginPass").value=""; loadCaptcha();
 }
 
+function toggleProductNav(open = !byId("sidebar").classList.contains("open"), restoreFocus = false){
+  byId("sidebar").classList.toggle("open", open);
+  var trigger = document.querySelector(".menu-toggle");
+  trigger.setAttribute("aria-expanded", String(open));
+  if(open) document.querySelector(".product-nav-close").focus();
+  else if(restoreFocus) trigger.focus();
+}
+
+document.addEventListener("keydown", function(event){
+  if(event.key==="Escape" && byId("sidebar").classList.contains("open")){
+    toggleProductNav(false, true);
+  }
+});
+
 function showPage(name,el){
+  if(name!=="chat"){
+    closeChatGroupCreate(false);
+    closeChatGroupDetails(false);
+    closeGroupDetail(false);
+    toggleGroupList(false);
+  }
   document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");});
-  document.querySelectorAll("#sidebarNav a").forEach(function(a){a.classList.remove("active");});
+  document.querySelectorAll("#sidebarNav a").forEach(function(a){
+    a.classList.toggle("active", a === el);
+    if(a === el) a.setAttribute("aria-current", "page");
+    else a.removeAttribute("aria-current");
+  });
   byId("page-"+name).classList.add("active");
-  if(el) el.classList.add("active");
+  rememberChatPage();
   var titles={dashboard:"\u4eea\u8868\u76d8",plans:"\u6295\u653e\u8ba1\u5212",budget:"\u9884\u7b97\u7ba1\u7406",alerts:"\u544a\u8b66\u4e2d\u5fc3",materials:"\u7d20\u6750\u7ba1\u7406",chat:"AI\u6295\u653e\u52a9\u624b",users:"\u8d26\u6237\u7ba1\u7406",logs:"\u64cd\u4f5c\u65e5\u5fd7",decisions:"\u51b3\u7b56\u8bb0\u5f55",timeline:"\u6d3b\u52a8\u65f6\u95f4\u8f74"};
-  byId("pageTitle").textContent = titles[name]||name;
-  document.getElementById("sidebar").classList.remove("open");
-  if(trendChart) setTimeout(function(){trendChart.resize();},100);
+  byId("pageTitle").textContent = name==="chat" ? "AI 工作台" : titles[name]||name;
+  byId("diagnosisToggle").hidden = name !== "chat";
+  byId("chatClear").hidden = name !== "chat" || !byId("diagnosisView").hidden || chatMode !== "legacy";
+  toggleProductNav(false);
+  if(trendChart) setTimeout(resizeTrend,100);
   var loaders = {dashboard:loadDashboard,plans:loadPlans,budget:loadBudget,alerts:loadAlerts,materials:loadMaterials,chat:loadChatHistory,users:loadUsers,logs:loadLogs,decisions:loadDecisions,timeline:loadTimeline};
-  if(loaders[name]) setTimeout(loaders[name],50);
+  var viewId = chatViewId;
+  if(loaders[name]) setTimeout(function(){if(TOKEN && viewId===chatViewId) loaders[name]();},50);
 }
 
 function fmtNum(n){ n=n||0; return n>=10000?(n/10000).toFixed(1)+"w":String(n); }
 
 function loadDashboard(){
-  api("GET","/api/dashboard").then(function(r){
+  sessionRequest("GET","/api/dashboard",null,function(r){
     if(r.code!==200) return;
     var d=r.data;
     var items=[
@@ -333,12 +636,14 @@ function loadDashboard(){
   loadTrend();
 }
 
+function resizeTrend(){ if(trendChart) trendChart.resize(); }
+window.addEventListener("resize", resizeTrend);
+
 function loadTrend(){
   var days = parseInt(byId("trendDays").value)||7;
-  api("GET","/api/daily_reports?days="+days).then(function(r){
+  return sessionRequest("GET","/api/daily_reports?days="+days,null,function(r){
     if(r.code!==200) return;
     if(!trendChart) trendChart = echarts.init(byId("trendChart"));
-    window.addEventListener("resize", function(){ if(trendChart) trendChart.resize(); });
     var items = r.data;
     var map = {};
     items.forEach(function(item){
@@ -353,7 +658,7 @@ function loadTrend(){
     trendChart.setOption({
       tooltip:{trigger:"axis"},
       legend:{data:["\u82b1\u8d39","\u9500\u552e\u989d","\u66dd\u5149(\u4e07)"]},
-      grid:{left:50,right:20,bottom:30,top:40},
+      grid:{left:50,right:20,bottom:53,top:40},
       xAxis:{type:"category",data:dates,axisLabel:{rotate:30,fontSize:11}},
       yAxis:{type:"value"},
       series:[
@@ -366,8 +671,11 @@ function loadTrend(){
 }
 
 function loadPlans(){
-  api("GET","/api/plans").then(function(r){
-    if(r.code!==200) return;
+  return sessionRequest("GET","/api/plans",null,function(r){
+    if(r.code!==200){
+      byId("plansTableWrap").textContent = planAccountError(r,"加载计划失败");
+      return;
+    }
     var data = r.data.slice();
     var kw = byId("planSearch").value.toLowerCase();
     var pf = byId("planPlatformFilter").value;
@@ -377,17 +685,61 @@ function loadPlans(){
     if(ps) data = data.filter(function(p){return p.status===ps;});
     if(byId("roasSort").checked) data.sort(function(a,b){var ra=a.sales&&a.cost?a.sales/a.cost:0;var rb=b.sales&&b.cost?b.sales/b.cost:0;return rb-ra;});
     if(!data.length){byId("plansTableWrap").innerHTML="<div class=\"empty-state\"><div class=\"icon\">\ud83d\udccb</div><p>\u6682\u65e0\u6295\u653e\u8ba1\u5212</p></div>";return;}
-    var html="<table><thead><tr><th>\u8ba1\u5212\u540d\u79f0</th><th>\u5e73\u53f0</th><th>\u65e5\u9884\u7b97</th><th>\u72b6\u6001</th><th>\u5c55\u793a</th><th>\u70b9\u51fb</th><th>\u82b1\u8d39</th><th>\u9500\u552e\u989d</th><th>ROAS</th><th>\u64cd\u4f5c</th></tr></thead><tbody>";
+    var html="<table><thead><tr><th>ID</th><th>\u8ba1\u5212\u540d\u79f0</th><th>\u5e73\u53f0</th><th>\u65e5\u9884\u7b97</th><th>\u72b6\u6001</th><th>\u5c55\u793a</th><th>\u70b9\u51fb</th><th>\u82b1\u8d39</th><th>\u9500\u552e\u989d</th><th>ROAS</th><th>\u64cd\u4f5c</th></tr></thead><tbody>";
     data.forEach(function(p){
       var roas = p.sales&&p.cost?(p.sales/p.cost).toFixed(2):"0.00";
-      html+="<tr><td>"+esc(p.plan_name)+"</td><td>"+esc(p.platform)+"</td><td>\u00a5"+p.daily_budget+"</td><td><span class=\"status-badge "+p.status+"\">"+(p.status==="active"?"\u6295\u653e\u4e2d":"\u5df2\u6682\u505c")+"</span></td>"
+      html+="<tr><td>"+esc(p.id)+"</td><td>"+esc(p.plan_name)+"</td><td>"+esc(p.platform)+"</td><td>\u00a5"+p.daily_budget+"</td><td><span class=\"status-badge "+p.status+"\">"+(p.status==="active"?"\u6295\u653e\u4e2d":"\u5df2\u6682\u505c")+"</span></td>"
         +"<td>"+fmtNum(p.impressions||0)+"</td><td>"+(p.clicks||0)+"</td><td>\u00a5"+(p.cost||0)+"</td><td>\u00a5"+(p.sales||0)+"</td><td>"+roas+"</td>"
         +"<td><div style=\"display:flex;gap:4px\"><button class=\"btn btn-sm "+(p.status==="active"?"btn-warning":"btn-success")+"\" onclick=\"togglePlan("+p.id+")\">"+(p.status==="active"?"\u6682\u505c":"\u542f\u7528")+"</button>"
-        +"<button class=\"btn btn-sm btn-danger\" onclick=\"deletePlan("+p.id+")\">\u5220\u9664</button></div></td></tr>";
+        +"<button class=\"btn btn-sm btn-danger\" onclick=\"deletePlan("+p.id+")\">\u5220\u9664</button>"
+        +"<button class=\"btn btn-sm btn-outline\" data-ctr-plan=\""+esc(p.id)+"\" onclick=\"checkPlanCtr(this)\">检查 CTR</button>"
+        +"</div><div class=\"plan-ctr-result\" role=\"status\"></div></td></tr>";
     });
     html+="</tbody></table>";
     byId("plansTableWrap").innerHTML=html;
   });
+}
+
+function ctrDetectionTime(iso){
+  return new Intl.DateTimeFormat("zh-CN", {timeZone:"Asia/Shanghai", dateStyle:"medium", timeStyle:"medium"}).format(new Date(iso));
+}
+
+function ctrDetectionWindows(data){
+  return [["基准窗",data.baseline],["当前窗",data.current]].filter(function(item){return item[1];}).map(function(item){
+    var window = item[1];
+    var ctr = window.ctr_pct == null ? "无定义" : window.ctr_pct.toFixed(2)+"%";
+    return item[0]+" "+groupWindow(window)+"，曝光 "+window.impressions.toLocaleString()+"，点击 "+window.clicks.toLocaleString()+"，CTR "+ctr;
+  });
+}
+
+async function checkPlanCtr(button){
+  var result = button.closest("td").querySelector(".plan-ctr-result");
+  button.disabled = true;
+  result.textContent = "正在检查 CTR…";
+  try {
+    await sessionRequest("POST","/api/plans/"+button.dataset.ctrPlan+"/ctr-alert-check",null,function(response){
+      if(response.code!==200){
+        result.textContent = planAccountError(response,"检查 CTR 失败");
+        return;
+      }
+      var data = response.data;
+      var messages = {created:"已生成严重告警 #"+data.alert_id, existing:"已有同一严重告警 #"+data.alert_id,
+        below_threshold:"未达严重告警阈值", insufficient_evidence:"证据不足"};
+      var reasons = {plan_history_not_mapped:"未绑定历史指标", plan_history_insufficient_windows:"连续日期不足两个窗口",
+        insufficient_impressions:"每窗需至少 "+data.policy.min_impressions.toLocaleString()+" 次曝光",
+        undefined_relative_decline:"基准 CTR 为零", source_version_mismatch:"历史来源版本不匹配"};
+      var lines = [messages[data.status], "检测时间 "+ctrDetectionTime(data.detected_at)+"（北京时间）",
+        ...ctrDetectionWindows(data)];
+      if(reasons[data.reason]) lines.push(reasons[data.reason]);
+      result.replaceChildren(...lines.map(function(line){
+        var row = document.createElement("div");
+        row.textContent = line;
+        return row;
+      }));
+    });
+  } finally {
+    button.disabled = false;
+  }
 }
 
 function createPlan(){
@@ -395,22 +747,31 @@ function createPlan(){
   var plat = byId("planPlatform").value;
   var bud = parseFloat(byId("planBudget").value)||0;
   if(!name) return alert("\u8bf7\u8f93\u5165\u8ba1\u5212\u540d\u79f0");
-  api("POST","/api/plans",{plan_name:name,platform:plat,daily_budget:bud}).then(function(r){
-    if(r.code===200){closeModal("planModal");byId("planName").value="";loadPlans();alert("\u521b\u5efa\u6210\u529f");}
-    else alert(r.msg||"\u521b\u5efa\u5931\u8d25");
+  return sessionRequest("POST","/api/plans",{plan_name:name,platform:plat,daily_budget:bud},function(r){
+    if(r.code===200){closeModal("planModal");byId("planName").value="";loadPlans();alert(r.msg||"创建成功");}
+    else alert(planAccountError(r,"创建失败"));
   });
 }
 function togglePlan(id){
-  api("POST","/api/plans/"+id+"/toggle").then(function(r){if(r.code===200) loadPlans(); else alert(r.msg||"\u64cd\u4f5c\u5931\u8d25");});
+  return sessionRequest("POST","/api/plans/"+id+"/toggle",null,function(r){
+    if(r.code===200){loadPlans();alert(r.data.new_status==="active"?"计划已启用":"计划已暂停");}
+    else alert(planAccountError(r,"操作失败"));
+  });
 }
 function deletePlan(id){
   if(!confirm("\u786e\u5b9a\u5220\u9664\u8be5\u8ba1\u5212?")) return;
-  api("DELETE","/api/plans/"+id).then(function(r){if(r.code===200) loadPlans(); else alert(r.msg);});
+  return sessionRequest("DELETE","/api/plans/"+id,null,function(r){
+    if(r.code===200){loadPlans();alert(r.msg||"已删除");}
+    else alert(planAccountError(r,"删除失败"));
+  });
 }
 
 function loadBudget(){
-  api("GET","/api/accounts").then(function(r){
-    if(r.code!==200) return;
+  return sessionRequest("GET","/api/accounts",null,function(r){
+    if(r.code!==200){
+      byId("budgetTableWrap").textContent = planAccountError(r,"加载账户失败");
+      return;
+    }
     var data = r.data;
     if(!data.length){byId("budgetTableWrap").innerHTML="<div class=\"empty-state\"><div class=\"icon\">\ud83d\udcb0</div><p>\u6682\u65e0\u8d26\u6237\u6570\u636e</p></div>";return;}
     var html="<table><thead><tr><th>\u8d26\u6237\u540d\u79f0</th><th>\u5e73\u53f0</th><th>\u4f59\u989d</th><th>\u65e5\u9884\u7b97</th><th>\u72b6\u6001</th><th>\u64cd\u4f5c</th></tr></thead><tbody>";
@@ -444,7 +805,7 @@ function rechargeAccount(id,name,platform){
   });
 }
 function loadAlerts(){
-  api("GET","/api/alerts").then(function(r){
+  return sessionRequest("GET","/api/alerts",null,function(r){
     if(r.code!==200) return;
     var data = r.data;
     if(!data.length){byId("alertsWrap").innerHTML="<div class=\"empty-state\"><div class=\"icon\">\ud83d\udd14</div><p>\u6682\u65e0\u544a\u8b66</p></div>";return;}
@@ -459,18 +820,18 @@ function loadAlerts(){
     byId("alertsWrap").innerHTML=html;
   });
 }
-function markRead(id){ api("POST","/api/alerts/read",{alert_id:id}).then(function(r){if(r.code===200) loadAlerts();}); }
-function markAllRead(){ api("POST","/api/alerts/read",{}).then(function(r){if(r.code===200) loadAlerts();}); }
+function markRead(id){ return sessionRequest("POST","/api/alerts/read",{alert_id:id},function(r){if(r.code===200) loadAlerts();}); }
+function markAllRead(){ return sessionRequest("POST","/api/alerts/read",{},function(r){if(r.code===200) loadAlerts();}); }
 
 function loadMaterials(){
-  api("GET","/api/materials").then(function(r){
+  return sessionRequest("GET","/api/materials",null,function(r){
     if(r.code!==200) return;
     var data = r.data;
     if(!data.length){byId("materialsWrap").innerHTML="<div class=\"empty-state\"><div class=\"icon\">\ud83d\udcc1</div><p>\u6682\u65e0\u7d20\u6750</p></div>";return;}
-    var html="<table><thead><tr><th>\u540d\u79f0</th><th>\u7c7b\u578b</th><th>\u94fe\u63a5</th><th>\u5173\u8054\u8ba1\u5212</th><th>\u72b6\u6001</th><th>\u521b\u5efa\u65f6\u95f4</th></tr></thead><tbody>";
+    var html="<table><thead><tr><th>\u540d\u79f0</th><th>\u7c7b\u578b</th><th>\u94fe\u63a5</th><th>\u5173\u8054\u8ba1\u5212</th><th>\u521b\u5efa\u65f6\u95f4</th></tr></thead><tbody>";
     data.forEach(function(m){
-      html+="<tr><td>"+esc(m.name)+"</td><td>"+m.type+"</td><td style=\"max-width:200px;overflow:hidden;text-overflow:ellipsis\">"+esc(m.url)+"</td>"
-        +"<td>"+(m.plan_name||"-")+"</td><td><span class=\"status-badge "+m.status+"\">"+(m.status==="active"?"\u542f\u7528":"\u505c\u7528")+"</span></td><td style=\"font-size:12px;color:var(--text-light)\">"+m.created_at+"</td></tr>";
+      html+="<tr><td>"+esc(m.name)+"</td><td>"+esc(m.type)+"</td><td style=\"max-width:200px;overflow:hidden;text-overflow:ellipsis\">"+esc(m.url)+"</td>"
+        +"<td>"+esc(m.plan_name||"-")+"</td><td style=\"font-size:12px;color:var(--text-light)\">"+esc(m.created_at)+"</td></tr>";
     });
     html+="</tbody></table>";
     byId("materialsWrap").innerHTML=html;
@@ -482,20 +843,23 @@ function createMaterial(){
   var url = byId("matUrl").value.trim();
   var pid = parseInt(byId("matPlanId").value)||0;
   if(!name||!url) return alert("\u8bf7\u586b\u5199\u7d20\u6750\u540d\u79f0\u548c\u94fe\u63a5");
-  api("POST","/api/materials",{name:name,type:type,url:url,plan_id:pid}).then(function(r){
+  return sessionRequest("POST","/api/materials",{name:name,type:type,url:url,plan_id:pid},function(r){
     if(r.code===200){closeModal("materialModal");byId("matName").value="";byId("matUrl").value="";loadMaterials();alert("\u4e0a\u4f20\u6210\u529f");}
     else alert(r.msg||"\u4e0a\u4f20\u5931\u8d25");
   });
 }
 
 function loadUsers(){
-  api("GET","/api/users").then(function(r){
-    if(r.code!==200) return;
+  return sessionRequest("GET","/api/users",null,function(r){
+    if(r.code!==200){
+      byId("usersTableWrap").textContent = planAccountError(r,"加载用户目录失败");
+      return;
+    }
     var data = r.data;
-    var html="<table><thead><tr><th>ID</th><th>\u7528\u6237\u540d</th><th>\u89d2\u8272</th><th>\u521b\u5efa\u65f6\u95f4</th></tr></thead><tbody>";
+    var html="<table><thead><tr><th>ID</th><th>\u7528\u6237\u540d</th><th>\u89d2\u8272</th></tr></thead><tbody>";
     data.forEach(function(u){
       var rl = u.role==="boss"?"\u8001\u677f":u.role==="admin"?"\u7ba1\u7406\u5458":"\u7528\u6237";
-      html+="<tr><td>"+u.id+"</td><td>"+esc(u.username)+'</td><td><span class="role-'+u.role+'">'+rl+'</span></td><td style="font-size:12px;color:var(--text-light)">'+u.created_at+"</td></tr>";
+      html+="<tr><td>"+u.id+"</td><td>"+esc(u.username)+'</td><td><span class="role-'+esc(u.role)+'">'+rl+'</span></td></tr>';
     });
     html+="</tbody></table>";
     byId("usersTableWrap").innerHTML=html;
@@ -506,13 +870,1724 @@ function createUser(){
   var p = byId("newUserPass").value;
   var r = byId("newUserRole").value;
   if(!u||!p) return alert("\u8bf7\u586b\u5199\u7528\u6237\u540d\u548c\u5bc6\u7801");
-  api("POST","/api/users",{username:u,password:p,role:r}).then(function(res){
+  return sessionRequest("POST","/api/users",{username:u,password:p,role:r},function(res){
     if(res.code===200){closeModal("userModal");byId("newUserName").value="";byId("newUserPass").value="";loadUsers();alert("\u521b\u5efa\u6210\u529f");}
     else alert(res.msg||"\u521b\u5efa\u5931\u8d25");
   });
 }
 
-function loadChatHistory(){ api("GET","/api/chat/history").then(function(r){ if(r.code!==200) return; byId("chatMessages").innerHTML = r.data.map(function(m){return "<div class=\"msg "+m.role+"\">"+(m.role==="assistant"?renderMarkdown(m.content):esc(m.content))+"</div>";}).join(""); byId("chatMessages").scrollTop = byId("chatMessages").scrollHeight; }); }
+var chatViewId = "";
+var chatHistoryLoading = false;
+var chatHistoryLoaded = false;
+var pendingChatReplies = new Set();
+var chatMode = "";
+var chatGroups = new Map();
+var groupListRevision = 0;
+var groupCreateRequest = null;
+var activeChatGroup = "";
+var groupSelection = 0;
+var groupHistoryRead = 0;
+var groupPoll;
+var groupPending = new Map();
+var groupErrors = new Map();
+var groupSession = new AbortController();
+var groupDateEdit;
+var visibleEntryIds = [];
+var visibleRunStates = "";
+var diagnosisTaskId = "";
+var diagnosisSourceTurnId = null;
+var diagnosisMode = "natural";
+var diagnosisSession = new AbortController();
+var diagnosisHistorySession = new AbortController();
+var diagnosisHistoryLoaded = false;
+var diagnosisCursor = null;
+
+function toggleDiagnosis(open){
+  if(open){
+    closeChatGroupCreate(false);
+    closeChatGroupDetails(false);
+    closeGroupDetail(false);
+    toggleGroupList(false);
+  }
+  byId("diagnosisView").hidden = !open;
+  byId("ordinaryChatView").hidden = open;
+  byId("chatClear").hidden = open || chatMode !== "legacy";
+  byId("diagnosisToggle").textContent = open ? "返回工作台" : "投放诊断";
+  byId("diagnosisToggle").setAttribute("aria-expanded", open);
+  rememberChatPage();
+  if(open && TOKEN && !diagnosisHistoryLoaded) loadDiagnosisHistory();
+}
+
+function setDiagnosisMode(mode){
+  diagnosisMode = mode;
+  byId("diagnosisNaturalFields").hidden = mode !== "natural";
+  byId("diagnosisStructuredFields").hidden = mode !== "structured";
+  byId("diagnosisMode").textContent = mode === "natural" ? "手动指定计划与日期" : "一句话诊断";
+}
+
+function resetDiagnosis(mode = diagnosisMode){
+  diagnosisSession.abort();
+  diagnosisSession = new AbortController();
+  diagnosisTaskId = "";
+  diagnosisSourceTurnId = null;
+  byId("diagnosisForm").reset();
+  byId("diagnosisInputs").disabled = false;
+  byId("diagnosisForm").elements.plan_id.readOnly = false;
+  byId("diagnosisForm").elements.rule_id.readOnly = false;
+  byId("diagnosisSubmit").textContent = "开始诊断";
+  byId("diagnosisSubmit").disabled = false;
+  byId("diagnosisNew").hidden = true;
+  byId("diagnosisTask").textContent = "";
+  byId("diagnosisHistory").value = "";
+  byId("diagnosisValidation").textContent = "";
+  byId("diagnosisRounds").replaceChildren();
+  byId("diagnosisView").scrollTop = 0;
+  setDiagnosisMode(mode);
+}
+
+byId("diagnosisMode").onclick = () => resetDiagnosis(diagnosisMode === "natural" ? "structured" : "natural");
+
+function clearDiagnosisSession(){
+  resetDiagnosis("natural");
+  diagnosisHistorySession.abort();
+  diagnosisHistorySession = new AbortController();
+  diagnosisHistoryLoaded = false;
+  diagnosisCursor = null;
+  var select = byId("diagnosisHistory");
+  select.length = 1;
+  select.disabled = false;
+  byId("diagnosisHistoryMore").hidden = true;
+  byId("diagnosisHistoryMore").disabled = false;
+  byId("diagnosisHistoryStatus").textContent = "";
+}
+
+function rememberDiagnosisTask(taskId, planId, ruleId, newest, mode){
+  var select = byId("diagnosisHistory");
+  if(!Array.from(select.options).some(option => option.value === taskId)){
+    var label = mode === "natural" ? "一句话诊断" + (planId ? " · 计划 "+planId : "") :
+      "计划 "+planId+" · "+ruleId;
+    var option = new Option(label+" · "+taskId, taskId);
+    select.add(option, newest ? 1 : null);
+    if(newest && diagnosisHistoryLoaded) byId("diagnosisHistoryStatus").textContent = "";
+  }
+}
+
+function setDiagnosisTask(taskId, planId, ruleId){
+  diagnosisTaskId = taskId;
+  var fields = byId("diagnosisForm").elements;
+  fields.plan_id.value = planId ?? "";
+  fields.rule_id.value = ruleId ?? "";
+  fields.plan_id.readOnly = fields.rule_id.readOnly = true;
+  byId("diagnosisTask").textContent = "任务 ID "+taskId;
+  byId("diagnosisNew").hidden = false;
+  byId("diagnosisHistory").value = taskId;
+}
+
+async function loadDiagnosisHistory(){
+  var more = byId("diagnosisHistoryMore");
+  if(more.disabled) return;
+  var select = byId("diagnosisHistory");
+  var status = byId("diagnosisHistoryStatus");
+  var token = TOKEN;
+  var signal = diagnosisHistorySession.signal;
+  var view = diagnosisSession.signal;
+  var firstPage = !diagnosisHistoryLoaded;
+  more.disabled = true;
+  status.textContent = "正在读取任务列表…";
+  if(firstPage && !diagnosisTaskId) byId("diagnosisInputs").disabled = true;
+  try{
+    var path = "/api/diagnosis/tasks?limit=20"+(diagnosisCursor ? "&cursor="+encodeURIComponent(diagnosisCursor) : "");
+    var data = await diagnosisRequest("GET", path, token, signal);
+    if(signal.aborted) return;
+    data.tasks.forEach(task => rememberDiagnosisTask(task.task_id, task.plan_id, task.rule_id, false, task.mode));
+    diagnosisHistoryLoaded = true;
+    diagnosisCursor = data.next_cursor;
+    more.textContent = "加载更多任务";
+    more.hidden = !diagnosisCursor;
+    status.textContent = select.length === 1 ? "暂无历史诊断" : "";
+    if(firstPage && !view.aborted && !diagnosisTaskId && data.tasks.length){
+      await openDiagnosisTask(data.tasks[0].task_id);
+    }
+  }catch(error){
+    if(signal.aborted) return;
+    status.textContent = "任务列表读取失败。";
+    more.textContent = "重试读取任务列表";
+    more.hidden = false;
+  }finally{
+    if(!signal.aborted) more.disabled = false;
+    if(!view.aborted && firstPage && !diagnosisTaskId) byId("diagnosisInputs").disabled = false;
+  }
+}
+
+async function openDiagnosisTask(taskId){
+  resetDiagnosis();
+  if(!taskId) return;
+  byId("diagnosisHistory").value = taskId;
+  var token = TOKEN;
+  var signal = diagnosisSession.signal;
+  var inputs = byId("diagnosisInputs");
+  var validation = byId("diagnosisValidation");
+  inputs.disabled = true;
+  validation.textContent = "正在恢复诊断任务…";
+  try{
+    var task = await diagnosisRequest("GET", "/api/diagnosis/tasks/"+encodeURIComponent(taskId), token, signal);
+    if(signal.aborted) return;
+    setDiagnosisMode(task.mode ?? "structured");
+    setDiagnosisTask(task.task_id, task.plan_id, task.rule_id);
+    var fields = byId("diagnosisForm").elements;
+    for(var window of ["baseline", "current"]){
+      fields[window+"_start"].value = task[window]?.start_date ?? "";
+      fields[window+"_end"].value = task[window]?.end_date ?? "";
+    }
+    byId("diagnosisSubmit").disabled = false;
+    if(diagnosisMode === "structured") byId("diagnosisSubmit").textContent = "用新日期窗续问";
+    task.turns.forEach(turn => restoreDiagnosisRound(turn, token, signal));
+    validation.textContent = "";
+  }catch(error){
+    if(!signal.aborted){
+      validation.textContent = "任务读取失败。请重新选择任务。"+error.message;
+      byId("diagnosisHistory").value = "";
+    }
+  }finally{
+    if(!signal.aborted) inputs.disabled = false;
+  }
+}
+
+byId("diagnosisHistory").onchange = function(){ openDiagnosisTask(this.value); };
+byId("diagnosisHistoryMore").onclick = loadDiagnosisHistory;
+
+function diagnosisWindows(baseline, current){
+  var dates = value => value?.start_date && value?.end_date ? value.start_date+" 至 "+value.end_date : "不可恢复";
+  return "基准 "+dates(baseline)+"　·　当前 "+dates(current);
+}
+
+function createDiagnosisRound(baseline, current, natural = false){
+  var rounds = byId("diagnosisRounds");
+  var round = byId("diagnosisRound").content.firstElementChild.cloneNode(true);
+  round.querySelector("h3").textContent = "第 "+(rounds.children.length+1)+" 轮";
+  round.querySelector(".diagnosis-windows").textContent = natural && !baseline ?
+    "尚未确定可比窗口" : diagnosisWindows(baseline, current);
+  rounds.appendChild(round);
+  return round;
+}
+
+function offerNaturalFollowup(round, turnId){
+  var button = document.createElement("button");
+  button.type = "button";
+  button.textContent = "基于此轮续问";
+  button.onclick = function(){
+    diagnosisSourceTurnId = turnId;
+    byId("diagnosisSubmit").disabled = false;
+    byId("diagnosisSubmit").textContent = "续问第 " + turnId + " 轮";
+    byId("diagnosisForm").elements.message.value = "";
+    byId("diagnosisForm").elements.message.focus();
+  };
+  round.appendChild(button);
+  diagnosisSourceTurnId = turnId;
+  byId("diagnosisSubmit").textContent = "续问第 " + turnId + " 轮";
+}
+
+function restoreDiagnosisRound(turn, token, signal){
+  var snapshot = turn.snapshot || {};
+  var round = createDiagnosisRound(snapshot.baseline, snapshot.current, snapshot.mode === "natural");
+  var message = round.querySelector(".diagnosis-message");
+  message.textContent = "提问 · "+turn.message;
+  message.hidden = false;
+  if(snapshot.source_trace_id) showDiagnosisTrace(round, snapshot.source_trace_id, signal);
+  else round.querySelector(".diagnosis-missing-trace").hidden = false;
+  var status = round.querySelector(".diagnosis-status");
+  var output = round.querySelector(".diagnosis-output");
+  output.hidden = false;
+  if(turn.status !== "committed"){
+    status.dataset.state = "error";
+    status.textContent = "未提交";
+    round.querySelector(".diagnosis-reply").textContent = "未提交，本轮回复不可恢复";
+  }else{
+    status.dataset.state = "done";
+    status.textContent = "已提交";
+    round.querySelector(".diagnosis-reply").textContent = turn.reply;
+  }
+  renderDiagnosisEvidence(round.querySelector(".diagnosis-evidence"), snapshot, true);
+  var gaps = round.querySelector(".diagnosis-gaps");
+  setDiagnosisItems(gaps, snapshot.evidence_gaps ?? ["证据缺项不可恢复"]);
+  var citations = round.querySelector(".diagnosis-citations");
+  if(snapshot.citations?.length) snapshot.citations.forEach(citation => addDiagnosisCitation(citations, citation, signal));
+  else citations.textContent = snapshot.citations ? "本轮无规则引用" : "规则引用不可恢复";
+  if(snapshot.mode === "natural" && turn.status === "committed" && snapshot.comparison) offerNaturalFollowup(round, turn.turn_id);
+  if(turn.review) showDiagnosisReview(round, {...snapshot, ...turn.review, turn_id:turn.turn_id}, token, signal);
+  if(turn.pause) showDiagnosisPause(round, {...snapshot, ...turn.pause, turn_id:turn.turn_id}, token, signal);
+}
+
+async function readChatStream(payload, token, onEvent, signal){
+  var response = await fetch("/api/chat/stream", {
+    method:"POST", headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},
+    body:JSON.stringify(payload), signal
+  });
+  if(!response.ok){
+    var error = await response.json().catch(function(){ return {}; });
+    var detail = typeof error?.detail === "string" ? error.detail : "请求失败";
+    throw new Error("HTTP "+response.status+" · "+detail);
+  }
+  var reader = response.body.getReader();
+  var decoder = new TextDecoder();
+  var buffer = "";
+  try{
+    while(true){
+      var packet = await reader.read();
+      if(packet.done) throw new Error("连接提前中断，未收到提交确认");
+      buffer += decoder.decode(packet.value, {stream:true});
+      var frames = buffer.split(/\r?\n\r?\n/);
+      buffer = frames.pop();
+      for(var frame of frames){
+        var json = frame.split(/\r?\n/).filter(function(line){ return line.startsWith("data:"); })
+          .map(function(line){ return line.slice(5).replace(/^ /, ""); }).join("\n");
+        if(!json) continue;
+        var event = JSON.parse(json);
+        onEvent(event);
+        if(event.type==="error") throw new Error(event.content || "执行失败，请重试");
+        if(event.type==="done" || event.type==="superseded" || event.type==="stopped") return;
+      }
+    }
+  }finally{
+    reader.cancel().catch(function(){});
+    reader.releaseLock();
+  }
+}
+
+function addDiagnosisCitation(container, citation, signal){
+  var details = document.createElement("details");
+  details.className = "diagnosis-citation";
+  var summary = document.createElement("summary");
+  summary.textContent = citation.title+" · "+citation.version;
+  var original = document.createElement("pre");
+  details.append(summary, original);
+  container.appendChild(details);
+  var loaded = false;
+  var loading = false;
+  details.addEventListener("toggle", async function(){
+    if(!details.open || loaded || loading) return;
+    loading = true;
+    original.textContent = "正在读取规则原文…";
+    try{
+      var response = await fetch("/api/knowledge/chunks/"+encodeURIComponent(citation.chunk_id), {signal});
+      if(!response.ok) throw new Error("HTTP "+response.status);
+      var chunk = await response.json();
+      if(signal.aborted) return;
+      original.textContent = chunk.content;
+      loaded = true;
+    }catch(error){
+      if(!signal.aborted) original.textContent = "原文读取失败，合上后可重新打开。";
+    }finally{
+      loading = false;
+    }
+  });
+}
+
+function showDiagnosisTrace(round, id, signal){
+  var trace = round.querySelector(".diagnosis-trace");
+  var code = trace.querySelector("code");
+  code.textContent = id;
+  trace.hidden = false;
+  trace.querySelector("button").onclick = async function(){
+    var status = trace.querySelector("[role=status]");
+    try{
+      await navigator.clipboard.writeText(id);
+      if(!signal.aborted) status.textContent = "已复制";
+    }catch(error){
+      if(signal.aborted) return;
+      var selection = window.getSelection();
+      var range = document.createRange();
+      range.selectNodeContents(code);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      status.textContent = document.execCommand("copy") ? "已复制" : "已选中，请手动复制";
+    }
+  };
+}
+
+async function diagnosisRequest(method, path, token, signal){
+  var response = await fetch(path, {method, headers:{"Authorization":"Bearer "+token}, signal, cache:"no-store"});
+  var result = await response.json().catch(function(){ return {}; });
+  if(response.status === 401 && !signal.aborted && token === TOKEN){
+    doLogout();
+    byId("loginErr").textContent = "登录已失效，请重新登录";
+    byId("loginErr").style.display = "block";
+  }
+  if(!response.ok) throw new Error(result.detail || "请求失败（HTTP "+response.status+"）");
+  return result.data;
+}
+
+function setDiagnosisItems(list, items){
+  list.replaceChildren(...items.map(function(text){
+    var item = document.createElement("li");
+    item.textContent = text;
+    return item;
+  }));
+}
+
+function diagnosisEvidence(snapshot){
+  var items = [
+    ...Object.entries(snapshot.metrics || {}).map(([window, result]) =>
+      window+" · 曝光 "+result.impressions+" · 点击 "+result.clicks+" · 来源 "+result.source_id+
+      " / "+result.source_plan_id+" · 版本 "+result.data_version),
+    ...(snapshot.calculation ? ["CTR 基准 "+snapshot.calculation.baseline_ctr_pct.toFixed(6)+
+      "% · 当前 "+snapshot.calculation.current_ctr_pct.toFixed(6)+"% · 百分点下降 "+
+      snapshot.calculation.decline_pp.toFixed(6)+" · 相对降幅 "+
+      (snapshot.calculation.relative_decline_pct == null ? "无定义" : snapshot.calculation.relative_decline_pct.toFixed(6)+"%")]: []),
+    ...(snapshot.rule_evaluation ? ["规则判定 · "+(snapshot.rule_evaluation.matched ? "达到阈值" : "未达到阈值")] : [])
+  ];
+  if(snapshot.comparison){
+    items.push("最近日期 · "+snapshot.comparison.latest_common_date+"（候选最新共同覆盖日）");
+    for(var candidate of snapshot.comparison.candidates){
+      var base = candidate.metrics.baseline, recent = candidate.metrics.current;
+      items.push("计划 #"+candidate.plan_id+" · 基准 "+base.clicks+"/"+base.impressions+
+        " · 当前 "+recent.clicks+"/"+recent.impressions+"（点击/曝光）· 相对降幅 "+
+        candidate.calculation.relative_decline_pct.toFixed(6)+"%");
+    }
+  }
+  return items;
+}
+
+function renderDiagnosisEvidence(list, snapshot, restored){
+  var items = diagnosisEvidence(snapshot);
+  if(restored){
+    for(var [field, label] of [["metrics", "指标"], ["calculation", "计算"], ["rule_evaluation", "规则判定"]]){
+      if(!Object.hasOwn(snapshot, field)) items.push(label+"不可恢复");
+    }
+  }
+  setDiagnosisItems(list, items.length ? items : ["本轮无结构化指标或规则判定"]);
+}
+
+function renderDiagnosisSnapshot(panel, snapshot){
+  panel.querySelector("[data-diagnosis-snapshot]").textContent =
+    "计划 "+snapshot.plan_id+" · 规则 "+snapshot.rule_id+" · 源 Trace ID "+(snapshot.source_trace_id ?? "不可恢复")+
+    " · "+diagnosisWindows(snapshot.baseline, snapshot.current);
+  setDiagnosisItems(panel.querySelector("[data-diagnosis-evidence]"), [
+    ...diagnosisEvidence(snapshot),
+    ...(snapshot.citations || []).map(citation => "引用 "+citation.title+" · "+citation.version+" · "+citation.chunk_id),
+    ...(snapshot.evidence_gaps || []).map(gap => "缺项 "+gap)
+  ]);
+}
+
+function showDiagnosisReview(round, proposal, token, signal){
+  var panel = round.querySelector(".diagnosis-review");
+  var button = panel.querySelector("button");
+  var status = panel.querySelector("[role=status]");
+  var reviewId = proposal.review_id || "";
+  renderDiagnosisSnapshot(panel, proposal);
+  panel.hidden = false;
+  if(proposal.state === "unavailable"){
+    button.disabled = true;
+    status.textContent = "计划归属或提案已变化，当前无法确认。";
+    return;
+  }
+  button.onclick = async function(){
+    if(signal.aborted) return;
+    button.disabled = true;
+    try{
+      if(!reviewId){
+        status.textContent = "正在确认…";
+        var confirmed = await diagnosisRequest(
+          "POST", "/api/diagnosis/review-proposals/"+encodeURIComponent(proposal.action_id)+"/confirm", token, signal
+        );
+        if(signal.aborted) return;
+        reviewId = confirmed.review_id;
+      }
+      button.textContent = "重新读取复核单";
+      status.textContent = "正在读取复核单 "+reviewId+"…";
+      var receipt = await diagnosisRequest(
+        "GET", "/api/diagnosis/reviews/"+encodeURIComponent(reviewId), token, signal
+      );
+      if(signal.aborted) return;
+      renderDiagnosisSnapshot(panel, receipt);
+      panel.querySelector("h4").textContent = "已保存的人工复核单";
+      status.textContent = "复核单 ID "+receipt.review_id+" · "+new Date(receipt.created_at).toLocaleString();
+    }catch(error){
+      if(!signal.aborted){
+        status.textContent = reviewId ? "复核单 "+reviewId+" 读取失败，可重新读取。" : error.message;
+      }
+    }finally{
+      if(!signal.aborted) button.disabled = false;
+    }
+  };
+  if(reviewId){
+    panel.querySelector("h4").textContent = "已批准 · 人工复核单";
+    button.onclick();
+  }
+}
+
+function showDiagnosisPause(round, proposal, token, signal){
+  var panel = round.querySelector(".diagnosis-pause");
+  var button = panel.querySelector("button");
+  var status = panel.querySelector("[role=status]");
+  var receiptLine = panel.querySelector(".diagnosis-pause-receipt");
+  var path = "/api/diagnosis/pause-actions/"+encodeURIComponent(proposal.action_id);
+  var target = proposal.target;
+  var confirmed = proposal.state === "approved";
+  panel.querySelector(".diagnosis-pause-target").textContent =
+    "沙箱计划 #"+target.plan_id+" · "+target.plan_name+" · 预期状态 "+target.expected_status+" → paused";
+  receiptLine.textContent = "动作 ID "+proposal.action_id+" · 原轮 #"+proposal.turn_id;
+  receiptLine.hidden = false;
+  renderDiagnosisSnapshot(panel, proposal);
+  panel.hidden = false;
+  if(proposal.state === "unavailable" || (confirmed && proposal.reason)){
+    if(confirmed){
+      panel.querySelector("h4").textContent = "已批准 · 沙箱暂停";
+      button.hidden = true;
+    }else{
+      button.disabled = true;
+    }
+    var reason = {
+      sandbox_disabled:"沙箱暂停已关闭。",
+      target_unavailable:"沙箱计划的登记或归属已变化。",
+      status_changed:"沙箱计划状态已变化，请重新诊断。"
+    }[proposal.reason] || "";
+    status.textContent = confirmed ? reason+"当前无法读回暂停回执。" : reason || "当前无法批准暂停。";
+    return;
+  }
+  button.onclick = async function(){
+    if(signal.aborted) return;
+    button.disabled = true;
+    try{
+      if(!confirmed){
+        status.textContent = "正在批准暂停…";
+        await diagnosisRequest("POST", path+"/confirm", token, signal);
+        if(signal.aborted) return;
+        confirmed = true;
+      }
+      button.textContent = "重新读回沙箱状态";
+      status.textContent = "正在读回沙箱状态…";
+      var result = await diagnosisRequest("GET", path, token, signal);
+      if(signal.aborted) return;
+      var receipt = result.receipt;
+      renderDiagnosisSnapshot(panel, receipt);
+      panel.querySelector("h4").textContent = "沙箱暂停回执";
+      status.textContent = "实际状态 "+(result.actual_status ?? "未知");
+      receiptLine.textContent = "回执 ID "+receipt.receipt_id+" · 动作 ID "+receipt.action_id+
+        " · 原轮 #"+receipt.turn_id+" · 执行 Trace ID "+receipt.execution_trace_id;
+    }catch(error){
+      if(!signal.aborted) status.textContent = confirmed ? "状态读回失败，可重新读取。" : error.message;
+    }finally{
+      if(!signal.aborted) button.disabled = false;
+    }
+  };
+  if(confirmed){
+    panel.querySelector("h4").textContent = "已批准 · 沙箱暂停";
+    button.onclick();
+  }
+}
+
+byId("diagnosisForm").addEventListener("submit", async function(event){
+  event.preventDefault();
+  var inputs = byId("diagnosisInputs");
+  if(!TOKEN || inputs.disabled) return;
+  var fields = event.currentTarget.elements;
+  var natural = diagnosisMode === "natural";
+  var message = fields.message.value.trim();
+  var planId = fields.plan_id.value.trim();
+  var ruleId = fields.rule_id.value.trim();
+  var baseline = {start_date:fields.baseline_start.value, end_date:fields.baseline_end.value};
+  var current = {start_date:fields.current_start.value, end_date:fields.current_end.value};
+  var validation = byId("diagnosisValidation");
+  var taskId = diagnosisTaskId;
+  if(natural && (!message || (taskId && !diagnosisSourceTurnId))){
+    validation.textContent = taskId && !diagnosisSourceTurnId ? "请选择已提交且有比较结果的轮次续问，或新建诊断。" : "请输入诊断需求。";
+    return;
+  }
+  if(!natural && !taskId && (!planId || !/^[\w.-]+-v[0-9]+(?:\.[0-9]+)*#[\w.-]+$/.test(ruleId))){
+    validation.textContent = "请输入本人计划 ID 和版本化规则 ID，例如 ctr-review-v1#low-ctr。";
+    return;
+  }
+  if(!natural && [baseline,current].some(function(window){
+    var days = (Date.parse(window.end_date) - Date.parse(window.start_date)) / 86400000;
+    return !(days >= 0 && days <= 90);
+  })){
+    validation.textContent = "请检查日期窗口。结束日须等于或晚于开始日，最多相差 90 天。";
+    return;
+  }
+  validation.textContent = "";
+  var diagnosis = taskId ? {task_id:taskId, baseline, current} : {plan_id:planId, rule_id:ruleId, baseline, current};
+  var payload = natural ? {message, diagnosis:taskId ? {mode:"natural", task_id:taskId, source_turn_id:diagnosisSourceTurnId} : {mode:"natural"}} : {diagnosis};
+  var signal = diagnosisSession.signal;
+  var token = TOKEN;
+  var round = createDiagnosisRound(natural ? null : baseline, natural ? null : current, natural);
+  if(natural){
+    var prompt = round.querySelector(".diagnosis-message");
+    prompt.textContent = "提问 · "+message;
+    prompt.hidden = false;
+  }
+  var status = round.querySelector(".diagnosis-status");
+  status.textContent = "正在诊断…";
+  var output = round.querySelector(".diagnosis-output");
+  var reply = round.querySelector(".diagnosis-reply");
+  var gaps = round.querySelector(".diagnosis-gaps");
+  var citations = round.querySelector(".diagnosis-citations");
+  var cited = new Set();
+  var hasComparison = false;
+  inputs.disabled = true;
+  round.scrollIntoView({block:"nearest"});
+  try{
+    await readChatStream(payload, token, function(data){
+      if(signal.aborted) return;
+      if(data.type==="done" || ((data.type==="thinking" || data.type==="error") && data.task_id!==undefined)){
+        if(typeof data.task_id!=="string" || !data.task_id.trim() || (taskId && data.task_id!==taskId)){
+          throw new Error("任务标识异常，无法确认本轮提交");
+        }
+        if(!taskId){
+          taskId = data.task_id;
+          rememberDiagnosisTask(taskId, planId, ruleId, true, diagnosisMode);
+          setDiagnosisTask(taskId, planId, ruleId);
+        }
+      }
+      if(data.trace_id) showDiagnosisTrace(round, data.trace_id, signal);
+      if(data.type==="thinking") status.textContent = data.content;
+      if(data.type==="text"){
+        if(data.comparison) hasComparison = true;
+        if(data.baseline && data.current){
+          round.querySelector(".diagnosis-windows").textContent = diagnosisWindows(data.baseline, data.current);
+        }
+        output.hidden = false;
+        reply.append(data.content);
+        renderDiagnosisEvidence(round.querySelector(".diagnosis-evidence"), data, false);
+        (data.evidence_gaps || []).forEach(function(gap){
+          var item = document.createElement("li");
+          item.textContent = gap;
+          gaps.appendChild(item);
+        });
+        (data.citations || []).forEach(function(citation){
+          if(cited.has(citation.chunk_id)) return;
+          cited.add(citation.chunk_id);
+          addDiagnosisCitation(citations, citation, signal);
+        });
+      }
+      if(data.type==="done"){
+        if(data.review_proposal) showDiagnosisReview(round, data.review_proposal, token, signal);
+        if(data.pause_proposal) showDiagnosisPause(round, data.pause_proposal, token, signal);
+        if(natural && hasComparison && data.turn_id) offerNaturalFollowup(round, data.turn_id);
+        else if(!natural) byId("diagnosisSubmit").textContent = "用新日期窗续问";
+        status.dataset.state = "done";
+        status.textContent = "已提交";
+      }
+    }, signal);
+  }catch(error){
+    if(!signal.aborted){
+      status.dataset.state = "error";
+      status.textContent = error.message;
+      if(taskId && !natural) byId("diagnosisSubmit").textContent = "重试诊断";
+    }
+  }finally{
+    if(!signal.aborted){
+      if(!output.hidden && !cited.size) citations.textContent = "本轮无规则引用";
+      inputs.disabled = false;
+    }
+  }
+});
+
+function resetChatGroups(){
+  closeChatGroupCreate(false);
+  closeChatGroupDetails(false);
+  closeGroupDetail(false);
+  toggleGroupList(false);
+  closeGroupDateChange();
+  setGroupListingMode(false);
+  chatMode = "";
+  chatGroups.clear();
+  groupListRevision = 0;
+  groupPending.clear();
+  groupErrors.clear();
+  groupSession.abort();
+  groupSession = new AbortController();
+  activeChatGroup = "";
+  groupSelection++;
+  clearTimeout(groupPoll);
+  chatHistoryLoading = false;
+  chatHistoryLoaded = false;
+  pendingChatReplies.clear();
+  byId("chatGroupControls").hidden = true;
+  byId("chatGroupHeading").hidden = true;
+  byId("chatGroupList").replaceChildren();
+  byId("chatMessages").replaceChildren();
+  byId("chatThinking").style.display = "none";
+  byId("chatSend").hidden = false;
+  byId("chatGroupStop").hidden = true;
+  delete byId("chatGroupStop").dataset.runId;
+  byId("chatInput").value = "";
+}
+
+async function chatGroupRequest(path, method, body, signal){
+  var view = chatViewId;
+  var response = await fetch("/api/chat/conversations"+path, {
+    method:method || "GET", headers:{"Authorization":"Bearer "+TOKEN, "Content-Type":"application/json"},
+    body:body ? JSON.stringify(body) : undefined, signal
+  });
+  if(signal?.aborted) throw signal.reason;
+  if(view !== chatViewId || !TOKEN) throw new Error("登录已切换");
+  var result = await response.json().catch(function(){return {};});
+  if(signal?.aborted) throw signal.reason;
+  if(view !== chatViewId || !TOKEN) throw new Error("登录已切换");
+  if(!response.ok){
+    if(response.status===401 && view===chatViewId) doLogout();
+    var error = new Error(result.detail || "工作群请求失败");
+    error.status = response.status;
+    throw error;
+  }
+  return result.data;
+}
+
+function chatGroupPreference(){
+  return "ad.chatGroup."+String(USER.user_id ?? USER.username);
+}
+
+function rememberChatPage(){
+  if(TOKEN && chatMode==="groups" && byId("page-chat").classList.contains("active") && byId("diagnosisView").hidden){
+    sessionStorage.setItem("ad.chatPage", "groups");
+  }else{
+    sessionStorage.removeItem("ad.chatPage");
+  }
+}
+
+function updateChatGroupControls(){
+  var group = chatGroups.get(activeChatGroup);
+  var running = groupPending.has(activeChatGroup) || Boolean(group?.running);
+  byId("chatGroupDetailsButton").hidden = !group;
+  byId("chatGroupArchive").textContent = group?.archived ? "恢复当前群" : "归档当前群";
+  byId("chatGroupArchive").disabled = !group || running;
+  byId("chatGroupChangeDates").hidden = !group?.running?.can_change_dates;
+  byId("chatInput").disabled = byId("chatSend").disabled = !group || group.archived || running;
+  var stop = byId("chatGroupStop");
+  var stoppable = Boolean(group?.running?.can_stop);
+  stop.hidden = !stoppable;
+  if(stoppable) stop.dataset.runId = group.running.run_id;
+  else delete stop.dataset.runId;
+  byId("chatSend").hidden = stoppable;
+  byId("chatGroupListing").hidden = chatMode!=="groups";
+  byId("chatGroupListing").disabled = byId("chatInput").disabled;
+  byId("chatThinking").style.display = running ? "flex" : "none";
+  if(running) byId("chatThinking").textContent = "正在处理本轮…";
+  byId("chatGroupStatus").textContent = groupErrors.get(activeChatGroup) ||
+    (group?.archived ? "已归档" : "");
+}
+
+function setGroupListingMode(enabled){
+  var button = byId("chatGroupListing");
+  button.setAttribute("aria-pressed", String(enabled));
+  button.classList.toggle("btn-primary", enabled);
+  button.classList.toggle("btn-outline", !enabled);
+  byId("chatInput").placeholder = enabled ? "输入 SKU 和要完成的商品任务…" : "输入问题…";
+  byId("chatSuggestions").hidden = enabled;
+}
+
+function renderChatGroupList(){
+  var list = byId("chatGroupList");
+  var focused = document.activeElement?.dataset.conversationId;
+  var fragment = document.createDocumentFragment();
+  if(!chatGroups.size) groupText(fragment,"p","还没有工作群").className = "workbench-group-empty";
+  for(const group of chatGroups.values()){
+    const button = groupText(fragment,"button","");
+    button.type = "button";
+    button.dataset.conversationId = group.conversation_id;
+    if(group.conversation_id===activeChatGroup) button.setAttribute("aria-current","true");
+    groupText(button,"span",group.title);
+    if(group.archived) groupText(button,"small","已归档");
+    button.addEventListener("click",() => selectChatGroup(button.dataset.conversationId));
+  }
+  list.replaceChildren(fragment);
+  if(focused) Array.from(list.children).find(button => button.dataset.conversationId===focused)?.focus({preventScroll:true});
+  byId("chatGroupTitle").textContent = chatGroups.get(activeChatGroup)?.title || "选择工作群";
+  updateChatGroupControls();
+}
+
+function chatBubble(kind, content){
+  var element = document.createElement("div");
+  element.className = "msg "+(kind==="user" ? "user" : "assistant");
+  if(kind==="assistant"){
+    var reply = groupText(element,"div","");
+    reply.className = "workbench-reply";
+    reply.innerHTML = renderMarkdown(content || "");
+    element.dataset.replyStatus = "回复已保存";
+  }
+  else element.textContent = content;
+  return element;
+}
+
+var groupToolLabels = {get_plan_metrics_by_date:"指标", search_knowledge:"规则", get_plan_detail:"详情",
+  get_daily_report_by_date:"日报", get_listing_sales:"商品销量", get_listing_current:"原 Listing",
+  get_listing_facts:"商品事实"};
+var groupGapLabels = {plan_history_not_mapped:"未绑定历史来源", plan_history_missing_dates:"历史数据缺报",
+  source_version_mismatch:"历史来源版本不匹配", review_metrics_pending:"尚缺本轮窗口指标",
+  review_rule_missing:"缺少指定版本的可核验条文", review_rule_conflict:"指定规则回执冲突",
+  review_metrics_conflict:"窗口指标回执冲突", review_source_mismatch:"窗口的历史来源或版本不一致",
+  review_comparison_undefined:"无法计算相对 CTR 变化", review_alert_not_confirmed:"尚未核实未读严重 CTR 告警",
+  dependency_failed:"上游任务失败，复核未启动", review_handoff_required:"未取得可交接的复核输入",
+  read_scope_changed:"输入回执的计划读取权限已变更", read_scope_unverified:"输入回执的计划读取权限未能核实",
+  missing_required_evidence:"未取得所需证据", invalid_worker_output:"Worker 回执格式无效"};
+
+function groupText(parent, tag, text){
+  var element = document.createElement(tag);
+  element.textContent = text;
+  parent.appendChild(element);
+  return element;
+}
+
+function groupWindow(window){
+  return window.start_date+" 至 "+window.end_date;
+}
+
+function groupTaskLabel(event){
+  return event?.task_label || event?.task_id || "Worker";
+}
+
+function groupProgressReadKey(event){
+  var args = event.arguments || {};
+  return JSON.stringify([event.source,args.plan_id,args.sku,args.start_date,args.end_date]);
+}
+
+function groupCompactWindow(args){
+  var [year, month, start] = args.start_date.split("-");
+  var [endYear, endMonth, end] = args.end_date.split("-");
+  if(year!==endYear || month!==endMonth) return groupWindow(args);
+  return Number(month)+" 月 "+Number(start)+(start===end ? "" : "–"+Number(end))+" 日";
+}
+
+function groupReadScope(event, compact){
+  var args = event.arguments || {};
+  var label = groupToolLabels[event.source] || event.source || "";
+  var plan = args.plan_id ? "#"+args.plan_id : args.sku || "";
+  if(args.start_date && args.end_date){
+    var window = compact ? groupCompactWindow(args) : groupWindow(args);
+    return [plan, window, event.source==="get_plan_metrics_by_date" ? "曝光与点击" : label].filter(Boolean).join(" · ");
+  }
+  return [plan,label].filter(Boolean).join(" · ");
+}
+
+function groupEventId(parent, label, value){
+  if(!value) return;
+  var code = groupText(groupText(parent,"small",label+" "),"code",value);
+  if(label==="产物") code.dataset.artifactId = value;
+}
+
+function groupProgressEntry(entry){
+  var event = entry.event;
+  var item = document.createElement("li");
+  item.className = "msg assistant";
+  item.dataset.entryId = entry.entry_id;
+  item.dataset.runId = entry.run_id;
+  if(!event){ item.textContent = entry.content; return item; }
+  item.dataset.event = event.kind;
+  var task = groupTaskLabel(event);
+  item.dataset.taskLabel = task;
+  if(event.worker_id) item.dataset.workerId = event.worker_id;
+  if(event.runtime_call_id) item.dataset.runtimeCallId = event.runtime_call_id;
+  if(event.dispatch_id) item.dataset.dispatchId = event.dispatch_id;
+  if(event.model_call_id) item.dataset.modelCallId = event.model_call_id;
+  var subject = event.source ? " · "+groupReadScope(event,false) : "";
+  if(event.kind==="waiting") item.textContent = task+(event.independent_review ? " · 独立复核" : "")+" · 等待 "+(event.dependencies || []).join("、");
+  else if(event.kind==="review_inputs") item.textContent = task+" · 收到复核输入，开始复核";
+  else if(event.kind==="dispatched" && entry.content==="Worker · 已分派" && event.capabilities){
+    item.textContent = task+" · 已分派 · "+event.capabilities.map(name => groupToolLabels[name] || name).join("、");
+  }else if(event.kind==="tool_started") item.textContent = task+" · 已发起读取"+subject;
+  else if(event.kind==="receipt") item.textContent = task+" · 收到回执"+subject;
+  else if(event.kind==="failed" && event.error_code){
+    item.textContent = task+" · "+(groupGapLabels[event.error_code] || event.error_code)+subject;
+    if(event.dependencies?.length) item.textContent += " · "+event.dependencies.join("、");
+  }else item.textContent = entry.content.startsWith("Worker · ") ? task+entry.content.slice(6) : entry.content;
+  groupEventId(item,"Worker",event.worker_id);
+  groupEventId(item,"分派调用",event.dispatch_id);
+  groupEventId(item,"读取调用",event.runtime_call_id);
+  groupEventId(item,"复核模型调用",event.model_call_id);
+  groupEventId(item,"产物",event.artifact_id);
+  for(var producer of event.producers || []){
+    var row = groupText(item,"div",groupTaskLabel(producer)+(producer.source ? " · "+groupReadScope(producer,false) : ""));
+    groupEventId(row,"Worker",producer.worker_id);
+    groupEventId(row,"读取调用",producer.runtime_call_id);
+    groupEventId(row,"产物",producer.artifact_id);
+  }
+  return item;
+}
+
+function groupProgressTasks(entries){
+  var tasks = new Map();
+  for(var entry of entries){
+    var event = entry.event || {};
+    var label = groupTaskLabel(event);
+    if(!tasks.has(label)) tasks.set(label,{label:label, entries:[], reads:new Map()});
+    var task = tasks.get(label);
+    task.entries.push(entry);
+    task.capabilities = event.capabilities || task.capabilities || [];
+    if(event.planned_metric_windows) task.plannedWindows = event.planned_metric_windows;
+    if(event.review_rule) task.reviewRule = event.review_rule;
+    task.review = task.review || event.independent_review || event.kind==="review_inputs";
+    if(event.kind==="waiting") task.waiting = event;
+    if(event.kind==="dispatched") task.dispatched = event;
+    if(event.kind==="review_inputs") task.handoff = event;
+    if(event.kind==="succeeded" || (event.kind==="failed" && !event.source)) task.terminal = event;
+    if(event.kind==="reclaimed") task.reclaimed = event;
+    if(event.source && ["tool_started","receipt","failed"].includes(event.kind)){
+      task.reads.set(groupProgressReadKey(event),event);
+    }
+  }
+  for(var task of tasks.values()){
+    var reads = [...task.reads.values()];
+    task.active = reads.filter(event => event.kind==="tool_started");
+    task.gaps = reads.filter(event => event.kind==="failed" && event.receipt_status!=="temporary_failure");
+    task.receipts = reads.filter(event => event.kind==="receipt");
+  }
+  return tasks;
+}
+
+function groupGapSummary(task){
+  if(!task.gaps.length) return groupGapLabels[task.terminal?.error_code] || task.terminal?.error_code || "缺少回执";
+  var gaps = new Map();
+  for(var event of task.gaps){
+    var plan = event.arguments?.plan_id;
+    var key = JSON.stringify([event.error_code,plan]);
+    if(!gaps.has(key)) gaps.set(key,{reason:groupGapLabels[event.error_code] || event.error_code,plan:plan,scopes:[]});
+    var args = event.arguments || {};
+    gaps.get(key).scopes.push(args.window==="baseline" ? "基准窗" : args.window==="current" ? "当前窗" :
+      args.start_date ? groupWindow(args) : groupToolLabels[event.source] || event.source);
+  }
+  return [...gaps.values()].map(gap => (gap.plan ? "#"+gap.plan+" " : "")+gap.scopes.join("、")+" · "+gap.reason).join("；");
+}
+
+function groupMetricSummary(events){
+  var byPlan = new Map();
+  for(var {source,arguments:args} of events){
+    if(source!=="get_plan_metrics_by_date" || !args?.plan_id || !args.start_date || !args.end_date) continue;
+    if(!byPlan.has(args.plan_id)) byPlan.set(args.plan_id,[]);
+    byPlan.get(args.plan_id).push(groupCompactWindow(args));
+  }
+  var byWindows = new Map();
+  for(var [plan, windows] of byPlan){
+    var dates = windows.join("、");
+    if(!byWindows.has(dates)) byWindows.set(dates,[]);
+    byWindows.get(dates).push("#"+plan);
+  }
+  return [...byWindows].map(([dates,plans]) => plans.join("、")+" · "+dates).join("；");
+}
+
+function groupTaskSummary(task, tasks, run){
+  var terminal = task.terminal;
+  var dependencies = (task.waiting?.dependencies || terminal?.dependencies || []).map(label => tasks.get(label) || {label:label,gaps:[],active:[],receipts:[]});
+  var blockedBy = terminal?.error_code==="dependency_failed" ? terminal.dependencies || [] : [];
+  var failed = dependencies.filter(dep => blockedBy.includes(dep.label) || dep.terminal?.kind==="failed");
+  if(blockedBy.length || (task.waiting && !task.dispatched && failed.length)){
+    var missing = failed.map(dep => dep.gaps.length || dep.terminal ? dep.label+" "+groupGapSummary(dep) : dep.label).join("；");
+    return ["blocked","受阻 · "+missing];
+  }
+  if(task.gaps.length) return ["failed","缺项 · "+groupGapSummary(task)];
+  if(terminal?.kind==="failed") return [task.review ? "blocked" : "failed",
+    (task.review ? "受阻 · " : "失败 · ")+groupGapSummary(task)];
+  var received = "";
+  if(task.handoff){
+    var counts = new Map();
+    for(var row of task.handoff.producers || []){
+      var label = groupToolLabels[row.source] || "证据";
+      counts.set(label,(counts.get(label) || 0)+1);
+    }
+    received = "已接收 "+[...counts].map(([label,count]) => count+" 份"+label).join("、");
+  }
+  if(terminal?.kind==="succeeded"){
+    var completedScope = received || groupMetricSummary(task.receipts) ||
+      (task.receipts.length ? task.receipts.length+" 份回执" : "");
+    return ["succeeded",[task.review ? "已复核" : "已完成",completedScope].filter(Boolean).join(" · ")];
+  }
+  if(run.status!=="running" || task.reclaimed){
+    var priorScope = groupMetricSummary([...task.reads.values()]);
+    var endLabel = run.status==="completed" || run.status==="running" ? "已结束" : groupRunStatus[run.status];
+    return ["inactive",[endLabel || "已结束",priorScope].filter(Boolean).join(" · ")];
+  }
+  if(task.handoff) return ["running",received+" · 正在复核"];
+  if(task.waiting && !task.dispatched){
+    var pending = dependencies.filter(dep => dep.terminal?.kind!=="succeeded");
+    var scopes = pending.flatMap(dep => dep.active.length ? dep.active.map(event => {
+      var args = event.arguments || {};
+      if(args.window) return "#"+args.plan_id+" "+(args.window==="baseline" ? "基准窗" : "当前窗");
+      return groupReadScope(event,true);
+    }) : dep.receipts.length ? [] : [dep.label]);
+    return ["waiting",scopes.length ? "等待 "+scopes.join("、") :
+      pending.length ? "已收到回执 · 等待取证任务完成" : "取证完成 · 等待交接"];
+  }
+  if(task.active.length) return ["running","正在查 "+task.active.map(event => groupReadScope(event,true)).join("；")];
+  if(task.receipts.length) return ["running","已收到 "+task.receipts.length+" 份回执"];
+  if(task.capabilities.includes("get_plan_metrics_by_date")) return ["running","指标取证待开始"];
+  return ["running",task.dispatched ? "已分派" : "等待分派"];
+}
+
+function groupProgress(run, entries, change, previous){
+  var tasks = groupProgressTasks(entries.filter(entry => !groupProgressNotices.has(entry.event?.kind)));
+  var summaries = [...tasks.values()].map(task => ({task:task, summary:groupTaskSummary(task,tasks,run)}));
+  var panel = document.createElement("details");
+  panel.className = "group-progress";
+  panel.dataset.runId = run.run_id;
+  panel.open = previous?.open ?? true;
+  var issue = summaries.some(({summary:[state]}) => state==="blocked" || state==="failed");
+  var status = run.status==="completed" && issue ? "部分受阻" : groupRunStatus[run.status] || run.status;
+  groupText(panel,"summary","协作进度 · "+status);
+  if(run.stop){
+    var record = groupText(panel,"p",run.stop.stopped_by_name+" · 停止于 ");
+    record.className = "group-scope group-stop-record";
+    var when = groupText(record,"time",new Date(run.stop.stopped_at).toLocaleString("zh-CN",{
+      dateStyle:"medium",timeStyle:"long"
+    }));
+    when.dateTime = run.stop.stopped_at;
+    groupText(record,"span"," · 轮次 ");
+    groupText(record,"code",run.run_id);
+  }
+  if(change){
+    var scope = change.new_plan_ids ? "确认计划 "+change.new_plan_ids.map(id => "#"+id).join("、") :
+      "确认日期 · 基准窗 "+groupWindow(change.new_dates.baseline)+" · 当前窗 "+groupWindow(change.new_dates.current);
+    groupText(panel,"p",scope).className = "group-scope";
+  }
+  for(var entry of entries){
+    var event = entry.event;
+    if(!groupProgressNotices.has(event?.kind)) continue;
+    var scope = event.source ? " · "+groupReadScope(event,false) : "";
+    var notice = groupText(panel,"p",entry.content+scope);
+    notice.className = "group-scope";
+    notice.dataset.event = event.kind;
+  }
+  var order = {running:0,waiting:1,blocked:2,failed:2,inactive:3,succeeded:4};
+  summaries.sort((a,b) => order[a.summary[0]]-order[b.summary[0]] ||
+    a.task.label.localeCompare(b.task.label,"zh",{numeric:true}));
+  var openTasks = new Set(Array.from(previous?.querySelectorAll(".group-task[open]") || [], row => row.dataset.taskLabel));
+  for(var {task, summary:[state, text]} of summaries){
+    var row = groupText(panel,"details","");
+    row.className = "group-task";
+    row.dataset.taskLabel = task.label;
+    row.dataset.state = state;
+    row.open = openTasks.has(task.label);
+    var type = task.review ? "独立复核" : task.capabilities.map(name => groupToolLabels[name] || name).join("与");
+    groupText(row,"summary",[task.label,type,text].filter(Boolean).join(" · "));
+    var list = groupText(row,"ol","");
+    for(var entry of task.entries) list.appendChild(groupProgressEntry(entry));
+  }
+  return panel;
+}
+
+function renderGroupEvidence(panel, data){
+  if(data.kind==="listing_inspection_v1"){
+    panel.replaceChildren();
+    groupText(panel,"h4","逐款巡检依据");
+    for(const product of data.products){
+      const section = groupText(panel,"section","");
+      const receipts = product.receipts;
+      const listing = receipts.get_listing_current?.result;
+      const facts = receipts.get_listing_facts?.result;
+      const metrics = receipts.get_listing_sales?.result;
+      renderGroupListingEvidence(section,{
+        target:listing?.target || facts?.target || metrics?.target || data.candidates.find(row => row.sku === product.sku),
+        listing, facts, metrics, missing_fact_fields:Object.keys(product.missing_fields).length ? product.missing_fields : null,
+        gaps:product.gaps,
+        artifacts:Object.fromEntries(Object.entries(receipts).map(([tool,receipt]) => [tool,{
+          artifact_id:receipt.artifact_id, runtime_call_id:receipt.tool_call_id
+        }]))
+      });
+    }
+    return;
+  }
+  if(data.kind==="listing_operations_v1"){
+    renderGroupListingEvidence(panel,data);
+    return;
+  }
+  if(data.kind==="olist_sales_v1"){
+    panel.replaceChildren();
+    var metrics = data.metrics;
+    groupText(panel,"h4","Olist v2 · 公开历史订单");
+    groupText(panel,"p","店铺 "+metrics.shop_id+" · 商品 "+metrics.product_id);
+    groupText(panel,"p","原始下单日期 · 仅本卖家行项 · 状态 "+metrics.included_statuses.join("、"));
+    groupListingChart(panel,{
+      baseline:{...metrics.baseline,days:metrics.baseline.points,...metrics.baseline.totals},
+      current:{...metrics.current,days:metrics.current.points,...metrics.current.totals},
+      units_delta:metrics.change.units.absolute,units_change_pct:metrics.change.units.relative_pct
+    });
+    groupText(panel,"code",data.runtime_call_id).dataset.runtimeCallId = data.runtime_call_id;
+    return;
+  }
+  panel.replaceChildren();
+  if(data.alert_review){
+    var alertReview = data.alert_review;
+    var period = alertReview.alert_period;
+    groupText(panel,"p","告警筛选时段（"+period.timezone+"） "+period.start+" 至 "+period.end).dataset.evidence = "alert-period";
+    var alerts = groupText(panel,"ul","");
+    for(var association of alertReview.associations){
+      var row = groupText(alerts,"li","");
+      groupText(row,"span","告警 #"+association.alert_id+" → 计划 #"+association.plan_id).dataset.evidence = "alert";
+      if(association.ctr_check){
+        var check = association.ctr_check;
+        groupText(row,"small","检测时间 "+ctrDetectionTime(check.detected_at)+"（北京时间） · "+check.rule);
+        for(var line of ctrDetectionWindows(check)) groupText(row,"small","告警检测"+line);
+      }
+    }
+    var gapLabels = {alert_plan_missing:"缺少结构化计划关联",alert_plan_unverified:"计划关联无法核验",
+      alert_history_changed:"计划历史绑定已变化"};
+    for(var gap of alertReview.association_gaps){
+      groupText(alerts,"li","告警 #"+gap.alert_id+" · "+gapLabels[gap.error_code]).dataset.evidence = "alert-gap";
+    }
+    for(var scopeGap of alertReview.scope_gaps) groupText(alerts,"li",scopeGap);
+    if(alertReview.review_scope){
+      groupText(panel,"p","指标比较 · 基准窗 "+groupWindow(data.scope.baseline)+" · 当前窗 "+groupWindow(data.scope.current));
+    }
+  }
+  var list = groupText(panel,"ul","");
+  for(var metric of data.metrics){
+    var label = "#"+metric.plan_id+" · "+groupWindow(metric)+" · ";
+    var ctr = metric.ctr_pct == null ? "无定义" : metric.ctr_pct.toFixed(2)+"%";
+    var line = metric.gap ? (metric.gap_text || metric.gap) :
+      "曝光 "+metric.impressions.toLocaleString()+"，点击 "+metric.clicks.toLocaleString()+"，CTR "+ctr;
+    var row = groupText(list,"li",label+line);
+    row.dataset.evidence = "metric";
+    if(metric.coverage?.missing_dates?.length) groupText(row,"small","缺报 "+metric.coverage.missing_dates.join("、"));
+    if(metric.artifact_id) groupText(row,"code",metric.artifact_id).dataset.artifactId = metric.artifact_id;
+  }
+  var rule = data.rule;
+  if(rule || !data.alert_review || data.alert_review.review_scope){
+    var row = groupText(list,"li",rule ? "规则 "+rule.version+" · "+(rule.source || rule.title)+" · "+rule.chunk_id :
+      "规则 "+data.scope.rule+" · "+(data.rule_gap_text || "缺少回执"));
+    row.dataset.evidence = "rule";
+    if(rule){
+      groupText(row,"small",rule.excerpt);
+      groupText(row,"code",rule.artifact_id).dataset.artifactId = rule.artifact_id;
+    }
+  }
+  for(var detail of data.details){
+    var row = groupText(list,"li","详情 #"+detail.id+" · "+detail.plan_name+" · "+detail.status+" · 日预算 "+detail.daily_budget);
+    row.dataset.evidence = "detail";
+    if(detail.review_input) groupText(row,"small","准入复核 Worker "+detail.review_input.worker_id);
+    groupText(row,"code",detail.artifact_id).dataset.artifactId = detail.artifact_id;
+  }
+  for(var id of data.missing_detail_plan_ids){
+    groupText(list,"li","详情 #"+id+(data.failed_detail_plan_ids.includes(id) ? " · 读取失败" : " · 尚缺获准回执"));
+  }
+  if(data.gap_text) groupText(panel,"p",data.gap_text+"，复核清单暂缓。");
+  else if(data.review_status && data.review_status!=="completed" && !data.missing_detail_plan_ids.length){
+    groupText(panel,"p","缺少独立复核 Worker 的有效交接。");
+  }
+}
+
+function groupListingNumber(value){
+  return typeof value==="number" && Number.isFinite(value) ? value.toLocaleString("zh-CN",{maximumFractionDigits:2}) : "未知";
+}
+
+function groupListingChart(panel, metrics){
+  var windows = [["基准窗",metrics.baseline],["当前窗",metrics.current]].filter(([,window]) => window);
+  var scale = Math.max(1,...windows.flatMap(([,window]) => (window.days || []).map(day => day.units ?? 0)));
+  var chart = groupText(panel,"figure","");
+  chart.className = "group-listing-chart";
+  groupText(chart,"figcaption","每日销量（件）");
+  for(var [label,window] of windows){
+    groupText(chart,"p",label+" "+groupWindow(window)+" · "+groupListingNumber(window.units)+" 件"+
+      (window.orders != null ? " · "+groupListingNumber(window.orders)+" 单" : "")+
+      (window.covered_days != null ? " · 有数据 "+window.covered_days+" 天" : ""));
+    var bars = groupText(chart,"ol","");
+    bars.className = "group-listing-bars";
+    bars.setAttribute("aria-label",label+"每日销量");
+    for(var day of window.days || []){
+      var bar = groupText(bars,"li","");
+      bar.dataset.date = day.date;
+      bar.dataset.units = day.units ?? "unknown";
+      bar.title = day.date+" · "+groupListingNumber(day.units)+" 件"+(day.orders != null ? " · "+day.orders+" 单" : "");
+      if(day.orders != null) bar.dataset.orders = day.orders;
+      groupText(bar,"span",groupListingNumber(day.units));
+      var track = groupText(bar,"span","");
+      track.className = "group-listing-bar-track";
+      track.setAttribute("aria-hidden","true");
+      var fill = groupText(track,"span","");
+      fill.className = "group-listing-bar";
+      fill.style.setProperty("--units-ratio",((day.units ?? 0) / scale * 100)+"%");
+      groupText(bar,"time",day.date.slice(5)).dateTime = day.date;
+    }
+  }
+  if(metrics.baseline) groupText(chart,"p","件数变化 "+groupListingNumber(metrics.units_delta)+" · 相对变化 "+
+    (metrics.units_change_pct == null ? "未知" : groupListingNumber(metrics.units_change_pct)+"%")+
+    (Object.hasOwn(metrics,"conversion_rate") ?
+      " · 转化率 "+(metrics.conversion_rate == null ? "未知" : groupListingNumber(metrics.conversion_rate)+"%") : ""));
+  if(metrics.source) groupText(chart,"small","来源 "+(metrics.source==="local_listing_test" ? "本地测试数据" : metrics.source));
+}
+
+function groupListingBullets(panel, bullets, version, facts){
+  var list = groupText(panel,"ol","");
+  list.lang = "en";
+  list.dataset.bulletVersion = version;
+  for(var bullet of bullets || []){
+    var item = groupText(list,"li",typeof bullet==="string" ? bullet : bullet.text);
+    if(bullet.fact_id && facts?.has(bullet.fact_id)){
+      var fact = facts.get(bullet.fact_id);
+      var source = groupText(item,"small","依据 "+fact.fact_id+" · "+fact.statement);
+      source.lang = "zh-CN";
+      source.dataset.factId = fact.fact_id;
+    }
+  }
+}
+
+function groupListingTarget(target){
+  if(!target) return "商品运营";
+  return [target.shop_id,target.marketplace_id,"SKU "+target.sku].filter(Boolean).join(" · ");
+}
+
+function renderGroupListingEvidence(panel, data, showSales = true){
+  panel.replaceChildren();
+  panel.classList.add("group-listing-evidence");
+  groupText(panel,"h4",groupListingTarget(data.target)+" · 本地测试商品");
+  if(showSales && data.comparisons){
+    for(const metric of data.comparisons){
+      const sku = metric.target.sku;
+      groupText(panel,"h5",`${data.candidate_titles[sku]} · ${sku}`);
+      groupListingChart(panel,metric);
+      const receipt = data.comparison_receipts.find(row => row.result.target.sku === sku);
+      if(receipt) groupEventId(groupText(panel,"p",""),"销量产物",receipt.artifact_id);
+    }
+  } else if(showSales && data.metrics) groupListingChart(panel,data.metrics);
+  if(data.missing_fact_fields) groupText(panel,"p","缺少依据 · "+Object.values(data.missing_fact_fields).join("、"));
+  var facts = new Map((data.facts?.facts || []).map(fact => [fact.fact_id,fact]));
+  if(data.listing?.title) groupText(panel,"p",data.listing.title);
+  if(data.listing || data.proposal){
+    var diff = groupText(panel,"div","");
+    diff.className = "group-listing-diff";
+    if(data.listing){
+      var before = groupText(diff,"section","");
+      groupText(before,"strong","原英文五点 · 版本 "+data.listing.version);
+      groupListingBullets(before,data.listing.bullets,"before");
+    }
+    if(data.proposal){
+      var proposed = groupText(diff,"section","");
+      groupText(proposed,"strong","拟应用的英文五点");
+      groupListingBullets(proposed,data.proposal.bullets,"proposed",facts);
+    }
+  }
+  if(facts.size){
+    var sources = groupText(panel,"details","");
+    sources.className = "group-listing-facts";
+    groupText(sources,"summary","商品资料 · 版本 "+data.facts.version);
+    var list = groupText(sources,"ul","");
+    for(var fact of facts.values()) groupText(list,"li",fact.fact_id+" · "+fact.statement).dataset.factId = fact.fact_id;
+  }
+  if(Object.keys(data.artifacts || {}).length){
+    var artifacts = groupText(panel,"details","");
+    groupText(artifacts,"summary","取证回执");
+    var list = groupText(artifacts,"ul","");
+    for(var [tool,receipt] of Object.entries(data.artifacts)){
+      var item = groupText(list,"li",groupToolLabels[tool] || tool);
+      groupEventId(item,"产物",receipt.artifact_id);
+      groupEventId(item,"读取调用",receipt.runtime_call_id);
+    }
+  }
+  if(data.gaps?.length){
+    groupText(panel,"p","证据缺项");
+    var gaps = groupText(panel,"ul","");
+    var labels = {get_listing_sales:"缺少销量数据",get_listing_current:"缺少原 Listing",get_listing_facts:"缺少商品资料",
+      insufficient_listing_facts:"商品资料不足，无法核验五条描述",incomplete_listing_sales:"销量记录不完整",
+      unverified_listing_requirement:"指定卖点缺少商品资料",missing_listing_fact_fields:"商品资料缺少必需字段"};
+    for(var gap of data.gaps) groupText(gaps,"li",labels[gap] || gap);
+    if(data.unverified_requirements?.length){
+      groupText(panel,"p","待核验卖点 · "+data.unverified_requirements.join("、"));
+    }
+  }
+}
+
+async function readGroupEntryEvidence(conversationId, entry, signal){
+  var data = await chatGroupRequest("/"+encodeURIComponent(conversationId)+"/runs/"+encodeURIComponent(entry.run_id)+"/evidence", "GET", undefined, signal);
+  if(data.conversation_id!==conversationId || data.run_id!==entry.run_id || data.entry_id!==entry.entry_id){
+    throw new Error("依据与本轮答案不匹配");
+  }
+  return data;
+}
+
+function groupPausePanel(conversationId, entry, proposal, detail){
+  var target = "#"+proposal.target.plan_id+" "+proposal.target.plan_name;
+  var section = document.createElement("section");
+  section.className = "group-pause";
+  section.dataset.actionId = proposal.action_id;
+  section.dataset.state = proposal.state;
+  groupText(section,"strong","暂停投放（沙箱） · "+target);
+  groupText(section,"p",proposal.reason);
+  var status = groupText(section,"p","");
+  status.setAttribute("role","status");
+  var button = groupText(section,"button","");
+  button.type = "button";
+  button.className = "btn btn-outline btn-sm";
+  var path = "/"+encodeURIComponent(conversationId)+"/runs/"+encodeURIComponent(entry.run_id)+
+    "/pause-actions/"+encodeURIComponent(proposal.action_id);
+  function showApproval(approval){
+    section.dataset.state = "approved";
+    status.textContent = approval.approved_by_name+" 于 "+new Date(approval.created_at).toLocaleString()+
+      " 批准暂停 "+target+" · 回执 "+approval.receipt_id;
+    button.textContent = "读取暂停回执";
+  }
+  if(proposal.approval) showApproval(proposal.approval);
+  else{
+    status.textContent = "待审批";
+    button.textContent = "批准暂停投放（沙箱）";
+  }
+  var result = groupText(section,"p","");
+  result.setAttribute("aria-live","polite");
+  button.addEventListener("click",async function(){
+    if(!isGroupDetailCurrent(detail) || button.disabled) return;
+    var pending = section.dataset.state==="pending";
+    if(pending && !confirm("批准暂停投放（沙箱）？\n目标计划 "+target+"\n预期状态 "+proposal.target.expected_status+" → paused")) return;
+    button.disabled = true;
+    try{
+      if(pending){
+        var approval = await chatGroupRequest(path+"/confirm","POST");
+        if(detail.view===chatViewId && activeChatGroup===conversationId && TOKEN) readChatGroupHistory();
+        if(!isGroupDetailCurrent(detail)) return;
+        showApproval(approval);
+        setWorkbenchActionState(detail,"approved");
+      }
+      var data = await chatGroupRequest(path,"GET",undefined,detail.controller.signal);
+      if(!isGroupDetailCurrent(detail)) return;
+      var receipt = data.receipt;
+      if(receipt.entry_id!==entry.entry_id || receipt.run_id!==entry.run_id ||
+         receipt.conversation_id!==conversationId || receipt.action_id!==proposal.action_id){
+        throw new Error("暂停回执与本轮答案不匹配");
+      }
+      showApproval(receipt);
+      result.textContent = "执行时状态 "+receipt.committed_status+" · 当前实际状态 "+data.actual_status+
+        " · 执行 Trace "+receipt.execution_trace_id;
+    }catch(error){
+      if(isGroupDetailCurrent(detail)) result.textContent = error.message;
+    }finally{ button.disabled = false; }
+  });
+  return section;
+}
+
+async function readChatGroupHistory(){
+  var conversationId = activeChatGroup;
+  if(!conversationId) return;
+  var selection = groupSelection;
+  var read = ++groupHistoryRead;
+  var view = chatViewId;
+  clearTimeout(groupPoll);
+  var retry = false;
+  try{
+    var result = await chatGroupRequest("/"+encodeURIComponent(conversationId)+"/history");
+    if(selection!==groupSelection || read!==groupHistoryRead || view!==chatViewId) return;
+    var group = chatGroups.get(conversationId);
+    group.running = result.runs.find(function(run){return run.status==="running";});
+    var pending = groupPending.get(conversationId);
+    if(pending?.runId && result.runs.some(function(run){
+      return run.run_id===pending.runId && (run.status==="superseded" || run.status==="stopped");
+    })) groupPending.delete(conversationId);
+    if(group.archived !== result.conversation.archived){
+      group.archived = result.conversation.archived;
+      renderChatGroupList();
+    }
+    var entries = Array.from(new Map(result.entries.map(function(entry){return [entry.entry_id,entry];})).values());
+    var ids = entries.map(function(entry){return entry.entry_id;});
+    var states = JSON.stringify([result.runs, entries.map(entry => [entry.entry_id,entry.content,entry.sales_summary,entry.evidence_gap_count]),
+      entries.flatMap(entry => (entry.pause_actions || []).map(pause => [pause.action_id,pause.state])),
+      entries.flatMap(entry => (entry.listing_actions || []).map(listing => [listing.action_id,listing.state]))]);
+    if(states!==visibleRunStates || ids.length!==visibleEntryIds.length || ids.some(function(id,i){return id!==visibleEntryIds[i];})){
+      var messages = byId("chatMessages");
+      var atBottom = messages.scrollHeight-messages.scrollTop-messages.clientHeight < 30;
+      var scrollTop = messages.scrollTop;
+      var focusedDelegation = document.activeElement?.closest(".workbench-delegation-toggle")
+        ?.closest(".workbench-delegation")?.dataset.runId;
+      var progress = new Map();
+      var changes = new Map();
+      for(var entry of entries){
+        if(entry.kind==="worker"){
+          if(!progress.has(entry.run_id)) progress.set(entry.run_id, []);
+          progress.get(entry.run_id).push(entry);
+        }
+        if(entry.kind==="change" && entry.event) changes.set(entry.event.new_run_id, entry.event);
+      }
+      var runs = new Map(result.runs.map(run => [run.run_id,run]));
+      var fragment = document.createDocumentFragment();
+      if(!entries.length){
+        var empty = groupText(fragment, "section", "");
+        empty.className = "workbench-group-empty";
+        groupText(empty, "h3", "交代这个工作群的第一项任务");
+        groupText(empty, "p", "发送消息后，任务和结果会保存在当前工作群。");
+      }
+      var answers = new Set(entries.filter(entry => entry.kind==="assistant").map(entry => entry.run_id));
+      var renderedDelegations = new Set();
+      entries.forEach(function(entry){
+        if(entry.kind==="worker" && runs.has(entry.run_id)) return;
+        var bubble = chatBubble(entry.kind, entry.content);
+        bubble.dataset.entryId = entry.entry_id;
+        if(entry.run_id) bubble.dataset.runId = entry.run_id;
+        if(entry.kind==="change" && entry.event){
+          bubble.dataset.event = entry.event.kind;
+          bubble.dataset.newRunId = entry.event.new_run_id;
+        }
+        var run = runs.get(entry.run_id);
+        var delegation = null;
+        if(run && !renderedDelegations.has(run.run_id) &&
+          (entry.kind==="assistant" || (entry.kind==="user" && !answers.has(run.run_id)))){
+          delegation = buildGroupDelegation(conversationId, entry, run, progress.get(run.run_id) || [], changes.get(run.run_id));
+          renderedDelegations.add(run.run_id);
+        }
+        if(entry.kind==="assistant"){
+          if(delegation) fragment.appendChild(delegation);
+          appendGroupCards(bubble, conversationId, entry, run);
+        }
+        fragment.appendChild(bubble);
+        if(entry.kind!=="assistant" && delegation) fragment.appendChild(delegation);
+      });
+      messages.replaceChildren(fragment);
+      messages.scrollTop = atBottom ? messages.scrollHeight : scrollTop;
+      if(focusedDelegation) messages.querySelector(`.workbench-delegation[data-run-id="${CSS.escape(focusedDelegation)}"] .workbench-delegation-toggle`)
+        ?.focus({preventScroll:true});
+      refreshOpenGroupDetail();
+      visibleEntryIds = ids;
+      visibleRunStates = states;
+    }
+    retry = group.running || groupPending.has(conversationId);
+    updateChatGroupControls();
+  }catch(error){
+    if(selection!==groupSelection || read!==groupHistoryRead || view!==chatViewId || !TOKEN) return;
+    byId("chatGroupStatus").textContent = error.message;
+    retry = groupPending.has(conversationId) || Boolean(chatGroups.get(conversationId)?.running);
+  }
+  if(retry) groupPoll = setTimeout(readChatGroupHistory, 500);
+}
+
+async function stopGroupRun(conversationId,runId,button){
+  if(activeChatGroup!==conversationId || chatGroups.get(conversationId)?.running?.run_id!==runId) return;
+  if(!confirm("停止当前轮？\n轮次 "+runId)) return;
+  var view = chatViewId;
+  var pending = groupPending.get(conversationId);
+  button.disabled = true;
+  try{
+    await chatGroupRequest("/"+encodeURIComponent(conversationId)+"/stop","POST",{run_id:runId});
+    if(view!==chatViewId || !TOKEN) return;
+    if(pending && (!pending.runId || pending.runId===runId) && groupPending.get(conversationId)===pending)
+      groupPending.delete(conversationId);
+    groupErrors.delete(conversationId);
+    if(groupDateEdit?.runId===runId) closeGroupDateChange();
+  }catch(error){
+    if(view===chatViewId && TOKEN) groupErrors.set(conversationId,error.message);
+  }finally{
+    button.disabled = false;
+    if(view===chatViewId && TOKEN && activeChatGroup===conversationId) await readChatGroupHistory();
+  }
+}
+
+function selectChatGroup(conversationId){
+  if(!TOKEN || (conversationId && !chatGroups.has(conversationId))) return;
+  var listWasOpen = byId("chatGroupToggle").getAttribute("aria-expanded")==="true";
+  toggleGroupList(false);
+  if(listWasOpen) byId("chatGroupToggle").focus({preventScroll:true});
+  if(conversationId===activeChatGroup && conversationId) return readChatGroupHistory();
+  closeChatGroupDetails(false);
+  closeGroupDetail(false);
+  setGroupListingMode(false);
+  activeChatGroup = conversationId;
+  closeGroupDateChange();
+  groupSelection++;
+  clearTimeout(groupPoll);
+  visibleEntryIds = [];
+  visibleRunStates = "";
+  byId("chatMessages").replaceChildren();
+  byId("chatInput").value = "";
+  if(conversationId) localStorage.setItem(chatGroupPreference(), conversationId);
+  rememberChatPage();
+  renderChatGroupList();
+  return readChatGroupHistory();
+}
+
+function closeGroupDateChange(){
+  groupDateEdit = null;
+  byId("chatGroupDateEditor").hidden = true;
+}
+
+function openGroupDateChange(){
+  var run = chatGroups.get(activeChatGroup)?.running;
+  if(!run?.can_change_dates) return;
+  groupDateEdit = {conversationId:activeChatGroup, runId:run.run_id};
+  byId("chatGroupDateEditor").hidden = false;
+  byId("chatGroupDateConfirm").hidden = true;
+  byId("chatGroupDatePreview").disabled = false;
+  byId("chatGroupDateFeedback").textContent = "";
+  byId("chatGroupDateRequest").value = "";
+  byId("chatGroupDateRequest").focus();
+}
+
+async function previewGroupDates(){
+  var edit = groupDateEdit;
+  var message = byId("chatGroupDateRequest").value.trim();
+  if(!edit || !message || edit.busy) return;
+  var preview = byId("chatGroupDatePreview");
+  var confirm = byId("chatGroupDateConfirm");
+  var feedback = byId("chatGroupDateFeedback");
+  edit.busy = preview.disabled = true;
+  edit.proposalId = null;
+  confirm.hidden = true;
+  feedback.textContent = "正在理解修改要求…";
+  try{
+    var result = await chatGroupRequest("/"+encodeURIComponent(edit.conversationId)+"/changes",
+      "POST", {run_id:edit.runId, message:message});
+    if(edit!==groupDateEdit) return;
+    if(result.clarification){
+      feedback.textContent = result.clarification;
+      return;
+    }
+    function describe(dates){
+      return "基准窗 "+dates.baseline.start_date+" 至 "+dates.baseline.end_date+
+        "，当前窗 "+dates.current.start_date+" 至 "+dates.current.end_date;
+    }
+    edit.proposalId = result.proposal_id;
+    edit.previewedMessage = message;
+    if(result.kind==="plan_change"){
+      var plans = ids => ids.map(id => "#"+id).join("、");
+      feedback.textContent = "替换前 · "+plans(result.old_plan_ids)+"\n替换后 · "+plans(result.new_plan_ids);
+    }else{
+      feedback.textContent = "改期前 · "+describe(result.old_dates)+"\n改期后 · "+describe(result.new_dates);
+    }
+    confirm.hidden = false;
+    confirm.disabled = false;
+  }catch(error){
+    if(edit===groupDateEdit) feedback.textContent = error.message;
+  }finally{
+    if(edit===groupDateEdit) edit.busy = preview.disabled = false;
+  }
+}
+
+async function confirmGroupDates(){
+  var edit = groupDateEdit;
+  if(!edit?.proposalId || edit.busy) return;
+  var view = chatViewId;
+  var feedback = byId("chatGroupDateFeedback");
+  if(edit.previewedMessage!==byId("chatGroupDateRequest").value.trim()){
+    feedback.textContent = "要求已更改，请重新预览";
+    return;
+  }
+  edit.busy = byId("chatGroupDateConfirm").disabled = true;
+  var runId;
+  try{
+    await readChatStream({conversation_id:edit.conversationId,
+      change:{run_id:edit.runId, proposal_id:edit.proposalId}}, TOKEN, function(event){
+      if(event.conversation_id!==edit.conversationId || event.run_id===edit.runId ||
+         (runId && event.run_id!==runId)) throw new Error("替换轮次标识异常");
+      runId = event.run_id;
+      if(edit!==groupDateEdit) return;
+      closeGroupDateChange();
+      readChatGroupHistory();
+    }, groupSession.signal);
+  }catch(error){
+    if(edit===groupDateEdit) feedback.textContent = error.message;
+    else if(runId && view===chatViewId && edit.conversationId===activeChatGroup && TOKEN)
+      groupErrors.set(edit.conversationId, error.message);
+  }finally{
+    if(edit===groupDateEdit) edit.busy = byId("chatGroupDateConfirm").disabled = false;
+    if(view===chatViewId && edit.conversationId===activeChatGroup && TOKEN) await readChatGroupHistory();
+  }
+}
+
+function showChatGroupWorkspace(){
+  chatMode = "groups";
+  byId("chatGroupHeading").hidden = false;
+  byId("chatGroupControls").hidden = false;
+  byId("chatClear").hidden = true;
+}
+
+function openChatGroupDetails(){
+  var group = chatGroups.get(activeChatGroup);
+  var dialog = byId("chatGroupDetailsDialog");
+  if(!TOKEN || !group || dialog.open) return;
+  byId("chatGroupDetailsName").textContent = group.title;
+  byId("chatGroupDetailsId").textContent = group.conversation_id;
+  byId("chatGroupDetailsFeedback").hidden = true;
+  dialog.showModal();
+}
+
+function closeChatGroupDetails(restoreFocus = true){
+  var dialog = byId("chatGroupDetailsDialog");
+  if(dialog.open) dialog.close();
+  byId("chatGroupDetailsName").textContent = "";
+  byId("chatGroupDetailsId").textContent = "";
+  byId("chatGroupDetailsFeedback").textContent = "";
+  if(restoreFocus && TOKEN && activeChatGroup) byId("chatGroupDetailsButton").focus({preventScroll:true});
+}
+
+byId("chatGroupDetailsDialog").addEventListener("cancel", function(event){
+  event.preventDefault();
+  closeChatGroupDetails();
+});
+
+async function copyChatGroupId(){
+  var group = chatGroups.get(activeChatGroup);
+  var dialog = byId("chatGroupDetailsDialog");
+  var id = byId("chatGroupDetailsId");
+  var feedback = byId("chatGroupDetailsFeedback");
+  if(!TOKEN || !dialog.open || !group || group.conversation_id!==id.textContent) return;
+  var view = chatViewId;
+  var selection = groupSelection;
+  try{
+    await navigator.clipboard.writeText(group.conversation_id);
+    if(view!==chatViewId || selection!==groupSelection || !dialog.open || !TOKEN) return;
+    feedback.textContent = "工作群 ID 已复制";
+  }catch{
+    if(view!==chatViewId || selection!==groupSelection || !dialog.open || !TOKEN) return;
+    var range = document.createRange();
+    range.selectNodeContents(id);
+    window.getSelection()?.removeAllRanges();
+    window.getSelection()?.addRange(range);
+    feedback.textContent = "已选中工作群 ID，请手动复制";
+  }
+  feedback.hidden = false;
+}
+
+function showChatGroupCreateError(message, invalidName = false){
+  var input = byId("chatGroupCreateName");
+  var feedback = byId("chatGroupCreateFeedback");
+  input.setAttribute("aria-invalid", String(invalidName));
+  feedback.textContent = message;
+  feedback.hidden = !message;
+}
+
+function setChatGroupCreateBusy(busy){
+  byId("chatGroupCreateForm").setAttribute("aria-busy", String(busy));
+  byId("chatGroupCreateName").readOnly = busy;
+  byId("chatGroupCreateClose").disabled = busy;
+  byId("chatGroupCreateCancel").disabled = busy;
+  var submit = byId("chatGroupCreateSubmit");
+  submit.disabled = busy;
+  submit.textContent = busy ? "正在创建…" : "创建工作群";
+}
+
+function openChatGroupCreate(){
+  var dialog = byId("chatGroupCreateDialog");
+  if(!TOKEN || dialog.open || groupCreateRequest) return;
+  var input = byId("chatGroupCreateName");
+  input.value = "新工作群";
+  showChatGroupCreateError("");
+  dialog.showModal();
+  input.select();
+}
+
+function closeChatGroupCreate(restoreFocus = true){
+  if(groupCreateRequest && restoreFocus) return;
+  var dialog = byId("chatGroupCreateDialog");
+  groupCreateRequest = null;
+  setChatGroupCreateBusy(false);
+  if(!dialog.open) return;
+  dialog.close();
+  if(restoreFocus) byId("chatGroupNew").focus({preventScroll:true});
+}
+
+byId("chatGroupCreateDialog").addEventListener("cancel", function(event){
+  event.preventDefault();
+  closeChatGroupCreate();
+});
+byId("chatGroupCreateName").addEventListener("input", function(){ showChatGroupCreateError(""); });
+byId("chatGroupCreateForm").addEventListener("submit", async function(event){
+  event.preventDefault();
+  if(!TOKEN || groupCreateRequest || !byId("chatGroupCreateDialog").open) return;
+  var input = byId("chatGroupCreateName");
+  var title = input.value.trim();
+  if(!title || Array.from(title).length>80){
+    showChatGroupCreateError("工作群名称须为 1–80 字", true);
+    input.focus();
+    return;
+  }
+  var view = chatViewId;
+  var signal = groupSession.signal;
+  var request = {};
+  groupCreateRequest = request;
+  showChatGroupCreateError("");
+  setChatGroupCreateBusy(true);
+  try{
+    var group = await chatGroupRequest("", "POST", {title:title}, signal);
+    if(groupCreateRequest!==request || view!==chatViewId || !TOKEN) return;
+    if(typeof group?.conversation_id!=="string" || !group.conversation_id){
+      throw new Error("创建回执异常，请检查工作群列表后重试");
+    }
+    groupListRevision++;
+    chatGroups.set(group.conversation_id, group);
+    showChatGroupWorkspace();
+    closeChatGroupCreate(false);
+    await selectChatGroup(group.conversation_id);
+    if(view===chatViewId && activeChatGroup===group.conversation_id && TOKEN) byId("chatInput").focus();
+  }catch(error){
+    if(groupCreateRequest===request && view===chatViewId && TOKEN){
+      showChatGroupCreateError(error.status ? error.message : "创建工作群失败，请检查网络后重试");
+      input.focus();
+    }
+  }finally{
+    if(groupCreateRequest===request){
+      groupCreateRequest = null;
+      setChatGroupCreateBusy(false);
+    }
+  }
+});
+
+async function changeChatGroupArchive(){
+  var group = chatGroups.get(activeChatGroup);
+  if(!group) return;
+  var view = chatViewId;
+  try{
+    var result = await chatGroupRequest("/"+encodeURIComponent(group.conversation_id)+"/archive", "PATCH", {archived:!group.archived});
+    if(view!==chatViewId || !TOKEN) return;
+    if(activeChatGroup===group.conversation_id) closeGroupDetail();
+    group.archived = result.archived;
+    renderChatGroupList();
+  }catch(error){
+    if(view===chatViewId && TOKEN) byId("chatGroupStatus").textContent = error.message;
+  }
+}
+
+async function loadChatHistory(){
+  if(!TOKEN || chatHistoryLoading) return;
+  if(chatMode==="legacy") return loadLegacyChatHistory();
+  var view = chatViewId;
+  var revision = groupListRevision;
+  chatHistoryLoading = true;
+  try{
+    var groups = await chatGroupRequest("", "GET", null, groupSession.signal);
+    if(view!==chatViewId || !TOKEN) return;
+    showChatGroupWorkspace();
+    var listedGroups = new Map(groups.map(function(group){return [group.conversation_id,group];}));
+    if(revision!==groupListRevision){
+      for(var [id, group] of chatGroups) listedGroups.set(id, group);
+    }
+    chatGroups = listedGroups;
+    var preferred = activeChatGroup || localStorage.getItem(chatGroupPreference());
+    if(!chatGroups.has(preferred)){
+      preferred = groups.find(function(group){return !group.archived;})?.conversation_id || "";
+    }
+    await selectChatGroup(preferred);
+  }catch(error){
+    if(view!==chatViewId || !TOKEN || revision!==groupListRevision) return;
+    if(error.status===404){
+      chatMode = "legacy";
+      byId("chatClear").hidden = !byId("diagnosisView").hidden;
+      byId("chatInput").disabled = byId("chatSend").disabled = false;
+    }else{
+      byId("chatGroupControls").style.display = "";
+      byId("chatGroupControls").hidden = false;
+      byId("chatGroupStatus").textContent = error.message;
+    }
+  }finally{
+    if(view===chatViewId) chatHistoryLoading = false;
+  }
+  if(chatMode==="legacy" && view===chatViewId) return loadLegacyChatHistory();
+}
+
+async function loadLegacyChatHistory(){
+  if(!TOKEN || chatHistoryLoading || chatHistoryLoaded) return;
+  var viewId = chatViewId;
+  var token = TOKEN;
+  chatHistoryLoading = true;
+  try{
+    var resp = await fetch("/api/chat/history?exclude_chat_view_id="+encodeURIComponent(viewId), {
+      headers:{"Authorization":"Bearer "+token}
+    });
+    if(!resp.ok) return;
+    var r = await resp.json();
+    if(r.code!==200 || viewId!==chatViewId || token!==TOKEN) return;
+    var messages = byId("chatMessages");
+    var history = document.createDocumentFragment();
+    r.data.forEach(function(m){history.appendChild(chatBubble(m.role,m.content));});
+    messages.prepend(history);
+    messages.scrollTop = messages.scrollHeight;
+    chatHistoryLoaded = true;
+  }catch(e){
+    // 下次进入聊天时重试。
+  }finally{
+    if(viewId===chatViewId) chatHistoryLoading = false;
+  }
+}
 function formatAI(text){
   var lines = text.split(String.fromCharCode(10));
   var result = []; var inTable = false; var tableRows = [];
@@ -541,62 +2616,77 @@ function formatAI(text){
     return h+'</table>';
   }
 }
-function sendChat(){
+async function sendChat(){
+  if(chatMode==="groups") return sendGroupChat();
+  if(chatMode!=="legacy") return;
   var inp = byId("chatInput"); var msg = inp.value.trim(); if(!msg) return; inp.value="";
-  byId("chatMessages").innerHTML += "<div class=\"msg user\">"+esc(msg)+"</div>";
-  byId("chatMessages").scrollTop = byId("chatMessages").scrollHeight;
-  var aiDiv = document.createElement("div"); aiDiv.className = "msg assistant"; aiDiv.id = "streamingMsg";
-  byId("chatMessages").appendChild(aiDiv);
-  byId("chatThinking").style.display = "flex"; byId("chatThinking").innerHTML = "🤔 思考中...";
-  fetch("/api/chat/stream", {
-    method:"POST", headers:{"Content-Type":"application/json","Authorization":"Bearer "+TOKEN},
-    body:JSON.stringify({message:msg})
-  }).then(function(resp){
-    var reader = resp.body.getReader(); var decoder = new TextDecoder(); var buffer = "";
-    function readStream(){
-      reader.read().then(function(pkt){
-        if(pkt.done){ byId("chatThinking").style.display="none"; return; }
-        buffer += decoder.decode(pkt.value, {stream:true});
-        var lines = buffer.split("\n"); buffer = lines.pop() || "";
-        for(var i=0;i<lines.length;i++){
-          var line = lines[i];
-          if(line.indexOf("data: ")===0){
-            try{
-              var data = JSON.parse(line.slice(6));
-              if(data.type==="text"){
-                var el = byId("streamingMsg");
-                if(el) el.innerHTML += renderMarkdown(data.content);
-                byId("chatMessages").scrollTop = byId("chatMessages").scrollHeight;
-              }else if(data.type==="thinking"){
-                var el = byId("chatThinking");
-                if(el) {
-                  el.style.display = "flex";
-                  el.innerHTML = data.content;
-                }
-              }else if(data.type==="done"){
-                byId("chatThinking").style.display = "none";
-                var el = byId("streamingMsg");
-                if(el) el.removeAttribute("id");
-              }else if(data.type==="error"){
-                byId("chatThinking").style.display = "none";
-                if(byId("streamingMsg")) byId("streamingMsg").innerHTML += "<br><span style=\"color:var(--danger)\">"+esc(data.content)+"</span>";
-              }
-            }catch(e){}
-          }
-        }
-        readStream();
-      });
+  var messages = byId("chatMessages");
+  messages.insertAdjacentHTML("beforeend", "<div class=\"msg user\">"+esc(msg)+"</div>");
+  var aiDiv = document.createElement("div"); aiDiv.className = "msg assistant";
+  messages.appendChild(aiDiv);
+  messages.scrollTop = messages.scrollHeight;
+  var thinking = byId("chatThinking");
+  pendingChatReplies.add(aiDiv);
+  thinking.style.display = "flex"; thinking.textContent = "🤔 思考中...";
+  var reply = "";
+  try{
+    await readChatStream({message:msg, chat_view_id:chatViewId}, TOKEN, function(data){
+      if(!pendingChatReplies.has(aiDiv)) return;
+      if(data.type==="text"){
+        reply += data.content;
+        aiDiv.innerHTML = renderMarkdown(reply);
+        messages.scrollTop = messages.scrollHeight;
+      }else if(data.type==="thinking"){
+        thinking.textContent = data.content;
+      }else if(data.type==="done"){
+        aiDiv.dataset.replyStatus = "回复已保存";
+      }
+    });
+  }catch(e){
+    aiDiv.insertAdjacentHTML("beforeend", "<br><span style=\"color:var(--danger)\">"+esc(e.message || "网络错误")+"</span>");
+  }finally{
+    if(pendingChatReplies.delete(aiDiv) && pendingChatReplies.size===0){
+      thinking.style.display = "none";
     }
-    readStream();
-  }).catch(function(){
-    byId("chatThinking").style.display="none";
-    byId("chatMessages").innerHTML += "<div class=\"msg assistant\" style=\"color:var(--danger)\">\u7f51\u7edc\u9519\u8bef</div>";
-  });
+  }
+}
+
+async function sendGroupChat(){
+  var conversationId = activeChatGroup;
+  var input = byId("chatInput");
+  var message = input.value.trim();
+  if(!message || input.disabled || !conversationId) return;
+  var view = chatViewId;
+  var pending = {};
+  var body = {message, conversation_id:conversationId};
+  if(byId("chatGroupListing").getAttribute("aria-pressed")==="true") body.listing_operations = true;
+  input.value = "";
+  groupPending.set(conversationId, pending);
+  groupErrors.delete(conversationId);
+  updateChatGroupControls();
+  try{
+    var streaming = readChatStream(body, TOKEN, function(data){
+      if(data.conversation_id!==conversationId || (pending.runId && pending.runId!==data.run_id))
+        throw new Error("工作群标识异常");
+      pending.runId = data.run_id;
+      if(data.type==="thinking" && view===chatViewId && activeChatGroup===conversationId) readChatGroupHistory();
+    }, groupSession.signal);
+    readChatGroupHistory();
+    await streaming;
+  }catch(error){
+    if(view===chatViewId && TOKEN && groupPending.get(conversationId)===pending)
+      groupErrors.set(conversationId, error.message);
+  }finally{
+    if(view===chatViewId && TOKEN){
+      if(groupPending.get(conversationId)===pending) groupPending.delete(conversationId);
+      if(activeChatGroup===conversationId) await readChatGroupHistory();
+    }
+  }
 }
 function sendSug(text){ byId("chatInput").value = text; sendChat(); }
 
 function loadLogs(){
-  api("GET","/api/logs").then(function(r){
+  return sessionRequest("GET","/api/logs",null,function(r){
     if(r.code!==200) return;
     var data = r.data;
     if(!data.length){byId("logsWrap").innerHTML="<div class=\"empty-state\"><div class=\"icon\">\ud83d\udcdd</div><p>\u6682\u65e0\u64cd\u4f5c\u65e5\u5fd7</p></div>";return;}
@@ -608,13 +2698,15 @@ function loadLogs(){
 }
 
 function loadDecisions(){
-  api("GET","/api/decisions").then(function(r){
+  return sessionRequest("GET","/api/decisions",null,function(r){
     if(r.code!==200) return;
-    var data = r.data.verified || [];
+    var data = r.data;
     if(!data.length){byId("decisionsWrap").innerHTML="<div class=\"empty-state\"><div class=\"icon\">\ud83e\udde0</div><p>\u6682\u65e0\u51b3\u7b56\u8bb0\u5f55</p></div>";return;}
     var html="<table><thead><tr><th>\u5206\u7c7b</th><th>\u5efa\u8bae</th><th>\u72b6\u6001</th><th>\u7ed3\u679c</th><th>\u65f6\u95f4</th></tr></thead><tbody>";
+    var statusLabels = new Map([["pending","待执行"],["executed","已执行"],["verified","已验证"]]);
     data.forEach(function(d){
-      html+="<tr><td>"+esc(d.category)+"</td><td>"+esc(d.suggestion)+"</td><td><span class=\"status-badge active\">\u5df2\u9a8c\u8bc1</span></td><td>"+esc(d.outcome||"-")+"</td><td style=\"font-size:12px;color:var(--text-light)\">"+(d.verified_at||d.created_at)+"</td></tr>";
+      var status = statusLabels.get(d.status) || d.status || "-";
+      html+="<tr><td>"+esc(d.category)+"</td><td>"+esc(d.suggestion)+"</td><td>"+esc(status)+"</td><td>"+esc(d.outcome||"-")+"</td><td style=\"font-size:12px;color:var(--text-light)\">"+esc(d.verified_at||d.created_at)+"</td></tr>";
     });
     html+="</tbody></table>";
     byId("decisionsWrap").innerHTML=html;
@@ -622,7 +2714,7 @@ function loadDecisions(){
 }
 
 function loadTimeline(){
-  api("GET","/api/timeline").then(function(r){
+  return sessionRequest("GET","/api/timeline",null,function(r){
     if(r.code!==200) return;
     var data = r.data;
     if(!data.plans||!data.plans.length){byId("timelineWrap").innerHTML="<div class=\"empty-state\"><div class=\"icon\">\ud83d\udcc5</div><p>\u6682\u65e0\u6d3b\u52a8\u6570\u636e</p></div>";return;}
@@ -641,7 +2733,7 @@ document.querySelectorAll(".modal-overlay").forEach(function(m){ m.addEventListe
 
 function esc(s){ if(!s) return ""; return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 
-function initApp(){ loadDashboard(); startAutoRefresh(); }
+function initApp(page="chat"){ showPage(page,document.querySelector('[data-page="'+page+'"]')); startAutoRefresh(); }
 var refreshTimers={};
 function startAutoRefresh(){
   refreshTimers.dashboard=setInterval(loadDashboard,30000);
@@ -652,71 +2744,127 @@ byId("loginPass").addEventListener("keydown",function(e){if(e.key==="Enter")doLo
 byId("loginCaptcha").addEventListener("keydown",function(e){if(e.key==="Enter")doLogin();});
 
 // ====== Markdown 渲染器（支持表格、加粗、列表） ======
-function renderMarkdown(text) {
-    // 1. 先处理 <b> </b>（AI有时返回HTML标签）
-    text = text.replace(/<b\s*\/?>/gi, '<strong>');
-    text = text.replace(/<\/b\s*>/gi, '</strong>');
-    text = text.replace(/<i\s*\/?>/gi, '<em>');
-    text = text.replace(/<\/i\s*>/gi, '</em>');
-    
-    // 2. 处理表格（加交互样式）
-    text = text.replace(/((?:\|.*?\|[\n]*)+)/g, function(match) {
-        var rows = match.trim().split('\n').filter(function(r){return r.trim()!=='';});
-        if (rows.length < 2) return match;
-        var headerDone = false;
-        var hasContent = false;
-        var html = '<div class="md-table-wrap"><table class="md-table"><thead>';
-        rows.forEach(function(row) {
-            if (row.match(/^\|[\s:-]+\|/)) return;
-            var cells = row.split('|').filter(function(c){return c.trim()!=='';});
-            if (cells.length < 2) return;
-            hasContent = true;
-            if (!headerDone) {
-                html += '<tr>';
-                cells.forEach(function(c){ html += '<th>'+c.trim()+'</th>'; });
-                html += '</tr></thead><tbody>';
-                headerDone = true;
-            } else {
-                var rowClass = '';
-                var rowText = cells.map(function(c){return c.trim();}).join(' ');
-                if (rowText.indexOf('\u2705') >= 0) rowClass = ' row-best';
-                else if (rowText.indexOf('\u274c') >= 0 || rowText.indexOf('\u2716') >= 0) rowClass = ' row-worst';
-                html += '<tr class="' + rowClass + '">';
-                cells.forEach(function(c){
-                    var val = c.trim();
-                    // 给数值加样式
-                    if (val.match(/^\d+\.?\d*$/) && parseFloat(val) > 3) val = '<span class="val-good">' + val + '</span>';
-                    else if (val.match(/^\d+\.?\d*$/) && parseFloat(val) < 1.5) val = '<span class="val-bad">' + val + '</span>';
-                    html += '<td>' + val + '</td>';
-                });
-                html += '</tr>';
-            }
-        });
-        html += '</tbody></table></div>';
-        return hasContent ? html : match;
+async function readProductOriginal(button){
+  var target = button.parentElement.querySelector("[data-product-original]");
+  if(!target.hidden){
+    target.hidden = true;
+    target.textContent = "";
+    return;
+  }
+  button.disabled = true;
+  try{
+    await sessionRequest("GET", "/api/product-evidence/chunks/"+button.dataset.productChunk, null, function(result){
+      if(!target.isConnected) return;
+      target.textContent = result.original === undefined ? planAccountError(result, "原文暂不可用") :
+        result.filename+" · "+result.version+" · "+result.locations.map(location => location.location).join("、")+
+        "\n\n"+result.content;
+      target.hidden = false;
     });
-    
-    // 3. **加粗**
-    text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    
-    // 4. *斜体*
-    text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
-    
-    // 5. 行内代码
-    text = text.replace(/`([^`]+)`/g, '<code class="md-code">$1</code>');
-    
-    // 6. ✅ ❌ 图标保留
-    // 7. 换行
-    text = text.replace(/\n/g, '<br>');
-    
-    return text;
+  }finally{
+    button.disabled = false;
+  }
 }
 
-// 重写 formatAI 使用 markdown 渲染
-var _origFormatAI = formatAI;
-formatAI = function(text) {
-    return renderMarkdown(text);
-};</script>
+function renderMarkdown(text) {
+  function inline(line){
+    var original = line.match(/^原文回查（需登录） \/api\/product-evidence\/chunks\/([a-f0-9]{64})$/);
+    if(original) return '<button type="button" class="btn btn-outline btn-sm" data-product-chunk="'+original[1]+
+      '" onclick="readProductOriginal(this)">回查原文</button><span data-product-original hidden style="white-space:pre-wrap"></span>';
+    return esc(line).split(/(`[^`]+`)/).map(function(part, index){
+      if(index % 2) return '<code class="md-code">' + part.slice(1,-1) + '</code>';
+      return part.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/\*(.+?)\*/g,"<em>$1</em>");
+    }).join("");
+  }
+  function tableCells(line){
+    return line.trim().replace(/^\||\|$/g,"").split("|").map(cell => cell.trim());
+  }
+  var heading = /^\s{0,3}(#{1,6})\s+(.*)$/;
+  var fence = /^\s{0,3}```/;
+  var rule = /^\s{0,3}(?:-{3,}|\*{3,}|_{3,})\s*$/;
+  var listItem = /^\s*(?:([-+*])|(\d+)[.)])\s+(.+)$/;
+  var isTableRow = line => /^\s*\|.*\|\s*$/.test(line || "");
+  var lines = String(text || "").split(/\r?\n/);
+  var blocks = [];
+  for(var i=0; i<lines.length;){
+    var line = lines[i++];
+    if(!line.trim()) continue;
+    if(fence.test(line)){
+      var code = [];
+      while(i<lines.length && !fence.test(lines[i])) code.push(lines[i++]);
+      if(i<lines.length) i++;
+      blocks.push("<pre><code>"+esc(code.join("\n"))+"</code></pre>");
+      continue;
+    }
+    var title = line.match(heading);
+    if(title){
+      var tag = "h"+Math.min(6,title[1].length+1);
+      blocks.push("<"+tag+">"+inline(title[2])+"</"+tag+">");
+      continue;
+    }
+    if(rule.test(line)){
+      blocks.push("<hr>");
+      continue;
+    }
+    var item = line.match(listItem);
+    if(item){
+      var list = item[2] ? "ol" : "ul";
+      var items = [];
+      do {
+        items.push("<li>"+inline(item[3])+"</li>");
+        item = lines[i]?.match(listItem);
+        if(!item || Boolean(item[2]) !== (list==="ol")) break;
+        i++;
+      } while(item);
+      blocks.push("<"+list+">"+items.join("")+"</"+list+">");
+      continue;
+    }
+    if(isTableRow(line) && isTableRow(lines[i]) &&
+        tableCells(lines[i]).every(cell => /^:?-{2,}:?$/.test(cell))){
+      i++;
+      var tableHeader = tableCells(line).map(cell => "<th scope='col'>"+inline(cell)+"</th>").join("");
+      var rows = [];
+      while(isTableRow(lines[i])){
+        var cells = tableCells(lines[i++]);
+        var rowClass = cells.some(cell => cell.includes("✅")) ? "row-best" :
+          cells.some(cell => /[❌✖]/.test(cell)) ? "row-worst" : "";
+        var columns = cells.map(function(cell){
+          var value = inline(cell);
+          if(/^\d+\.?\d*$/.test(cell)){
+            if(Number(cell)>3) value = '<span class="val-good">'+value+'</span>';
+            else if(Number(cell)<1.5) value = '<span class="val-bad">'+value+'</span>';
+          }
+          return "<td>"+value+"</td>";
+        }).join("");
+        rows.push('<tr class="'+rowClass+'">'+columns+"</tr>");
+      }
+      blocks.push('<div class="md-table-wrap"><table class="md-table"><thead><tr>'+tableHeader+
+        "</tr></thead><tbody>"+rows.join("")+"</tbody></table></div>");
+      continue;
+    }
+    var paragraph = [inline(line)];
+    while(i<lines.length && lines[i].trim() && !heading.test(lines[i]) &&
+          !fence.test(lines[i]) && !rule.test(lines[i]) && !listItem.test(lines[i]) && !isTableRow(lines[i])){
+      paragraph.push(inline(lines[i++]));
+    }
+    blocks.push("<p>"+paragraph.join("<br>")+"</p>");
+  }
+  return blocks.join("");
+}
+
+var savedLogin;
+try { savedLogin = JSON.parse(sessionStorage.getItem("ad.login")); } catch(e) {}
+var returnParams = new URLSearchParams(location.search);
+var returningFromOrders = returnParams.get("from")==="orders";
+if(savedLogin?.token && savedLogin.user && (returningFromOrders || sessionStorage.getItem("ad.chatPage")==="groups")){
+  var returnPage = returnParams.get("page");
+  var availablePages = Array.from(document.querySelectorAll("#sidebarNav a[data-page]"), a => a.dataset.page);
+  if(savedLogin.user.role!=="admin" && savedLogin.user.role!=="boss")
+    availablePages = availablePages.filter(page => page!=="users");
+  openSession(savedLogin, returningFromOrders && availablePages.includes(returnPage) ? returnPage : "chat");
+}else{
+  sessionStorage.removeItem("ad.login");
+}
+</script>
 </body>
 </html>
 

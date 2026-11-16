@@ -1,6 +1,25 @@
 """工具函数模块：所有AI可以调用的函数都写在这里"""
+from contextlib import closing
+
 import pandas as pd
+from backend.database import mysql_diagnosis
 from backend.database.database import get_db
+from backend.database.mysql_diagnosis import is_mysql, plan_key
+from backend.tools.daily_reports import query_daily_reports
+from backend.tools.plan_metrics import query_plan_metrics
+
+
+def _home_read_db():
+    if mysql_diagnosis.chat_enabled():
+        return mysql_diagnosis.connect(read_only=True)
+    return get_db()
+
+
+def owns_plan(plan_id, user_id):
+    with closing(_home_read_db()) as conn:
+        lookup = plan_key(plan_id) if is_mysql(conn) else plan_id
+        return conn.execute("SELECT 1 FROM ad_plans WHERE id=? AND user_id=?", (lookup, user_id)).fetchone() is not None
+
 
 def get_real_trends(keyword="AI 广告", user_id=None):
     """查中文搜索趋势（先尝试百度API，失败则按关键词热度估算）"""
@@ -84,12 +103,16 @@ def search_web(query, user_id=None):
         return {"success": False, "error": str(e)}
 def get_dashboard_data(user_id=None):
     """获取仪表盘核心指标：总花费、销售额、ROAS等"""
-    conn = get_db()
-    c = conn.cursor()
-    w = "" if user_id is None else " WHERE user_id=" + str(user_id)
-    row = c.execute("SELECT COALESCE(SUM(cost),0), COALESCE(SUM(sales),0), COALESCE(SUM(impressions),0), COALESCE(SUM(clicks),0) FROM ad_plans" + w).fetchone()
-    conn.close()
-    cost, sales, imp, clicks = float(row[0]), float(row[1]), int(row[2]), int(row[3])
+    where = "" if user_id is None else " WHERE user_id=?"
+    params = () if user_id is None else (user_id,)
+    with closing(_home_read_db()) as conn:
+        row = conn.execute(
+            "SELECT COALESCE(SUM(cost),0) AS cost, COALESCE(SUM(sales),0) AS sales, "
+            "COALESCE(SUM(impressions),0) AS impressions, COALESCE(SUM(clicks),0) AS clicks "
+            "FROM ad_plans" + where, params,
+        ).fetchone()
+    cost, sales = float(row["cost"]), float(row["sales"])
+    imp, clicks = int(row["impressions"]), int(row["clicks"])
     # 估算总订单和CPA（基于平均客单价50元估算）
     avg_order_value = 50
     estimated_orders = int(sales / avg_order_value) if sales > 0 else 0
@@ -126,58 +149,80 @@ def get_dashboard_data(user_id=None):
 
 def get_daily_trend(days=7, user_id=None):
     """获取每日趋势数据（用于图表展示）"""
-    conn = get_db()
-    c = conn.cursor()
-    w = "" if user_id is None else " AND user_id=" + str(user_id)
-    rows = c.execute(
-        "SELECT report_date, SUM(cost) AS cost, SUM(impressions) AS impressions, SUM(clicks) AS clicks, SUM(sales) AS sales FROM daily_reports "
-        "WHERE 1=1" + w + " GROUP BY report_date ORDER BY report_date DESC LIMIT ?", (days,)
-    ).fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+    where = "WHERE user_id=?" if user_id is not None else ""
+    params = (user_id, days) if user_id is not None else (days,)
+    with closing(_home_read_db()) as conn:
+        rows = conn.execute(
+            "SELECT report_date, SUM(cost) AS cost, SUM(impressions) AS impressions, "
+            "SUM(clicks) AS clicks, SUM(sales) AS sales FROM daily_reports "
+            f"{where} GROUP BY report_date ORDER BY report_date DESC LIMIT ?",
+            params,
+        ).fetchall()
+        mysql = is_mysql(conn)
+    reports = [dict(row) for row in rows]
+    if mysql:
+        for report in reports:
+            for key in ("impressions", "clicks"):
+                if report[key] is not None:
+                    report[key] = int(report[key])
+    return reports
 
 
 def get_plans_summary(user_id=None):
-    """获取所有广告计划列表"""
-    conn = get_db()
-    c = conn.cursor()
-    w = "" if user_id is None else " WHERE user_id=" + str(user_id)
-    rows = c.execute("SELECT * FROM ad_plans" + w + " ORDER BY id").fetchall()
-    conn.close()
+    """获取广告计划列表，可按属主过滤。"""
+    with closing(_home_read_db()) as conn:
+        if user_id is None:
+            rows = conn.execute("SELECT * FROM ad_plans ORDER BY id").fetchall()
+        else:
+            rows = conn.execute("SELECT * FROM ad_plans WHERE user_id=? ORDER BY id", (user_id,)).fetchall()
     return [dict(r) for r in rows]
 
 
 def get_alerts(unread_only=False, user_id=None):
     """获取告警列表"""
-    conn = get_db()
-    c = conn.cursor()
-    uw = "1=1" if user_id is None else "user_id=" + str(user_id)
-    ur = " AND is_read=0" if unread_only else ""
-    rows = c.execute(
-        "SELECT * FROM alerts WHERE " + uw + ur + " ORDER BY id DESC LIMIT 20"
-    ).fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+    owner = "1=1" if user_id is None else "user_id=?"
+    params = () if user_id is None else (user_id,)
+    unread = " AND is_read=0" if unread_only else ""
+    with closing(_home_read_db()) as conn:
+        mysql = is_mysql(conn)
+        fields = "*" if mysql else """id, type, message, level, is_read, user_id, created_at,
+            (SELECT p.id FROM ad_plans p WHERE p.id=alerts.plan_id AND p.user_id=alerts.user_id) AS plan_id"""
+        rows = conn.execute(
+            "SELECT " + fields + " FROM alerts WHERE " + owner + unread + " ORDER BY id DESC LIMIT 20", params,
+        ).fetchall()
+    alerts = [dict(row) for row in rows]
+    if mysql:
+        for alert in alerts:
+            if alert["created_at"] is not None:
+                alert["created_at"] = alert["created_at"].isoformat(sep=" ", timespec="seconds")
+    return alerts
 
 
 def get_plan_detail(plan_id, user_id=None):
     """获取单个广告计划的详细信息"""
-    conn = get_db()
-    c = conn.cursor()
-    if user_id:
-        row = c.execute(
-            "SELECT p.*, a.account_name FROM ad_plans p LEFT JOIN ad_accounts a "
-            "ON p.account_id=a.id WHERE p.id=? AND p.user_id=?", (plan_id, user_id)
-        ).fetchone()
-    else:
-        row = c.execute(
-            "SELECT p.*, a.account_name FROM ad_plans p LEFT JOIN ad_accounts a "
-            "ON p.account_id=a.id WHERE p.id=?", (plan_id,)
-        ).fetchone()
-    conn.close()
+    return query_plan_detail(plan_id, user_id, _home_read_db)
+
+
+def query_plan_detail(plan_id, user_id, connect):
+    with closing(connect()) as conn:
+        mysql = is_mysql(conn)
+        if mysql:
+            plan_id = plan_key(plan_id)
+        if user_id:
+            row = conn.execute(
+                "SELECT p.*, a.account_name FROM ad_plans p LEFT JOIN ad_accounts a "
+                "ON p.account_id=a.id AND a.user_id=p.user_id WHERE p.id=? AND p.user_id=?", (plan_id, user_id)
+            ).fetchone()
+        else:
+            row = conn.execute(
+                "SELECT p.*, a.account_name FROM ad_plans p LEFT JOIN ad_accounts a "
+                "ON p.account_id=a.id WHERE p.id=?", (plan_id,)
+            ).fetchone()
     if not row:
         return {"success": False, "message": "未找到"}
     d = dict(row)
+    if mysql and d["created_at"] is not None:
+        d["created_at"] = d["created_at"].isoformat(sep=" ", timespec="seconds")
     # 计算衍生指标
     d["ctr"] = round(d["clicks"] / d["impressions"] * 100, 2) if d["impressions"] > 0 else 0
     d["cpc"] = round(d["cost"] / d["clicks"], 2) if d["clicks"] > 0 else 0
@@ -187,23 +232,18 @@ def get_plan_detail(plan_id, user_id=None):
 
 def get_account_detail(account_id, user_id=None):
     """获取账户详情（包含关联的广告计划）"""
-    conn = get_db()
-    c = conn.cursor()
-    if user_id:
-        acc = c.execute("SELECT * FROM ad_accounts WHERE id=? AND user_id=?", (account_id, user_id)).fetchone()
-    else:
-        acc = c.execute("SELECT * FROM ad_accounts WHERE id=?", (account_id,)).fetchone()
-    if not acc:
-        conn.close()
-        return {"success": False, "message": "未找到"}
-    acc = dict(acc)
-    acc["plans"] = [
-        dict(p) for p in c.execute(
+    where = " AND user_id=?" if user_id else ""
+    params = (account_id, user_id) if user_id else (account_id,)
+    with closing(_home_read_db()) as conn:
+        acc = conn.execute("SELECT * FROM ad_accounts WHERE id=?" + where, params).fetchone()
+        if not acc:
+            return {"success": False, "message": "未找到"}
+        acc = dict(acc)
+        plans = conn.execute(
             "SELECT id,plan_name,status,impressions,clicks,cost,sales "
-            "FROM ad_plans WHERE account_id=?", (account_id,)
+            "FROM ad_plans WHERE account_id=? AND user_id=? ORDER BY id", (account_id, acc["user_id"])
         ).fetchall()
-    ]
-    conn.close()
+    acc["plans"] = [dict(plan) for plan in plans]
     return acc
 
 
@@ -224,42 +264,17 @@ def compare_plans(plan_id_1, plan_id_2, user_id=None):
 
 def get_daily_report_by_date(start_date, end_date, user_id=None):
     """按日期范围查询报表（约束：日期格式校验 + 最多查90天）"""
-    # ===== ① 参数校验 =====
-    import re
-    # 检查日期格式：必须是 YYYY-MM-DD
-    date_pattern = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-    if not date_pattern.match(str(start_date)):
-        return {"success": False, "error": f"日期格式错误: {start_date}，正确格式: YYYY-MM-DD"}
-    if not date_pattern.match(str(end_date)):
-        return {"success": False, "error": f"日期格式错误: {end_date}，正确格式: YYYY-MM-DD"}
-    
-    # 检查日期范围：最多查90天
-    from datetime import datetime
-    try:
-        s = datetime.strptime(start_date, "%Y-%m-%d")
-        e = datetime.strptime(end_date, "%Y-%m-%d")
-    except:
-        return {"success": False, "error": "日期不合法"}
-    if (e - s).days > 90:
-        return {"success": False, "error": "查询范围不能超过90天，请缩小日期范围"}
-    if e < s:
-        return {"success": False, "error": "结束日期不能早于开始日期"}
-    
-    """按日期范围查询报表"""
-    conn = get_db()
-    c = conn.cursor()
-    if user_id:
-        rows = c.execute(
-            "SELECT * FROM daily_reports WHERE report_date>=? AND report_date<=? AND user_id=? "
-            "ORDER BY report_date", (start_date, end_date, user_id)
-        ).fetchall()
-    else:
-        rows = c.execute(
-            "SELECT * FROM daily_reports WHERE report_date>=? AND report_date<=? "
-            "ORDER BY report_date", (start_date, end_date)
-        ).fetchall()
-    conn.close()
-    return {"success": True, "reports": [dict(r) for r in rows]}
+    return query_daily_reports(start_date, end_date, user_id, _home_read_db)
+
+
+def get_plan_metrics_by_date(plan_id, start_date, end_date, user_id=None):
+    """查询本人计划的可溯源历史曝光、点击与日期覆盖。
+
+    plan_id: 本地计划 ID，来源计划映射由服务端维护
+    start_date: 开始日期 YYYY-MM-DD（含）
+    end_date: 结束日期 YYYY-MM-DD（含）
+    """
+    return query_plan_metrics(plan_id, start_date, end_date, user_id, _home_read_db)
 
 
 # ==================== 操作建议类函数 ====================
@@ -305,31 +320,36 @@ def update_daily_budget(account_id, amount, user_id=None):
         "suggestion": f"建议在后台手动调整预算至: {amount}"
     }
 
-def toggle_plan_status(plan_id, user_id=None):
-    """切换计划状态（暂停/启用）"""
+def toggle_plan_status(plan_id, user_id):
+    """切换当前用户的计划状态（暂停/启用）。"""
     from backend.database.database import get_db
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("SELECT status FROM ad_plans WHERE id=?", (plan_id,))
-    row = cur.fetchone()
+    with closing(get_db()) as conn, conn:
+        row = conn.execute(
+            "UPDATE ad_plans SET status=CASE WHEN status='active' THEN 'paused' ELSE 'active' END "
+            "WHERE id=? AND user_id=? RETURNING status", (plan_id, user_id),
+        ).fetchone()
     if not row:
-        conn.close()
         return {"success": False, "message": "计划不存在"}
-    new_status = "paused" if row["status"] == "active" else "active"
-    cur.execute("UPDATE ad_plans SET status=? WHERE id=?", (new_status, plan_id))
-    conn.commit()
-    conn.close()
-    return {"success": True, "message": "ok", "new_status": new_status}
+    return {"success": True, "message": "ok", "new_status": row["status"]}
 
 
 def create_alert(type, message, level="warning", user_id=None):
     """创建告警"""
-    conn = get_db()
-    uid = user_id or 1
-    conn.execute("INSERT INTO alerts (type,message,level,user_id) VALUES (?,?,?,?)",
-                 (type, message, level, uid))
-    conn.commit()
-    conn.close()
+    return record_alert(type, message, level, user_id)
+
+
+def record_alert(kind, message, level="warning", user_id=None, *, source_plan_id=None):
+    """Create an alert. A trusted server-side producer may supply its local plan ID."""
+    with closing(get_db()) as conn, conn:
+        if user_id and source_plan_id.__class__ is int and 0 < source_plan_id <= 2**63 - 1:
+            conn.execute(
+                """INSERT INTO alerts (type,message,level,user_id,plan_id)
+                   VALUES (?,?,?,?,(SELECT id FROM ad_plans WHERE id=? AND user_id=?))""",
+                (kind, message, level, user_id, source_plan_id, user_id),
+            )
+        else:
+            conn.execute("INSERT INTO alerts (type,message,level,user_id) VALUES (?,?,?,?)",
+                         (kind, message, level, user_id or 1))
     return {"success": True}
 
 
@@ -414,9 +434,8 @@ def detect_anomalies(user_id=None, lookback_days=14):
 def get_week_over_week(user_id=None):
     """本周与上周的数据对比"""
     from datetime import datetime, timedelta
-    conn = get_db()
-    c = conn.cursor()
-    uid_cond = "" if user_id is None else " AND user_id=" + str(user_id)
+    uid_cond = "" if user_id is None else " AND user_id=?"
+    owner = () if user_id is None else (user_id,)
 
     now = datetime.now()
     # 计算本周起始（周一）
@@ -424,19 +443,14 @@ def get_week_over_week(user_id=None):
     last_monday = (now - timedelta(days=now.weekday() + 7)).strftime("%Y-%m-%d")
     last_sunday = (now - timedelta(days=now.weekday() + 1)).strftime("%Y-%m-%d")
 
-    this_week = c.execute(
-        "SELECT COALESCE(SUM(cost),0), COALESCE(SUM(sales),0) FROM daily_reports "
-        "WHERE report_date>=?" + uid_cond, (this_monday,)
-    ).fetchone()
-
-    last_week = c.execute(
-        "SELECT COALESCE(SUM(cost),0), COALESCE(SUM(sales),0) FROM daily_reports "
-        "WHERE report_date>=? AND report_date<=?" + uid_cond, (last_monday, last_sunday)
-    ).fetchone()
-    conn.close()
-
-    tc, ts = float(this_week[0]), float(this_week[1])
-    lc, ls = float(last_week[0]), float(last_week[1])
+    sql = "SELECT COALESCE(SUM(cost),0) AS cost, COALESCE(SUM(sales),0) AS sales FROM daily_reports "
+    with closing(_home_read_db()) as conn:
+        this_week = conn.execute(sql + "WHERE report_date>=?" + uid_cond, (this_monday, *owner)).fetchone()
+        last_week = conn.execute(
+            sql + "WHERE report_date>=? AND report_date<=?" + uid_cond, (last_monday, last_sunday, *owner),
+        ).fetchone()
+    tc, ts = float(this_week["cost"]), float(this_week["sales"])
+    lc, ls = float(last_week["cost"]), float(last_week["sales"])
 
     return {
         "this_week": {"cost": tc, "sales": ts,
@@ -502,16 +516,12 @@ def get_verified_suggestions(user_id=None):
 
 def get_decision_summary(user_id=None):
     """获取决策统计摘要"""
-    conn = get_db()
     uid = user_id or 1
-    total = conn.execute("SELECT COUNT(*) FROM decision_logs WHERE user_id=?", (uid,)).fetchone()[0]
-    verified = conn.execute(
-        "SELECT COUNT(*) FROM decision_logs WHERE user_id=? AND status='verified'", (uid,)
-    ).fetchone()[0]
-    effective = conn.execute(
-        "SELECT COUNT(*) FROM decision_logs WHERE user_id=? AND effective=1", (uid,)
-    ).fetchone()[0]
-    conn.close()
+    sql = "SELECT COUNT(*) AS total FROM decision_logs WHERE user_id=?"
+    with closing(_home_read_db()) as conn:
+        total = conn.execute(sql, (uid,)).fetchone()["total"]
+        verified = conn.execute(sql + " AND status='verified'", (uid,)).fetchone()["total"]
+        effective = conn.execute(sql + " AND effective=1", (uid,)).fetchone()["total"]
     return {
         "total_suggestions": total,
         "verified_count": verified,
@@ -522,16 +532,14 @@ def get_decision_summary(user_id=None):
 
 def get_activity_timeline(user_id=None):
     """获取活动时间轴（所有广告计划概览）"""
-    conn = get_db()
-    c = conn.cursor()
     uid = user_id or 1
-    plans = c.execute(
-        "SELECT id,plan_name,platform,status,daily_budget,start_date,end_date,"
-        "impressions,clicks,cost,sales FROM ad_plans "
-        "WHERE user_id=? ORDER BY CASE WHEN status='active' THEN 0 ELSE 1 END, start_date DESC",
-        (uid,)
-    ).fetchall()
-    conn.close()
+    with closing(_home_read_db()) as conn:
+        plans = conn.execute(
+            "SELECT id,plan_name,platform,status,daily_budget,start_date,end_date,"
+            "impressions,clicks,cost,sales FROM ad_plans "
+            "WHERE user_id=? ORDER BY CASE WHEN status='active' THEN 0 ELSE 1 END, start_date DESC",
+            (uid,),
+        ).fetchall()
     return {"success": True, "plans": [dict(p) for p in plans]}
 
 
@@ -553,16 +561,12 @@ def get_hot_products(category="all", user_id=None):
 
 def search_knowledge(query: str):
     """搜索广告知识库，返回相关参考资料"""
-    from backend.rag.rag_knowledge import RAGKnowledge
+    from backend.rag.rag_knowledge import get_rag_knowledge
     import json
-    rag = RAGKnowledge()
-    result = rag.generate(query)
-    if result:
-        return json.dumps({
-            "context": result["context"],
-            "sources": result["sources"]
-        }, ensure_ascii=False)
-    return json.dumps({"context": "", "sources": []}, ensure_ascii=False)
+    result = get_rag_knowledge().generate(query)
+    if result is None:
+        result = {"context": "", "sources": [], "evidence": []}
+    return json.dumps({key: result[key] for key in ("context", "sources", "evidence")}, ensure_ascii=False)
 
 # ==================== 函数注册（给AI发"菜单"） ====================
 
@@ -570,7 +574,7 @@ def search_knowledge(query: str):
 func_names = [
     "get_dashboard_data", "get_daily_trend", "get_plans_summary", "get_alerts",
     "get_plan_detail", "get_account_detail", "compare_plans",
-    "get_daily_report_by_date", "optimize_accounts", "update_daily_budget",
+    "get_daily_report_by_date", "get_plan_metrics_by_date", "optimize_accounts", "update_daily_budget",
     "toggle_plan_status", "create_alert", "compare_periods", "detect_anomalies",
     "get_week_over_week", "record_suggestion", "report_execution", "report_outcome",
     "get_verified_suggestions", "get_decision_summary", "get_activity_timeline",
@@ -588,6 +592,7 @@ func_descs = {
     "get_account_detail": "获取账户详情",
     "compare_plans": "对比两个计划",
     "get_daily_report_by_date": "按日期查报表",
+    "get_plan_metrics_by_date": "查询本人计划指定日期窗的历史曝光和点击，含来源版本、覆盖和时间映射",
     "optimize_accounts": "优化建议",
     "update_daily_budget": "修改日预算（敏感操作,只建议）",
     "toggle_plan_status": "切换计划状态（敏感操作,只建议）",

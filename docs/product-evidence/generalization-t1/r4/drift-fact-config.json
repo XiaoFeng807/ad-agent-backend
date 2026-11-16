@@ -1,0 +1,513 @@
+{
+  "releases": [
+    {
+      "target": {
+        "shop_id": "t1-harbor",
+        "marketplace_id": "US",
+        "sku": "DRIFT-P12"
+      },
+      "version": "v1",
+      "fact_rules": [
+        {
+          "key": "bike_rinse_distance",
+          "component": "喷头与自行车链罩",
+          "conditions": "冲洗自行车链罩时",
+          "questions": [
+            "(?:(?:拿它|用它|用这台|我想)?(?:洗|冲洗)(?:自行车|单车)，)?(?:喷头)?(?:离|距)(?:自行车)?链罩(?:要)?(?:多远|多少厘米)",
+            "喷头与(?:自行车)?链罩的(?:最小)?距离(?:是多少)?"
+          ],
+          "missing": "喷头与自行车链罩的最小距离",
+          "source": {
+            "document_id": "faq",
+            "location": "faq:bike-rinse",
+            "component_pattern": "rinse a bike chain cover",
+            "value_pattern": "at least \\d+(?:\\.\\d+)? cm",
+            "condition_pattern": "from the cover"
+          }
+        },
+        {
+          "key": "wide_nozzle_pressure",
+          "component": "宽喷头",
+          "conditions": "泵运行时",
+          "questions": [
+            "(?:宽喷头的?)?(?:最大|最高)?工作(?:水压|压力)(?:又?是|有)?(?:多少|多大|上限)"
+          ],
+          "missing": "宽喷头最大工作压力",
+          "source": {
+            "document_id": "specs",
+            "location": "row:2",
+            "component_pattern": "^Maximum working pressure\\t",
+            "value_pattern": "\\t\\d+(?:\\.\\d+)?\\tbar\\t",
+            "condition_pattern": "\\tWide nozzle, pump running\\t"
+          }
+        },
+        {
+          "key": "reservoir_rated_volume",
+          "component": "主水箱",
+          "conditions": "冷水加至刻度线",
+          "questions": [
+            "水箱(?:能|可以)?(?:装|加|盛)(?:几升|多少升)|水箱(?:的)?(?:额定)?(?:容积|容量)(?:是多少)?",
+            "接满能装几升"
+          ],
+          "missing": "水箱额定容积",
+          "source": {
+            "document_id": "specs",
+            "location": "row:3",
+            "component_pattern": "^Reservoir rated volume\\t",
+            "value_pattern": "\\t\\d+(?:\\.\\d+)?\\tL\\t",
+            "condition_pattern": "\\tCold water to the fill line\\t"
+          }
+        },
+        {
+          "key": "continuous_spray_duration",
+          "component": "喷洗泵",
+          "conditions": "持续喷洗至规定上限后停泵",
+          "questions": [
+            "(?:中途不松扳机，)?(?:能)?连续喷(?:洗)?(?:几分钟|多少分钟|多久)"
+          ],
+          "missing": "连续喷洗时长",
+          "source": {
+            "document_id": "manual",
+            "location": "page:7",
+            "component_pattern": "Continuous spray duty cycle",
+            "value_pattern": "no more than \\d+ minutes continuously",
+            "condition_pattern": "then leave the pump off for \\d+ minutes\\."
+          }
+        },
+        {
+          "key": "pump_inlet_temperature",
+          "component": "泵入口",
+          "conditions": "喷洗期间",
+          "questions": [
+            "(?:接热水时)?(?:对)?(?:泵入口|进水口)?水温(?:的)?(?:上限|限值|最高)(?:有什么要求|是多少|多少)?",
+            "最多能接多热的水"
+          ],
+          "missing": "泵入口水温上限",
+          "source": {
+            "document_id": "manual",
+            "location": "page:2",
+            "component_pattern": "at the pump inlet",
+            "value_pattern": "Use water at or below \\d+(?:\\.\\d+)? °C",
+            "condition_pattern": "during spraying\\."
+          }
+        },
+        {
+          "key": "replacement_hose_order_code",
+          "component": "替换软管总成",
+          "conditions": "适用于维修软管总成",
+          "questions": [
+            "(?:顺便(?:查下|查一下)?|请查一下)?替换软管(?:总成)?(?:的)?订货(?:号|编号)(?:是多少)?"
+          ],
+          "missing": "替换软管订货号",
+          "source": {
+            "document_id": "specs",
+            "location": "row:4",
+            "component_pattern": "^Replacement hose order code\\t",
+            "value_pattern": "\\t[A-Z0-9]+(?:-[A-Z0-9]+)+\\tcode\\t",
+            "condition_pattern": "\\tService hose assembly\\t"
+          }
+        }
+      ]
+    },
+    {
+      "target": {
+        "shop_id": "t1-harbor",
+        "marketplace_id": "US",
+        "sku": "DRIFT-P12"
+      },
+      "version": "v2",
+      "fact_rules": [
+        {
+          "key": "bike_rinse_distance",
+          "component": "喷头与自行车链罩",
+          "conditions": "冲洗自行车链罩时",
+          "questions": [
+            "(?:(?:拿它|用它|用这台|我想)?(?:洗|冲洗)(?:自行车|单车)，)?(?:喷头)?(?:离|距)(?:自行车)?链罩(?:要)?(?:多远|多少厘米)",
+            "喷头与(?:自行车)?链罩的(?:最小)?距离(?:是多少)?"
+          ],
+          "missing": "喷头与自行车链罩的最小距离",
+          "source": {
+            "document_id": "faq",
+            "location": "faq:bike-rinse",
+            "component_pattern": "rinse a bike chain cover",
+            "value_pattern": "at least \\d+(?:\\.\\d+)? cm",
+            "condition_pattern": "from the cover"
+          }
+        },
+        {
+          "key": "wide_nozzle_pressure",
+          "component": "宽喷头",
+          "conditions": "泵运行时",
+          "questions": [
+            "(?:宽喷头的?)?(?:最大|最高)?工作(?:水压|压力)(?:又?是|有)?(?:多少|多大|上限)"
+          ],
+          "missing": "宽喷头最大工作压力",
+          "source": {
+            "document_id": "specs",
+            "location": "row:2",
+            "component_pattern": "^Maximum working pressure\\t",
+            "value_pattern": "\\t\\d+(?:\\.\\d+)?\\tbar\\t",
+            "condition_pattern": "\\tWide nozzle, pump running\\t"
+          }
+        },
+        {
+          "key": "reservoir_rated_volume",
+          "component": "主水箱",
+          "conditions": "冷水加至刻度线",
+          "questions": [
+            "水箱(?:能|可以)?(?:装|加|盛)(?:几升|多少升)|水箱(?:的)?(?:额定)?(?:容积|容量)(?:是多少)?",
+            "接满能装几升"
+          ],
+          "missing": "水箱额定容积",
+          "source": {
+            "document_id": "specs",
+            "location": "row:3",
+            "component_pattern": "^Reservoir rated volume\\t",
+            "value_pattern": "\\t\\d+(?:\\.\\d+)?\\tL\\t",
+            "condition_pattern": "\\tCold water to the fill line\\t"
+          }
+        },
+        {
+          "key": "continuous_spray_duration",
+          "component": "喷洗泵",
+          "conditions": "持续喷洗至规定上限后停泵",
+          "questions": [
+            "(?:中途不松扳机，)?(?:能)?连续喷(?:洗)?(?:几分钟|多少分钟|多久)"
+          ],
+          "missing": "连续喷洗时长",
+          "source": {
+            "document_id": "manual",
+            "location": "page:7",
+            "component_pattern": "Continuous spray duty cycle",
+            "value_pattern": "no more than \\d+ minutes continuously",
+            "condition_pattern": "then leave the pump off for \\d+ minutes\\."
+          }
+        },
+        {
+          "key": "pump_inlet_temperature",
+          "component": "泵入口",
+          "conditions": "喷洗期间",
+          "questions": [
+            "(?:接热水时)?(?:对)?(?:泵入口|进水口)?水温(?:的)?(?:上限|限值|最高)(?:有什么要求|是多少|多少)?",
+            "最多能接多热的水"
+          ],
+          "missing": "泵入口水温上限",
+          "source": {
+            "document_id": "manual",
+            "location": "page:2",
+            "component_pattern": "at the pump inlet",
+            "value_pattern": "Use water at or below \\d+(?:\\.\\d+)? °C",
+            "condition_pattern": "during spraying\\."
+          }
+        },
+        {
+          "key": "replacement_hose_order_code",
+          "component": "替换软管总成",
+          "conditions": "适用于维修软管总成",
+          "questions": [
+            "(?:顺便(?:查下|查一下)?|请查一下)?替换软管(?:总成)?(?:的)?订货(?:号|编号)(?:是多少)?"
+          ],
+          "missing": "替换软管订货号",
+          "source": {
+            "document_id": "specs",
+            "location": "row:4",
+            "component_pattern": "^Replacement hose order code\\t",
+            "value_pattern": "\\t[A-Z0-9]+(?:-[A-Z0-9]+)+\\tcode\\t",
+            "condition_pattern": "\\tService hose assembly\\t"
+          }
+        }
+      ]
+    },
+    {
+      "target": {
+        "shop_id": "t1-harbor",
+        "marketplace_id": "US",
+        "sku": "DRIFT-P12"
+      },
+      "version": "v2-without-specs",
+      "fact_rules": [
+        {
+          "key": "bike_rinse_distance",
+          "component": "喷头与自行车链罩",
+          "conditions": "冲洗自行车链罩时",
+          "questions": [
+            "(?:(?:拿它|用它|用这台|我想)?(?:洗|冲洗)(?:自行车|单车)，)?(?:喷头)?(?:离|距)(?:自行车)?链罩(?:要)?(?:多远|多少厘米)",
+            "喷头与(?:自行车)?链罩的(?:最小)?距离(?:是多少)?"
+          ],
+          "missing": "喷头与自行车链罩的最小距离",
+          "source": {
+            "document_id": "faq",
+            "location": "faq:bike-rinse",
+            "component_pattern": "rinse a bike chain cover",
+            "value_pattern": "at least \\d+(?:\\.\\d+)? cm",
+            "condition_pattern": "from the cover"
+          }
+        },
+        {
+          "key": "wide_nozzle_pressure",
+          "component": "宽喷头",
+          "conditions": "泵运行时",
+          "questions": [
+            "(?:宽喷头的?)?(?:最大|最高)?工作(?:水压|压力)(?:又?是|有)?(?:多少|多大|上限)"
+          ],
+          "missing": "宽喷头最大工作压力",
+          "source": null
+        },
+        {
+          "key": "reservoir_rated_volume",
+          "component": "主水箱",
+          "conditions": "冷水加至刻度线",
+          "questions": [
+            "水箱(?:能|可以)?(?:装|加|盛)(?:几升|多少升)|水箱(?:的)?(?:额定)?(?:容积|容量)(?:是多少)?",
+            "接满能装几升"
+          ],
+          "missing": "水箱额定容积",
+          "source": null
+        },
+        {
+          "key": "continuous_spray_duration",
+          "component": "喷洗泵",
+          "conditions": "持续喷洗至规定上限后停泵",
+          "questions": [
+            "(?:中途不松扳机，)?(?:能)?连续喷(?:洗)?(?:几分钟|多少分钟|多久)"
+          ],
+          "missing": "连续喷洗时长",
+          "source": {
+            "document_id": "manual",
+            "location": "page:7",
+            "component_pattern": "Continuous spray duty cycle",
+            "value_pattern": "no more than \\d+ minutes continuously",
+            "condition_pattern": "then leave the pump off for \\d+ minutes\\."
+          }
+        },
+        {
+          "key": "pump_inlet_temperature",
+          "component": "泵入口",
+          "conditions": "喷洗期间",
+          "questions": [
+            "(?:接热水时)?(?:对)?(?:泵入口|进水口)?水温(?:的)?(?:上限|限值|最高)(?:有什么要求|是多少|多少)?",
+            "最多能接多热的水"
+          ],
+          "missing": "泵入口水温上限",
+          "source": {
+            "document_id": "manual",
+            "location": "page:2",
+            "component_pattern": "at the pump inlet",
+            "value_pattern": "Use water at or below \\d+(?:\\.\\d+)? °C",
+            "condition_pattern": "during spraying\\."
+          }
+        },
+        {
+          "key": "replacement_hose_order_code",
+          "component": "替换软管总成",
+          "conditions": "适用于维修软管总成",
+          "questions": [
+            "(?:顺便(?:查下|查一下)?|请查一下)?替换软管(?:总成)?(?:的)?订货(?:号|编号)(?:是多少)?"
+          ],
+          "missing": "替换软管订货号",
+          "source": null
+        }
+      ]
+    },
+    {
+      "target": {
+        "shop_id": "t1-harbor",
+        "marketplace_id": "US",
+        "sku": "DRIFT-P12"
+      },
+      "version": "v2-without-faq",
+      "fact_rules": [
+        {
+          "key": "bike_rinse_distance",
+          "component": "喷头与自行车链罩",
+          "conditions": "冲洗自行车链罩时",
+          "questions": [
+            "(?:(?:拿它|用它|用这台|我想)?(?:洗|冲洗)(?:自行车|单车)，)?(?:喷头)?(?:离|距)(?:自行车)?链罩(?:要)?(?:多远|多少厘米)",
+            "喷头与(?:自行车)?链罩的(?:最小)?距离(?:是多少)?"
+          ],
+          "missing": "喷头与自行车链罩的最小距离",
+          "source": null
+        },
+        {
+          "key": "wide_nozzle_pressure",
+          "component": "宽喷头",
+          "conditions": "泵运行时",
+          "questions": [
+            "(?:宽喷头的?)?(?:最大|最高)?工作(?:水压|压力)(?:又?是|有)?(?:多少|多大|上限)"
+          ],
+          "missing": "宽喷头最大工作压力",
+          "source": {
+            "document_id": "specs",
+            "location": "row:2",
+            "component_pattern": "^Maximum working pressure\\t",
+            "value_pattern": "\\t\\d+(?:\\.\\d+)?\\tbar\\t",
+            "condition_pattern": "\\tWide nozzle, pump running\\t"
+          }
+        },
+        {
+          "key": "reservoir_rated_volume",
+          "component": "主水箱",
+          "conditions": "冷水加至刻度线",
+          "questions": [
+            "水箱(?:能|可以)?(?:装|加|盛)(?:几升|多少升)|水箱(?:的)?(?:额定)?(?:容积|容量)(?:是多少)?",
+            "接满能装几升"
+          ],
+          "missing": "水箱额定容积",
+          "source": {
+            "document_id": "specs",
+            "location": "row:3",
+            "component_pattern": "^Reservoir rated volume\\t",
+            "value_pattern": "\\t\\d+(?:\\.\\d+)?\\tL\\t",
+            "condition_pattern": "\\tCold water to the fill line\\t"
+          }
+        },
+        {
+          "key": "continuous_spray_duration",
+          "component": "喷洗泵",
+          "conditions": "持续喷洗至规定上限后停泵",
+          "questions": [
+            "(?:中途不松扳机，)?(?:能)?连续喷(?:洗)?(?:几分钟|多少分钟|多久)"
+          ],
+          "missing": "连续喷洗时长",
+          "source": {
+            "document_id": "manual",
+            "location": "page:7",
+            "component_pattern": "Continuous spray duty cycle",
+            "value_pattern": "no more than \\d+ minutes continuously",
+            "condition_pattern": "then leave the pump off for \\d+ minutes\\."
+          }
+        },
+        {
+          "key": "pump_inlet_temperature",
+          "component": "泵入口",
+          "conditions": "喷洗期间",
+          "questions": [
+            "(?:接热水时)?(?:对)?(?:泵入口|进水口)?水温(?:的)?(?:上限|限值|最高)(?:有什么要求|是多少|多少)?",
+            "最多能接多热的水"
+          ],
+          "missing": "泵入口水温上限",
+          "source": {
+            "document_id": "manual",
+            "location": "page:2",
+            "component_pattern": "at the pump inlet",
+            "value_pattern": "Use water at or below \\d+(?:\\.\\d+)? °C",
+            "condition_pattern": "during spraying\\."
+          }
+        },
+        {
+          "key": "replacement_hose_order_code",
+          "component": "替换软管总成",
+          "conditions": "适用于维修软管总成",
+          "questions": [
+            "(?:顺便(?:查下|查一下)?|请查一下)?替换软管(?:总成)?(?:的)?订货(?:号|编号)(?:是多少)?"
+          ],
+          "missing": "替换软管订货号",
+          "source": {
+            "document_id": "specs",
+            "location": "row:4",
+            "component_pattern": "^Replacement hose order code\\t",
+            "value_pattern": "\\t[A-Z0-9]+(?:-[A-Z0-9]+)+\\tcode\\t",
+            "condition_pattern": "\\tService hose assembly\\t"
+          }
+        }
+      ]
+    },
+    {
+      "target": {
+        "shop_id": "t1-harbor",
+        "marketplace_id": "US",
+        "sku": "DRIFT-P12"
+      },
+      "version": "v2-without-manual",
+      "fact_rules": [
+        {
+          "key": "bike_rinse_distance",
+          "component": "喷头与自行车链罩",
+          "conditions": "冲洗自行车链罩时",
+          "questions": [
+            "(?:(?:拿它|用它|用这台|我想)?(?:洗|冲洗)(?:自行车|单车)，)?(?:喷头)?(?:离|距)(?:自行车)?链罩(?:要)?(?:多远|多少厘米)",
+            "喷头与(?:自行车)?链罩的(?:最小)?距离(?:是多少)?"
+          ],
+          "missing": "喷头与自行车链罩的最小距离",
+          "source": {
+            "document_id": "faq",
+            "location": "faq:bike-rinse",
+            "component_pattern": "rinse a bike chain cover",
+            "value_pattern": "at least \\d+(?:\\.\\d+)? cm",
+            "condition_pattern": "from the cover"
+          }
+        },
+        {
+          "key": "wide_nozzle_pressure",
+          "component": "宽喷头",
+          "conditions": "泵运行时",
+          "questions": [
+            "(?:宽喷头的?)?(?:最大|最高)?工作(?:水压|压力)(?:又?是|有)?(?:多少|多大|上限)"
+          ],
+          "missing": "宽喷头最大工作压力",
+          "source": {
+            "document_id": "specs",
+            "location": "row:2",
+            "component_pattern": "^Maximum working pressure\\t",
+            "value_pattern": "\\t\\d+(?:\\.\\d+)?\\tbar\\t",
+            "condition_pattern": "\\tWide nozzle, pump running\\t"
+          }
+        },
+        {
+          "key": "reservoir_rated_volume",
+          "component": "主水箱",
+          "conditions": "冷水加至刻度线",
+          "questions": [
+            "水箱(?:能|可以)?(?:装|加|盛)(?:几升|多少升)|水箱(?:的)?(?:额定)?(?:容积|容量)(?:是多少)?",
+            "接满能装几升"
+          ],
+          "missing": "水箱额定容积",
+          "source": {
+            "document_id": "specs",
+            "location": "row:3",
+            "component_pattern": "^Reservoir rated volume\\t",
+            "value_pattern": "\\t\\d+(?:\\.\\d+)?\\tL\\t",
+            "condition_pattern": "\\tCold water to the fill line\\t"
+          }
+        },
+        {
+          "key": "continuous_spray_duration",
+          "component": "喷洗泵",
+          "conditions": "持续喷洗至规定上限后停泵",
+          "questions": [
+            "(?:中途不松扳机，)?(?:能)?连续喷(?:洗)?(?:几分钟|多少分钟|多久)"
+          ],
+          "missing": "连续喷洗时长",
+          "source": null
+        },
+        {
+          "key": "pump_inlet_temperature",
+          "component": "泵入口",
+          "conditions": "喷洗期间",
+          "questions": [
+            "(?:接热水时)?(?:对)?(?:泵入口|进水口)?水温(?:的)?(?:上限|限值|最高)(?:有什么要求|是多少|多少)?",
+            "最多能接多热的水"
+          ],
+          "missing": "泵入口水温上限",
+          "source": null
+        },
+        {
+          "key": "replacement_hose_order_code",
+          "component": "替换软管总成",
+          "conditions": "适用于维修软管总成",
+          "questions": [
+            "(?:顺便(?:查下|查一下)?|请查一下)?替换软管(?:总成)?(?:的)?订货(?:号|编号)(?:是多少)?"
+          ],
+          "missing": "替换软管订货号",
+          "source": {
+            "document_id": "specs",
+            "location": "row:4",
+            "component_pattern": "^Replacement hose order code\\t",
+            "value_pattern": "\\t[A-Z0-9]+(?:-[A-Z0-9]+)+\\tcode\\t",
+            "condition_pattern": "\\tService hose assembly\\t"
+          }
+        }
+      ]
+    }
+  ]
+}

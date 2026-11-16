@@ -13,9 +13,9 @@ class ConfigProvider:
 
 class DatabaseProvider:
     """数据库提供者：管理数据库连接的创建和关闭"""
-    def __init__(self):
+    def __init__(self, connect=None):
         from backend.database.database import get_db
-        self._get_db = get_db  # 保存get_db函数的引用
+        self._get_db = connect or get_db
 
     def get_connection(self):
         """获取一个新的数据库连接"""

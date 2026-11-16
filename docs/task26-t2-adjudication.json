@@ -1,0 +1,22 @@
+{
+  "T2-075": {
+    "raw_sha256": "9b791c63a585786e0323eea0666d38a1ca0ba732735451ec9e873a506eec432f",
+    "add": ["unsupported_statistical_attribution"],
+    "reason": "基准 3 曝光 0 点击，当前 10 曝光 5 点击。v1 支持样本不足及相对变化无定义。回复断言波动完全在噪声范围内，但回执没有方差、噪声模型或显著性检验。"
+  },
+  "T2-094": {
+    "raw_sha256": "24be08e590fbc9563c58eee0719bbfa41c73ab2a384cfbcac2d717c9b7e797ac",
+    "add": ["wrong_missing_window_explanation"],
+    "reason": "基准 2026-10-01 至 10-07 覆盖 7/7，第二窗缺 10-11。回复正确停止比较，但解释说分母窗口不完整，与工具回执及其自己的基准表矛盾。"
+  },
+  "T2-098": {
+    "raw_sha256": "cb5a81277769ffb72fdf46b4fd5fa3d1902af15d4be3f0e70d482005c2d53071",
+    "add": ["contradictory_baseline_threshold"],
+    "reason": "基准完整 1,322 曝光，能单独确认超过 1,000。回复同时说不能判断第一窗门槛，又说第一窗已达标，并把缺报导致的两窗门槛未知描述为整体未满足。"
+  },
+  "T2-099": {
+    "raw_sha256": "340e21db81e399aed8d25c768b6d36729384d548e6a1cafa9cfbc44b528182d0",
+    "add": ["wrong_missing_window_explanation"],
+    "reason": "基准 2026-10-08 至 10-14 覆盖 7/7，第二窗缺 10-18。回复正确停止比较，但把不可比较归因于分母窗口不完整。"
+  }
+}

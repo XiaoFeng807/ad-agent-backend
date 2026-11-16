@@ -1,0 +1,499 @@
+{
+  "catalog": [
+    {
+      "principal": "owner",
+      "target": {
+        "shop_id": "evidence-main",
+        "marketplace_id": "US",
+        "sku": "METRO-500"
+      },
+      "title": "Metro 水杯"
+    },
+    {
+      "principal": "owner",
+      "target": {
+        "shop_id": "evidence-main",
+        "marketplace_id": "US",
+        "sku": "METRO-750"
+      },
+      "title": "Metro 水杯"
+    },
+    {
+      "principal": "other",
+      "target": {
+        "shop_id": "evidence-other",
+        "marketplace_id": "US",
+        "sku": "METRO-500"
+      },
+      "title": "Metro 水杯"
+    },
+    {
+      "principal": "owner",
+      "target": {
+        "shop_id": "evidence-main",
+        "marketplace_id": "CA",
+        "sku": "METRO-500"
+      },
+      "title": "Metro 水杯"
+    }
+  ],
+  "evidence_rules": [
+    {
+      "pattern": "容量(?:是多少|是多大|有多大|多少毫升)[？?]?|How many milliliters does the bottle hold\\?",
+      "requires": [
+        [
+          "specs",
+          "row:2"
+        ]
+      ]
+    },
+    {
+      "pattern": "(?:接触饮料的)?内胆(?:的)?(?:用什么材料|是什么材质|材质是什么|用的是哪种钢)[？?]?|What is the drink-contact liner made of\\?",
+      "requires": [
+        [
+          "manual",
+          "page:4"
+        ]
+      ]
+    },
+    {
+      "pattern": "(?:杯身|瓶身)(?:最宽处|的最宽处)?(?:直径|横向尺寸)(?:是多少|有多宽|多大)[？?]?|How wide is the bottle body at the widest point\\?",
+      "requires": [
+        [
+          "specs",
+          "row:3"
+        ]
+      ]
+    },
+    {
+      "pattern": "(?:盖好|拧好)杯盖后(?:整杯|瓶子)(?:有多高|高度是多少)[？?]?|What is the overall height with the cap closed\\?",
+      "requires": [
+        [
+          "specs",
+          "row:4"
+        ]
+      ]
+    },
+    {
+      "pattern": "(?:装好杯盖和密封圈后)?空杯(?:多重|有多重|重量是多少)[？?]?|What is the empty weight including the cap and gasket\\?",
+      "requires": [
+        [
+          "specs",
+          "row:5"
+        ]
+      ]
+    },
+    {
+      "pattern": "(?:杯身和杯盖|杯盖和杯身|盖子和瓶身)(?:都|一起)?(?:能|可以)进洗碗机吗[？?]?|Can I put the body and cap in the dishwasher together\\?",
+      "requires": [
+        [
+          "manual",
+          "page:5"
+        ],
+        [
+          "manual",
+          "page:6"
+        ]
+      ]
+    },
+    {
+      "pattern": "(?:杯身|瓶身)(?:在洗碗机里怎么洗|能进洗碗机吗|机洗有哪些限制|的机洗要求是什么)[？?]?|How should I wash the bottle body in a dishwasher\\?",
+      "requires": [
+        [
+          "manual",
+          "page:5"
+        ]
+      ]
+    },
+    {
+      "pattern": "(?:杯盖和密封圈|杯盖|盖子)(?:怎么清洗|能机洗吗|可以机洗吗|能进洗碗机吗)[？?]?|Can the cap and seal go in the dishwasher\\?",
+      "requires": [
+        [
+          "manual",
+          "page:6"
+        ]
+      ]
+    },
+    {
+      "pattern": "规格表(?:对)?杯身(?:清洗|机洗)(?:列了什么限制|的限制条件是什么|有什么要求)[？?]?|What is the body wash restriction in the specification table\\?",
+      "requires": [
+        [
+          "specs",
+          "row:9"
+        ]
+      ]
+    },
+    {
+      "pattern": "(?:替换杯盖|备用杯盖)的(?:配件号|零件号)是什么[？?]?|(?:Does )?(?P<part_code>LID-M[0-9]+) (?:fit this SKU\\?|service code: what is it for\\?)",
+      "requires": [
+        [
+          "specs",
+          "row:7"
+        ]
+      ]
+    },
+    {
+      "pattern": "只看(?:杯盖)?外观(?:能|可以)判断(?:杯盖|替换盖)通用吗[？?]?|Can I fit a replacement cap based on appearance alone\\?",
+      "requires": [
+        [
+          "faq",
+          "faq:share"
+        ],
+        [
+          "specs",
+          "row:7"
+        ]
+      ]
+    },
+    {
+      "pattern": "GSK-R42 (?:gasket service code: which groove is allowed\\?|适用什么盖槽[？?]?)",
+      "requires": [
+        [
+          "specs",
+          "row:8"
+        ]
+      ]
+    },
+    {
+      "pattern": "(?P<part_code>BOX-M[0-9]+) (?:replacement carton code: what fits\\?|适用什么包装条件[？?]?)",
+      "requires": [
+        [
+          "specs",
+          "row:18"
+        ]
+      ]
+    },
+    {
+      "pattern": "Cap torque inspection: what value and restriction apply\\?|规格表的杯盖扭矩(?:是多少|有什么限制)[？?]?",
+      "requires": [
+        [
+          "specs",
+          "row:11"
+        ]
+      ]
+    },
+    {
+      "pattern": "(?:最高灌装温度是多少|倒入饮料的温度上限是多少|灌装温度上限和条件是什么)[？?]?|Maximum fill temperature: what limit and condition apply\\?",
+      "requires": [
+        [
+          "specs",
+          "row:13"
+        ]
+      ]
+    },
+    {
+      "pattern": "(?:这个杯子|水杯)?(?:能|可以)放进微波炉(?:加热)?吗[？?]?|Can I warm the drink in a microwave\\?",
+      "requires": [
+        [
+          "manual",
+          "page:10"
+        ]
+      ]
+    },
+    {
+      "pattern": "(?:装着水|装水后)(?:能|可以)把杯子冷冻吗[？?]?|Can I freeze the bottle with water inside\\?",
+      "requires": [
+        [
+          "manual",
+          "page:11"
+        ]
+      ]
+    },
+    {
+      "pattern": "(?:能|可以)装气泡水吗[？?]?|Can I use sparkling water in the closed bottle\\?",
+      "requires": [
+        [
+          "faq",
+          "faq:pressure"
+        ]
+      ]
+    },
+    {
+      "pattern": "(?:杯盖拧紧|拧紧杯盖)后(?:还在|仍然|还是)漏水怎么办[？?]?|How do I refit the seal and check a leak\\?",
+      "requires": [
+        [
+          "faq",
+          "faq:seal"
+        ],
+        [
+          "manual",
+          "page:13"
+        ]
+      ]
+    },
+    {
+      "pattern": "(?:随箱|盒内)(?:有|包含|附带)杯套和备用密封圈吗[？?]?|Are a sleeve and a spare seal included\\?",
+      "requires": [
+        [
+          "faq",
+          "faq:sleeve"
+        ]
+      ]
+    },
+    {
+      "pattern": "运输时(?:如何|怎么)保护(?:瓶口|杯口)[？?]?|How do I protect the rim during transport\\?",
+      "requires": [
+        [
+          "faq",
+          "faq:rim"
+        ]
+      ]
+    },
+    {
+      "pattern": "(?:能|可以)用香精给杯子去味吗[？?]?|Can fragrance be used to remove odor\\?",
+      "requires": [
+        [
+          "faq",
+          "faq:smell"
+        ]
+      ]
+    },
+    {
+      "pattern": "丢弃时(?:要|应)拆分哪些部件[？?]?|Which components should I separate for disposal\\?",
+      "requires": [
+        [
+          "faq",
+          "faq:recycle"
+        ]
+      ]
+    },
+    {
+      "pattern": "(?:外壁|外壳)(?:要|应该)用什么擦洗[？?]?|What can I scrub the painted shell with\\?",
+      "requires": [
+        [
+          "faq",
+          "faq:brush"
+        ]
+      ]
+    },
+    {
+      "pattern": "(?:干了以后|晾干后)(?:怎样|怎么)存放[？?]?|How do I store the bottle once dry\\?",
+      "requires": [
+        [
+          "manual",
+          "page:7"
+        ]
+      ]
+    },
+    {
+      "pattern": "(?:生产)?批号(?:在哪|在哪里)[？?]?|Where is the batch code and what does it identify\\?",
+      "requires": [
+        [
+          "manual",
+          "page:24"
+        ]
+      ]
+    },
+    {
+      "pattern": "(?:可以|能)(?:往杯里)?放冰块吗[？?]?|Can I add ice cubes by hand\\?",
+      "requires": [
+        [
+          "faq",
+          "faq:ice"
+        ]
+      ]
+    },
+    {
+      "pattern": "(?:第一次|初次)使用前要怎么处理[？?]?|What should I do before first use\\?",
+      "requires": [
+        [
+          "manual",
+          "page:2"
+        ]
+      ]
+    },
+    {
+      "pattern": "杯架适配时要核对杯身直径和整杯高度吗[？?]?|What width and closed-cap height should I compare against my holder\\?",
+      "requires": [
+        [
+          "specs",
+          "row:3"
+        ],
+        [
+          "specs",
+          "row:4"
+        ],
+        [
+          "manual",
+          "page:15"
+        ]
+      ]
+    },
+    {
+      "pattern": "容量和空杯重量分别是多少[？?]?|What are the capacity and empty weight\\?",
+      "requires": [
+        [
+          "specs",
+          "row:2"
+        ],
+        [
+          "specs",
+          "row:5"
+        ]
+      ]
+    },
+    {
+      "pattern": "外壁是什么涂层[？?]?|Which finish process is used on the exterior\\?",
+      "requires": [
+        [
+          "specs",
+          "row:19"
+        ]
+      ]
+    },
+    {
+      "pattern": "密封圈用什么材料[？?]?|What is the removable seal material\\?",
+      "requires": [
+        [
+          "specs",
+          "row:12"
+        ]
+      ]
+    },
+    {
+      "pattern": "瓶口螺纹代号是什么[？?]?|What is the neck thread code\\?",
+      "requires": [
+        [
+          "specs",
+          "row:15"
+        ]
+      ]
+    },
+    {
+      "pattern": "选配杯套开口尺寸是多少[？?]?|What size is the optional sleeve opening\\?",
+      "requires": [
+        [
+          "specs",
+          "row:23"
+        ]
+      ]
+    }
+  ],
+  "releases": [
+    {
+      "target": {
+        "shop_id": "evidence-main",
+        "marketplace_id": "US",
+        "sku": "METRO-500"
+      },
+      "version": "v1",
+      "documents": [
+        {
+          "id": "manual",
+          "kind": "manual",
+          "file": "manual-500-v1.md"
+        },
+        {
+          "id": "specs",
+          "kind": "specs",
+          "file": "specs-500-v1.tsv"
+        },
+        {
+          "id": "faq",
+          "kind": "faq",
+          "file": "faq.md"
+        }
+      ]
+    },
+    {
+      "target": {
+        "shop_id": "evidence-main",
+        "marketplace_id": "US",
+        "sku": "METRO-500"
+      },
+      "version": "v2",
+      "documents": [
+        {
+          "id": "manual",
+          "kind": "manual",
+          "file": "manual-500-v2.md"
+        },
+        {
+          "id": "specs",
+          "kind": "specs",
+          "file": "specs-500-v2.tsv"
+        },
+        {
+          "id": "faq",
+          "kind": "faq",
+          "file": "faq.md"
+        }
+      ]
+    },
+    {
+      "target": {
+        "shop_id": "evidence-main",
+        "marketplace_id": "US",
+        "sku": "METRO-750"
+      },
+      "version": "v1",
+      "documents": [
+        {
+          "id": "manual",
+          "kind": "manual",
+          "file": "manual-750-v1.md"
+        },
+        {
+          "id": "specs",
+          "kind": "specs",
+          "file": "specs-750-v1.tsv"
+        },
+        {
+          "id": "faq",
+          "kind": "faq",
+          "file": "faq.md"
+        }
+      ]
+    },
+    {
+      "target": {
+        "shop_id": "evidence-other",
+        "marketplace_id": "US",
+        "sku": "METRO-500"
+      },
+      "version": "v1",
+      "documents": [
+        {
+          "id": "manual",
+          "kind": "manual",
+          "file": "manual-other-v1.md"
+        },
+        {
+          "id": "specs",
+          "kind": "specs",
+          "file": "specs-other-v1.tsv"
+        },
+        {
+          "id": "faq",
+          "kind": "faq",
+          "file": "faq.md"
+        }
+      ]
+    },
+    {
+      "target": {
+        "shop_id": "evidence-main",
+        "marketplace_id": "CA",
+        "sku": "METRO-500"
+      },
+      "version": "v1",
+      "documents": [
+        {
+          "id": "manual",
+          "kind": "manual",
+          "file": "manual-500-v1.md"
+        },
+        {
+          "id": "specs",
+          "kind": "specs",
+          "file": "specs-ca-v1.tsv"
+        },
+        {
+          "id": "faq",
+          "kind": "faq",
+          "file": "faq.md"
+        }
+      ]
+    }
+  ]
+}

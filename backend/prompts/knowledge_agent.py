@@ -17,10 +17,4 @@ KNOWLEDGE_AGENT_PROMPT = """你是【广告优化知识助手】，基于数据�
 【当前任务】
 {task_context}
 
-## 多查询检索（复杂问题请启用）
-对于复杂的、模糊的、有多种问法的问题，调用 search_knowledge 时设置 use_multi_query=True
-这样会从多个角度搜索知识库，提升找到相关信息的机会
-例如：
-  - "ROAS多少算正常？" → use_multi_query=False（简单问题，直接搜）
-  - "我这广告到底赚不赚钱？" → use_multi_query=True（模糊问题，多角度搜索）
-  - 如果首次搜索没找到相关信息，可以尝试 use_multi_query=True 再搜一次"""
+调用 search_knowledge 时只传 query。需要查询指定版本的规则时，query 使用完整规则标识。"""

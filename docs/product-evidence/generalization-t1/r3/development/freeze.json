@@ -1,0 +1,108 @@
+{
+  "sources_and_questions": {
+    "manifest.json": "6286121d169e018cee0f6486aa9649bcc788f869fb07150bb2c208542ac3cd3b",
+    "questions.json": "4d6547835ad3c5374776d8e004b2a7f000fa6e8846eced8fb13a85b8caf00219",
+    "sources/lamp-specs.tsv": "a699968012109f4ce88d4f0f026a807c83a5cca76e1c53ead37c809295279dab",
+    "sources/pump-manual.md": "e2b38bf52d5828a3e683e6f57ae910299e96ef13f12f0d59145e056a436f4e34",
+    "sources/pump-specs.tsv": "80bbad8ccdfe615adca0fe30b48bf2669741691a82d0079a34be6c8337ede1cc"
+  },
+  "config_code": {
+    "backend/rag/product_attribute_queries.py": "275b01a3c84a93e3aca0c655445bc666f8e515aa78bafec3f9f2c0bc0e8da8e4",
+    "backend/rag/product_query_expansion.py": "a95e6874461c10d60566e02c185625077a0fb6e08ec9193ee5097d95bd719fb2",
+    "backend/rag/product_evidence.py": "23cddd0b3cb6328d3890a1199f99dceaf03cf002aaddff2fbf248b6ffd60390e",
+    "backend/rag/product_chat_search.py": "7a45db40c0bb37035584e24c00fc83fbe0c0e3d04ac07739aa9b299ba679b509"
+  },
+  "model": "BAAI/bge-small-zh-v1.5@7999e1d3359715c523056ef9478215996d62a620",
+  "variants": {
+    "r2": "none",
+    "aliases": "aliases",
+    "split": "parts",
+    "r3": "both"
+  },
+  "base": {
+    "mode": "vector",
+    "expansion": "both"
+  },
+  "production": {
+    "mode": "vector",
+    "expansion": "both",
+    "attribute_expansion": "both"
+  },
+  "device": "cpu",
+  "gpu": false,
+  "original_slots": 5,
+  "top_k": 20,
+  "rubric": "Exact complete original regions at K=5,20. All required groups for multi. Near-part negatives have no gold; check expansion and final citations separately.",
+  "gold": {
+    "D01": [
+      [
+        {
+          "location": "row:11",
+          "start_offset": 522,
+          "end_offset": 592,
+          "document_id": "specs",
+          "filename": "lamp-specs.tsv",
+          "quote": "Sealed cell rated capacity\t1550\tmAh\tInternal rechargeable cell\tLUMA-71"
+        }
+      ]
+    ],
+    "D02": [
+      [
+        {
+          "location": "row:21",
+          "start_offset": 1053,
+          "end_offset": 1128,
+          "document_id": "specs",
+          "filename": "lamp-specs.tsv",
+          "quote": "Transport profile thickness\t29\tmm\tSupport bracket completely folded\tLUMA-71"
+        }
+      ]
+    ],
+    "D03": [],
+    "D04": [
+      [
+        {
+          "location": "row:11",
+          "start_offset": 536,
+          "end_offset": 600,
+          "document_id": "specs",
+          "filename": "pump-specs.tsv",
+          "quote": "Tank nominal capacity\t2.7\tL\tFill line, upright reservoir\tRILL-60"
+        }
+      ],
+      [
+        {
+          "location": "page:1",
+          "start_offset": 0,
+          "end_offset": 94,
+          "document_id": "manual",
+          "filename": "pump-manual.md",
+          "quote": "## 1 | Steady trigger operation\nContinuous spraying ends after 6 minutes. Rest for 12 minutes."
+        }
+      ]
+    ],
+    "D05": [
+      [
+        {
+          "location": "page:2",
+          "start_offset": 96,
+          "end_offset": 175,
+          "document_id": "manual",
+          "filename": "pump-manual.md",
+          "quote": "## 2 | Water inlet limit\nKeep water at the intake below 31 °C during operation."
+        }
+      ],
+      [
+        {
+          "location": "row:21",
+          "start_offset": 1046,
+          "end_offset": 1131,
+          "document_id": "specs",
+          "filename": "pump-specs.tsv",
+          "quote": "Spare service hose order number\tRL-H6\tcode\tStraight replacement hose assembly\tRILL-60"
+        }
+      ]
+    ],
+    "D06": []
+  }
+}

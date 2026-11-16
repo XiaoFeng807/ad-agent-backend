@@ -1,0 +1,65 @@
+{
+  "denials": [
+    {
+      "id": "P01",
+      "principal": "other",
+      "target": {
+        "shop_id": "t1-harbor",
+        "marketplace_id": "US",
+        "sku": "ARC-220"
+      },
+      "version": null,
+      "query": "买这盏灯的话，标的电芯有多少毫安时？",
+      "expectation": "denied",
+      "lookup_scope": {
+        "shop_id": "t1-harbor",
+        "marketplace_id": "US",
+        "sku": "ARC-220"
+      },
+      "lookup_principal": "owner"
+    },
+    {
+      "id": "P02",
+      "principal": "owner",
+      "target": {
+        "shop_id": "t1-outlet",
+        "marketplace_id": "US",
+        "sku": "ARC-220"
+      },
+      "version": null,
+      "query": "买这盏灯的话，标的电芯有多少毫安时？",
+      "expectation": "denied",
+      "lookup_scope": {
+        "shop_id": "t1-outlet",
+        "marketplace_id": "US",
+        "sku": "ARC-220"
+      },
+      "lookup_principal": "other"
+    },
+    {
+      "id": "P03",
+      "principal": "owner",
+      "target": {
+        "shop_id": "t1-harbor",
+        "marketplace_id": "CA",
+        "sku": "ARC-220"
+      },
+      "version": null,
+      "query": "买这盏灯的话，标的电芯有多少毫安时？",
+      "expectation": "denied",
+      "lookup_scope": null
+    }
+  ],
+  "switch": {
+    "target": {
+      "shop_id": "t1-harbor",
+      "marketplace_id": "US",
+      "sku": "DRIFT-P12"
+    },
+    "principal": "owner",
+    "from": "v1",
+    "to": "v2",
+    "before": "V01",
+    "after": "V02"
+  }
+}

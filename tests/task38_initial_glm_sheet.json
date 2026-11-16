@@ -1,0 +1,42 @@
+{
+  "normal_sheet": {
+    "reason": "复核本周严重CTR告警，涉及计划101和103，需要对比基准期(10/17-10/23)和当前期(10/24-10/30)的CTR数据，应用CTR审核规则ctr-review-v1#low-ctr",
+    "tasks": [
+      {
+        "task_id": "ctr_evidence_101",
+        "objective": "获取计划101的CTR指标数据，对比基准期(10/17-10/23)和当前期(10/24-10/30)的CTR表现，应用CTR审核规则ctr-review-v1#low-ctr",
+        "capabilities": [
+          "get_plan_metrics_by_date"
+        ],
+        "expected_output": "计划101的CTR指标对比分析报告，包含基准期和当前期的CTR数值、变化趋势和规则应用结果",
+        "stop_condition": "完成计划101的CTR数据收集和分析，输出对比报告"
+      },
+      {
+        "task_id": "ctr_evidence_103",
+        "objective": "获取计划103的CTR指标数据，对比基准期(10/17-10/23)和当前期(10/24-10/30)的CTR表现，应用CTR审核规则ctr-review-v1#low-ctr",
+        "capabilities": [
+          "get_plan_metrics_by_date"
+        ],
+        "expected_output": "计划103的CTR指标对比分析报告，包含基准期和当前期的CTR数值、变化趋势和规则应用结果",
+        "stop_condition": "完成计划103的CTR数据收集和分析，输出对比报告"
+      },
+      {
+        "task_id": "ctr_review_independent",
+        "objective": "独立复核计划101和103的CTR告警，基于取证任务结果进行综合评估，确认CTR异常情况的真实性和严重程度",
+        "capabilities": [
+          "get_plan_detail"
+        ],
+        "dependencies": [
+          "ctr_evidence_101",
+          "ctr_evidence_103"
+        ],
+        "expected_output": "CTR告警复核结论报告，包含各计划CTR异常情况确认、严重程度评估和处理建议",
+        "stop_condition": "完成对两个计划CTR告警的独立复核，输出最终复核结论"
+      }
+    ]
+  },
+  "unstructured_replies": {
+    "missing": "\n<tool_call>delegate_tasks\n<arg_key>tasks='[\n  {\n    \"task_id\": \"1\",\n    \"task_type\": \"evidence_collection\",\n    \"target\": \"计划103的CTR指标取证\",\n    \"description\": \"获取计划103在2026-11-09至2026-11-12期间的CTR指标数据\",\n    \"required_capabilities\": [\"search_knowledge\"],\n    \"dependencies\": [],\n    \"artifacts\": [\"CTR指标数据\"],\n    \"stop_conditions\": [\"获取到完整的CTR指标数据\"]\n  },\n  {\n    \"task_id\": \"2\",\n    \"task_type\": \"evidence_collection\",\n    \"target\": \"告警规则4102的规则取证\",\n    \"description\": \"查询告警规则4102的详细规则定义\",\n    \"required_capabilities\": [\"search_knowledge\"],\n    \"dependencies\": [],\n    \"artifacts\": [\"告警规则定义\"],\n    \"stop_conditions\": [\"获取到完整的告警规则定义\"]\n  },\n  {\n    \"task_id\": \"3\",\n    \"task_type\": \"independent_review\",\n    \"target\": \"计划103的CTR告警复核\",\n    \"description\": \"复核计划103在2026-11-09至2026-11-12期间的CTR告警\",\n    \"required_capabilities\": [\"get_plan_detail\"],\n    \"dependencies\": [\"1\", \"2\"],\n    \"artifacts\": [\"CTR告警复核报告\"],\n    \"stop_conditions\": [\"完成CTR告警复核并生成报告\"]\n  }\n]'\n</tool_call>",
+    "cross": "\n<tool_call>delegate_tasks\n<arg_key>tasks='[\n  {\n    \"task_id\": \"task_001\",\n    \"task_type\": \"evidence_collection\",\n    \"target\": \"计划103的CTR指标数据\",\n    \"required_capabilities\": [\"get_plan_detail\"],\n    \"dependencies\": [],\n    \"artifacts\": [],\n    \"stop_conditions\": [\"获取计划103的完整CTR指标数据\"]\n  },\n  {\n    \"task_id\": \"task_002\",\n    \"task_type\": \"independent_review\",\n    \"target\": \"计划103的CTR指标复核\",\n    \"required_capabilities\": [\"get_plan_detail\"],\n    \"dependencies\": [\"task_001\"],\n    \"artifacts\": [],\n    \"stop_conditions\": [\"完成计划103的CTR指标独立复核\"]\n  },\n  {\n    \"task_id\": \"task_003\",\n    \"task_type\": \"rule_evidence\",\n    \"target\": \"严重CTR告警规则引用\",\n    \"required_capabilities\": [\"search_knowledge\"],\n    \"dependencies\": [],\n    \"artifacts\": [],\n    \"stop_conditions\": [\"获取严重CTR告警相关规则文档\"]\n  }\n]'\n<arg_key>review_scope='{\"plan_id\": 103, \"alert_period\": {\"start\": \"2026-11-09T00:00:00+08:00\", \"end\": \"2026-11-12T10:30:00+08:00\"}, \"alert_id\": 4102}'\n</tool_call>"
+  }
+}

@@ -1,0 +1,4 @@
+*.jsonl text eol=lf
+manifest.json text eol=lf
+sources/*.md text eol=lf
+sources/*.tsv text eol=lf

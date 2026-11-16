@@ -1,0 +1,799 @@
+{
+  "catalog": [
+    {
+      "principal": "owner",
+      "target": {
+        "shop_id": "t1-harbor",
+        "marketplace_id": "US",
+        "sku": "ARC-220"
+      },
+      "title": "ArcTrail 折叠工作灯"
+    },
+    {
+      "principal": "owner",
+      "target": {
+        "shop_id": "t1-harbor",
+        "marketplace_id": "US",
+        "sku": "ARC-480"
+      },
+      "title": "ArcTrail 折叠工作灯"
+    },
+    {
+      "principal": "owner",
+      "target": {
+        "shop_id": "t1-harbor",
+        "marketplace_id": "US",
+        "sku": "DRIFT-P12"
+      },
+      "title": "DriftPod 旅行冲洗泵"
+    },
+    {
+      "principal": "other",
+      "target": {
+        "shop_id": "t1-outlet",
+        "marketplace_id": "US",
+        "sku": "ARC-220"
+      },
+      "title": "ArcTrail 折叠工作灯"
+    }
+  ],
+  "releases": [
+    {
+      "target": {
+        "shop_id": "t1-harbor",
+        "marketplace_id": "US",
+        "sku": "ARC-220"
+      },
+      "version": "v1",
+      "documents": [
+        {
+          "id": "manual",
+          "kind": "manual",
+          "file": "arc220-manual.md"
+        },
+        {
+          "id": "specs",
+          "kind": "specs",
+          "file": "arc220-specs.tsv"
+        },
+        {
+          "id": "faq",
+          "kind": "faq",
+          "file": "arc220-faq.md"
+        }
+      ],
+      "evidence_rules": [
+        {
+          "pattern": ".*(?:多少|多大|什么|多大块).*(?:毫安时|mAh)|.*(?:电池|电芯).*(?:容量|多大|多少).*|.*battery.*(?:capacity|mAh).*",
+          "requires": [
+            [
+              "specs",
+              "row:2"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:收拢|折叠|合起来|folded).*(?:厚|尺寸|thick|depth).*",
+          "requires": [
+            [
+              "specs",
+              "row:3"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:磁吸底座|magnetic base).*(?:编码|编号|型号|配件号|订购|part number).*",
+          "requires": [
+            [
+              "specs",
+              "row:4"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:照射|灯光|光束).*(?:角度|多宽).*|.*beam.*(?:angle|wide).*",
+          "requires": [
+            [
+              "specs",
+              "row:5"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "target": {
+        "shop_id": "t1-harbor",
+        "marketplace_id": "US",
+        "sku": "ARC-480"
+      },
+      "version": "v1",
+      "documents": [
+        {
+          "id": "manual",
+          "kind": "manual",
+          "file": "arc480-manual.md"
+        },
+        {
+          "id": "specs",
+          "kind": "specs",
+          "file": "arc480-specs.tsv"
+        },
+        {
+          "id": "faq",
+          "kind": "faq",
+          "file": "arc480-faq.md"
+        }
+      ],
+      "evidence_rules": [
+        {
+          "pattern": ".*(?:多少|多大|什么|多大块).*(?:毫安时|mAh)|.*(?:电池|电芯).*(?:容量|多大|多少).*|.*battery.*(?:capacity|mAh).*",
+          "requires": [
+            [
+              "specs",
+              "row:2"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:收拢|折叠|合起来|folded).*(?:厚|尺寸|thick|depth).*",
+          "requires": [
+            [
+              "specs",
+              "row:3"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:磁吸底座|magnetic base).*(?:编码|编号|型号|配件号|订购|part number).*",
+          "requires": [
+            [
+              "specs",
+              "row:4"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:照射|灯光|光束).*(?:角度|多宽).*|.*beam.*(?:angle|wide).*",
+          "requires": [
+            [
+              "specs",
+              "row:5"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "target": {
+        "shop_id": "t1-outlet",
+        "marketplace_id": "US",
+        "sku": "ARC-220"
+      },
+      "version": "v1",
+      "documents": [
+        {
+          "id": "manual",
+          "kind": "manual",
+          "file": "arc220-outlet-manual.md"
+        },
+        {
+          "id": "specs",
+          "kind": "specs",
+          "file": "arc220-outlet-specs.tsv"
+        },
+        {
+          "id": "faq",
+          "kind": "faq",
+          "file": "arc220-outlet-faq.md"
+        }
+      ],
+      "evidence_rules": [
+        {
+          "pattern": ".*(?:多少|多大|什么|多大块).*(?:毫安时|mAh)|.*(?:电池|电芯).*(?:容量|多大|多少).*|.*battery.*(?:capacity|mAh).*",
+          "requires": [
+            [
+              "specs",
+              "row:2"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:收拢|折叠|合起来|folded).*(?:厚|尺寸|thick|depth).*",
+          "requires": [
+            [
+              "specs",
+              "row:3"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:磁吸底座|magnetic base).*(?:编码|编号|型号|配件号|订购|part number).*",
+          "requires": [
+            [
+              "specs",
+              "row:4"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:照射|灯光|光束).*(?:角度|多宽).*|.*beam.*(?:angle|wide).*",
+          "requires": [
+            [
+              "specs",
+              "row:5"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "target": {
+        "shop_id": "t1-harbor",
+        "marketplace_id": "US",
+        "sku": "DRIFT-P12"
+      },
+      "version": "v1",
+      "documents": [
+        {
+          "id": "manual",
+          "kind": "manual",
+          "file": "drift-v1-manual.md"
+        },
+        {
+          "id": "specs",
+          "kind": "specs",
+          "file": "drift-v1-specs.tsv"
+        },
+        {
+          "id": "faq",
+          "kind": "faq",
+          "file": "drift-v1-faq.md"
+        }
+      ],
+      "evidence_rules": [
+        {
+          "pattern": ".*(?:水温|热水|水最高|water temperature|hot can the water).*(?:多少|度|work|be|\\?).*",
+          "requires": [
+            [
+              "manual",
+              "page:2"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:连续|一直).*(?:冲|喷|开).*(?:多久|几分钟|多少分钟).*|.*continuous.*(?:spray|run).*",
+          "requires": [
+            [
+              "manual",
+              "page:7"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:喷射|工作|冲洗).*(?:水压|压力).*(?:多大|多少|上限).*|.*(?:working|spray) pressure.*",
+          "requires": [
+            [
+              "specs",
+              "row:2"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:水箱|储水).*(?:容量|几升|多少升|装多少).*|.*reservoir.*(?:volume|capacity).*",
+          "requires": [
+            [
+              "specs",
+              "row:3"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:柠檬酸|citric acid).*(?:除垢|descal).*",
+          "requires": [
+            [
+              "manual",
+              "page:16"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:冬季|过冬).*(?:滤篮|滤网).*|.*winter.*(?:basket|screen).*",
+          "requires": [
+            [
+              "manual",
+              "page:17"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:水温|热水).*(?:连续|不停).*(?:喷|冲).*",
+          "requires": [
+            [
+              "manual",
+              "page:2"
+            ],
+            [
+              "manual",
+              "page:7"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:软管).*(?:外形|长得|接口).*(?:订|换|编号).*|.*replacement hose.*(?:shape|order).*",
+          "requires": [
+            [
+              "faq",
+              "faq:hose-fit"
+            ],
+            [
+              "specs",
+              "row:4"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:自行车|单车).*(?:离|距离).*(?:压力|水压).*|.*bike.*distance.*pressure.*",
+          "requires": [
+            [
+              "faq",
+              "faq:bike-rinse"
+            ],
+            [
+              "specs",
+              "row:2"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:装|加|接).*(?:几升|多少升).*(?:冲|喷).*(?:多久|几分钟).*",
+          "requires": [
+            [
+              "specs",
+              "row:3"
+            ],
+            [
+              "manual",
+              "page:7"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:装|接|加).*(?:几升|多少升).*(?:水温|热水).*",
+          "requires": [
+            [
+              "specs",
+              "row:3"
+            ],
+            [
+              "manual",
+              "page:2"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:热水|水温).*(?:顺便|再).*(?:软管).*(?:订|编号).*",
+          "requires": [
+            [
+              "manual",
+              "page:2"
+            ],
+            [
+              "specs",
+              "row:4"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*车链罩.*(?:距离|多远).*",
+          "requires": [
+            [
+              "faq",
+              "faq:bike-rinse"
+            ],
+            [
+              "specs",
+              "row:2"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "target": {
+        "shop_id": "t1-harbor",
+        "marketplace_id": "US",
+        "sku": "DRIFT-P12"
+      },
+      "version": "v2",
+      "documents": [
+        {
+          "id": "manual",
+          "kind": "manual",
+          "file": "drift-v2-manual.md"
+        },
+        {
+          "id": "specs",
+          "kind": "specs",
+          "file": "drift-v2-specs.tsv"
+        },
+        {
+          "id": "faq",
+          "kind": "faq",
+          "file": "drift-v2-faq.md"
+        }
+      ],
+      "evidence_rules": [
+        {
+          "pattern": ".*(?:水温|热水|水最高|water temperature|hot can the water).*(?:多少|度|work|be|\\?).*",
+          "requires": [
+            [
+              "manual",
+              "page:2"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:连续|一直).*(?:冲|喷|开).*(?:多久|几分钟|多少分钟).*|.*continuous.*(?:spray|run).*",
+          "requires": [
+            [
+              "manual",
+              "page:7"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:喷射|工作|冲洗).*(?:水压|压力).*(?:多大|多少|上限).*|.*(?:working|spray) pressure.*",
+          "requires": [
+            [
+              "specs",
+              "row:2"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:水箱|储水).*(?:容量|几升|多少升|装多少).*|.*reservoir.*(?:volume|capacity).*",
+          "requires": [
+            [
+              "specs",
+              "row:3"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:水温|热水).*(?:连续|不停).*(?:喷|冲).*",
+          "requires": [
+            [
+              "manual",
+              "page:2"
+            ],
+            [
+              "manual",
+              "page:7"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:软管).*(?:外形|长得|接口).*(?:订|换|编号).*|.*replacement hose.*(?:shape|order).*",
+          "requires": [
+            [
+              "faq",
+              "faq:hose-fit"
+            ],
+            [
+              "specs",
+              "row:4"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:自行车|单车).*(?:离|距离).*(?:压力|水压).*|.*bike.*distance.*pressure.*",
+          "requires": [
+            [
+              "faq",
+              "faq:bike-rinse"
+            ],
+            [
+              "specs",
+              "row:2"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:装|加|接).*(?:几升|多少升).*(?:冲|喷).*(?:多久|几分钟).*",
+          "requires": [
+            [
+              "specs",
+              "row:3"
+            ],
+            [
+              "manual",
+              "page:7"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:装|接|加).*(?:几升|多少升).*(?:水温|热水).*",
+          "requires": [
+            [
+              "specs",
+              "row:3"
+            ],
+            [
+              "manual",
+              "page:2"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:热水|水温).*(?:顺便|再).*(?:软管).*(?:订|编号).*",
+          "requires": [
+            [
+              "manual",
+              "page:2"
+            ],
+            [
+              "specs",
+              "row:4"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*车链罩.*(?:距离|多远).*",
+          "requires": [
+            [
+              "faq",
+              "faq:bike-rinse"
+            ],
+            [
+              "specs",
+              "row:2"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "target": {
+        "shop_id": "t1-harbor",
+        "marketplace_id": "US",
+        "sku": "DRIFT-P12"
+      },
+      "version": "v2-without-specs",
+      "documents": [
+        {
+          "id": "manual",
+          "kind": "manual",
+          "file": "drift-v2-manual.md"
+        },
+        {
+          "id": "faq",
+          "kind": "faq",
+          "file": "drift-v2-faq.md"
+        }
+      ],
+      "evidence_rules": [
+        {
+          "pattern": ".*(?:水温|热水|水最高|water temperature|hot can the water).*(?:多少|度|work|be|\\?).*",
+          "requires": [
+            [
+              "manual",
+              "page:2"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:连续|一直).*(?:冲|喷|开).*(?:多久|几分钟|多少分钟).*|.*continuous.*(?:spray|run).*",
+          "requires": [
+            [
+              "manual",
+              "page:7"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:水温|热水).*(?:连续|不停).*(?:喷|冲).*",
+          "requires": [
+            [
+              "manual",
+              "page:2"
+            ],
+            [
+              "manual",
+              "page:7"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "target": {
+        "shop_id": "t1-harbor",
+        "marketplace_id": "US",
+        "sku": "DRIFT-P12"
+      },
+      "version": "v2-without-faq",
+      "documents": [
+        {
+          "id": "manual",
+          "kind": "manual",
+          "file": "drift-v2-manual.md"
+        },
+        {
+          "id": "specs",
+          "kind": "specs",
+          "file": "drift-v2-specs.tsv"
+        }
+      ],
+      "evidence_rules": [
+        {
+          "pattern": ".*(?:水温|热水|水最高|water temperature|hot can the water).*(?:多少|度|work|be|\\?).*",
+          "requires": [
+            [
+              "manual",
+              "page:2"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:连续|一直).*(?:冲|喷|开).*(?:多久|几分钟|多少分钟).*|.*continuous.*(?:spray|run).*",
+          "requires": [
+            [
+              "manual",
+              "page:7"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:喷射|工作|冲洗).*(?:水压|压力).*(?:多大|多少|上限).*|.*(?:working|spray) pressure.*",
+          "requires": [
+            [
+              "specs",
+              "row:2"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:水箱|储水).*(?:容量|几升|多少升|装多少).*|.*reservoir.*(?:volume|capacity).*",
+          "requires": [
+            [
+              "specs",
+              "row:3"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:水温|热水).*(?:连续|不停).*(?:喷|冲).*",
+          "requires": [
+            [
+              "manual",
+              "page:2"
+            ],
+            [
+              "manual",
+              "page:7"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:装|加|接).*(?:几升|多少升).*(?:冲|喷).*(?:多久|几分钟).*",
+          "requires": [
+            [
+              "specs",
+              "row:3"
+            ],
+            [
+              "manual",
+              "page:7"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:装|接|加).*(?:几升|多少升).*(?:水温|热水).*",
+          "requires": [
+            [
+              "specs",
+              "row:3"
+            ],
+            [
+              "manual",
+              "page:2"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:热水|水温).*(?:顺便|再).*(?:软管).*(?:订|编号).*",
+          "requires": [
+            [
+              "manual",
+              "page:2"
+            ],
+            [
+              "specs",
+              "row:4"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "target": {
+        "shop_id": "t1-harbor",
+        "marketplace_id": "US",
+        "sku": "DRIFT-P12"
+      },
+      "version": "v2-without-manual",
+      "documents": [
+        {
+          "id": "specs",
+          "kind": "specs",
+          "file": "drift-v2-specs.tsv"
+        },
+        {
+          "id": "faq",
+          "kind": "faq",
+          "file": "drift-v2-faq.md"
+        }
+      ],
+      "evidence_rules": [
+        {
+          "pattern": ".*(?:喷射|工作|冲洗).*(?:水压|压力).*(?:多大|多少|上限).*|.*(?:working|spray) pressure.*",
+          "requires": [
+            [
+              "specs",
+              "row:2"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:水箱|储水).*(?:容量|几升|多少升|装多少).*|.*reservoir.*(?:volume|capacity).*",
+          "requires": [
+            [
+              "specs",
+              "row:3"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:软管).*(?:外形|长得|接口).*(?:订|换|编号).*|.*replacement hose.*(?:shape|order).*",
+          "requires": [
+            [
+              "faq",
+              "faq:hose-fit"
+            ],
+            [
+              "specs",
+              "row:4"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*(?:自行车|单车).*(?:离|距离).*(?:压力|水压).*|.*bike.*distance.*pressure.*",
+          "requires": [
+            [
+              "faq",
+              "faq:bike-rinse"
+            ],
+            [
+              "specs",
+              "row:2"
+            ]
+          ]
+        },
+        {
+          "pattern": ".*车链罩.*(?:距离|多远).*",
+          "requires": [
+            [
+              "faq",
+              "faq:bike-rinse"
+            ],
+            [
+              "specs",
+              "row:2"
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

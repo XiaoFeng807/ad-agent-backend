@@ -2,7 +2,7 @@
 
 StorePilot 是面向跨境电商运营的 AI 工作台。用户可以用自然语言查销量、巡检商品资料、起草 Listing 英文五点，审核后再应用变更。每项结论都可以回查数据窗口、商品事实或执行回执。
 
-[看项目截图与讲解](docs/SHOWCASE.md) · [查看异地演示部署方案](docs/REMOTE_DEMO.md)
+[项目截图和讲解](docs/SHOWCASE.md) · [架构](ARCHITECTURE.md) · [接口](API.md) · [部署](DEPLOY.md)
 
 ![StorePilot 工作台中的销量分析和英文五点待审批卡片](docs/showcase/01-workbench.png)
 
@@ -34,6 +34,48 @@ StorePilot 是面向跨境电商运营的 AI 工作台。用户可以用自然�
 
 销量分析使用 Olist 公开历史及合成业务数据，广告演示使用公开 Criteo 指标与本地沙箱。真实 Amazon 订单读取和 Listing 写入仍待取得卖家授权后联合验收。
 
-## 运行与演示
+## 本地启动
 
-展示资料对应本地已验收的开发版本。GitHub 展示分支的代码基于较早的公开提交，完整新版源码另行发布。复跑新版需要匹配版本的源码与锁文件。环境准备、远程部署边界和外网验收步骤见[异地演示说明](docs/REMOTE_DEMO.md)。
+服务入口是 [`fast_server.py`](fast_server.py)，由 Uvicorn 启动 `fast_server:app`。仓库内的 `uv.lock` 和 `locks/` 固定了依赖版本。下面用 Python 3.12 在 Windows PowerShell 启动隔离的本地模拟实例。
+
+```powershell
+py -3.12 -m venv .venv
+$python = '.\.venv\Scripts\python.exe'
+& $python -m pip --isolated install --require-hashes -r locks/acceptance.txt
+
+$env:AD_OFFLINE_ACCEPTANCE = '1'
+$env:PYTHON_DOTENV_DISABLED = '1'
+$env:LLM_PROVIDER = 'mock'
+$env:JWT_SECRET = & $python -c "import secrets; print(secrets.token_urlsafe(32))"
+$demoDir = New-Item -ItemType Directory -Path ("logs/local-demo-" + [guid]::NewGuid().ToString("N"))
+$env:DIAGNOSIS_SANDBOX_DB_PATH = Join-Path $demoDir.FullName 'demo.sqlite3'
+& $python -m uvicorn fast_server:app --host 127.0.0.1 --port 5010
+```
+
+浏览器打开 [本地工作台](http://127.0.0.1:5010)。本地回环实例可用初始化的普通测试账号 `zhangsan`，测试口令为 `user123`。测试商品、公开历史和完整流程可用下节的浏览器验收脚本准备。使用真实 Provider 或 BGE 时，在新终端按 [部署文档](DEPLOY.md) 配置模型、密钥与缓存。对外试用使用独立的环境和账号，见 [异地演示](docs/REMOTE_DEMO.md)。
+
+## 离线评测与浏览器演示
+
+在仓库根目录，用 Node.js 22+（含 npm 10+）安装 Playwright 并复跑本地隔离验收。固定回放使用合成数据，可在无模型密钥和无 BGE 权重的环境运行。
+
+```powershell
+npm ci
+$env:PLAYWRIGHT_BROWSERS_PATH = '0'
+npm run browser:install
+& .\.venv\Scripts\python.exe -B -X utf8 -m scripts.run_acceptance --mode core
+& .\.venv\Scripts\python.exe -B -X utf8 -m scripts.verify_workbench --output-dir "logs/workbench-$(Get-Date -Format yyyyMMdd-HHmmss)"
+```
+
+浏览器演示生成销量、待审批、已执行和刷新读回记录。验收过程使用临时数据库和独立的运行目录。
+
+## 计划历史与可计算诊断
+
+在需要复跑广告历史指标案例时，将 [Criteo 固定版本公开历史](https://huggingface.co/datasets/criteo/criteo-attribution-dataset/tree/904188a63cbad78bee43cd26ff5ee4ac77903986) 中的 `criteo_attribution_dataset.tsv.gz` 放在 `data/public/criteo/`，从仓库根目录执行以下命令。导入会生成只读指标产物，核验命令从原始数据独立复算。
+
+```powershell
+& .\.venv\Scripts\python.exe -m scripts.import_criteo_metrics data/public/criteo/criteo_attribution_dataset.tsv.gz
+& .\.venv\Scripts\python.exe -m scripts.verify_criteo_metrics data/public/criteo/criteo_attribution_dataset.tsv.gz data/plan_metrics/criteo.sqlite3
+& .\.venv\Scripts\python.exe -B -X utf8 -m scripts.run_acceptance --mode full
+```
+
+账户绑定见 [部署文档](DEPLOY.md#计划历史数据部署)。

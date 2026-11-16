@@ -3,7 +3,7 @@
    不要用 from .shared import xxx，否则拿不到更新后的值"""
 import datetime
 
-# 这些变量会在create_app()时通过init()函数设置
+# 兼容蓝图通过 init() 设置这些变量
 db_provider = None       # 数据库提供者
 auth_instance = None     # 认证实例
 agent = None             # AI助手实例
@@ -12,7 +12,7 @@ app_start_time = None    # 服务启动时间
 
 
 def init(db_prov, auth_inst, agent_inst, captcha, start_time):
-    """初始化所有共享状态（由server.py的create_app调用）"""
+    """初始化兼容蓝图使用的共享状态。"""
     global db_provider, auth_instance, agent, captcha_store, app_start_time
     db_provider = db_prov
     auth_instance = auth_inst

@@ -1,0 +1,110 @@
+[
+  {
+    "reason": "独立复核计划#101和#103的点击率变化，基准窗2026-10-17至2026-10-23，当前窗2026-10-24至2026-10-30，按《点击率下降复核》v1规则",
+    "tasks": [
+      {
+        "task_id": "evidence_collection_101",
+        "objective": "获取计划#101基准窗(2026-10-17至2026-10-23)和当前窗(2026-10-24至2026-10-30)的点击率指标数据",
+        "capabilities": [
+          "get_plan_metrics_by_date"
+        ],
+        "expected_output": "计划#101在两个时间窗口的impression、click、CTR数据",
+        "stop_condition": "完成计划#101两个时间窗口的CTR指标收集"
+      },
+      {
+        "task_id": "evidence_collection_103",
+        "objective": "获取计划#103基准窗(2026-10-17至2026-10-23)和当前窗(2026-10-24至2026-10-30)的点击率指标数据",
+        "capabilities": [
+          "get_plan_metrics_by_date"
+        ],
+        "expected_output": "计划#103在两个时间窗口的impression、click、CTR数据",
+        "stop_condition": "完成计划#103两个时间窗口的CTR指标收集"
+      },
+      {
+        "task_id": "rule_lookup",
+        "objective": "查找《点击率下降复核》v1规则的具体内容和标准",
+        "capabilities": [
+          "search_knowledge"
+        ],
+        "expected_output": "点击率下降复核规则的详细条款和判定标准",
+        "stop_condition": "获取完整的点击率下降复核规则文档"
+      },
+      {
+        "task_id": "independent_review_101",
+        "objective": "根据证据复核计划#101的点击率变化是否符合《点击率下降复核》v1规则，确定是否需要跟进",
+        "capabilities": [
+          "get_plan_detail"
+        ],
+        "expected_output": "计划#101的复核结论和跟进建议清单",
+        "stop_condition": "完成计划#101的独立复核并生成跟进清单"
+      },
+      {
+        "task_id": "independent_review_103",
+        "objective": "根据证据复核计划#103的点击率变化是否符合《点击率下降复核》v1规则，确定是否需要跟进",
+        "capabilities": [
+          "get_plan_detail"
+        ],
+        "expected_output": "计划#103的复核结论和跟进建议清单",
+        "stop_condition": "完成计划#103的独立复核并生成跟进清单"
+      }
+    ]
+  },
+  {
+    "reason": "独立复核计划#101和#103的点击率变化，基准窗2026-10-17至2026-10-23，当前窗2026-10-24至2026-10-30，按《点击率下降复核》v1规则",
+    "tasks": [
+      {
+        "task_id": "evidence_collection_101",
+        "objective": "获取计划#101基准窗(2026-10-17至2026-10-23)和当前窗(2026-10-24至2026-10-30)的点击率指标数据",
+        "capabilities": [
+          "get_plan_metrics_by_date"
+        ],
+        "expected_output": "计划#101在两个时间窗口的impression、click、CTR数据",
+        "stop_condition": "完成计划#101两个时间窗口的CTR指标收集"
+      },
+      {
+        "task_id": "evidence_collection_103",
+        "objective": "获取计划#103基准窗(2026-10-17至2026-10-23)和当前窗(2026-10-24至2026-10-30)的点击率指标数据",
+        "capabilities": [
+          "get_plan_metrics_by_date"
+        ],
+        "expected_output": "计划#103在两个时间窗口的impression、click、CTR数据",
+        "stop_condition": "完成计划#103两个时间窗口的CTR指标收集"
+      },
+      {
+        "task_id": "rule_lookup",
+        "objective": "查找《点击率下降复核》v1规则的具体内容和标准",
+        "capabilities": [
+          "search_knowledge"
+        ],
+        "expected_output": "点击率下降复核规则的详细条款和判定标准",
+        "stop_condition": "获取完整的点击率下降复核规则文档"
+      },
+      {
+        "task_id": "independent_review_101",
+        "objective": "根据证据复核计划#101的点击率变化是否符合《点击率下降复核》v1规则，确定是否需要跟进",
+        "capabilities": [
+          "get_plan_detail"
+        ],
+        "expected_output": "计划#101的复核结论和跟进建议清单",
+        "stop_condition": "完成计划#101的独立复核并生成跟进清单",
+        "dependencies": [
+          "evidence_collection_101",
+          "rule_lookup"
+        ]
+      },
+      {
+        "task_id": "independent_review_103",
+        "objective": "根据证据复核计划#103的点击率变化是否符合《点击率下降复核》v1规则，确定是否需要跟进",
+        "capabilities": [
+          "get_plan_detail"
+        ],
+        "expected_output": "计划#103的复核结论和跟进建议清单",
+        "stop_condition": "完成计划#103的独立复核并生成跟进清单",
+        "dependencies": [
+          "evidence_collection_103",
+          "rule_lookup"
+        ]
+      }
+    ]
+  }
+]

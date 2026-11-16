@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="same-origin">
+  <title>店铺订单 · StorePilot Agent</title>
+  <link rel="stylesheet" href="/static/product-shell.css">
+  <link rel="stylesheet" href="/static/orders.css">
+  <script src="/static/echarts.min.js" defer></script>
+  <script src="/static/orders.js" defer></script>
+</head>
+<body>
+  <aside class="product-sidebar" id="orders-nav" aria-label="全局导航">
+    <a class="product-brand" href="/?from=orders"><span aria-hidden="true">✦</span><strong>StorePilot Agent</strong></a>
+    <button class="product-nav-close" id="orders-nav-close" type="button" aria-label="关闭全局导航">×</button>
+    <nav>
+      <a href="/?from=orders"><span aria-hidden="true">✧</span>AI 工作台</a>
+      <a href="/?from=orders&amp;page=dashboard"><span aria-hidden="true">▥</span>仪表盘</a>
+      <a href="/?from=orders&amp;page=plans"><span aria-hidden="true">◎</span>投放计划</a>
+      <a href="/orders" aria-current="page"><span aria-hidden="true">◇</span>店铺订单</a>
+      <a href="/?from=orders&amp;page=budget"><span aria-hidden="true">▣</span>预算管理</a>
+      <a href="/?from=orders&amp;page=alerts"><span aria-hidden="true">△</span>告警中心</a>
+      <a href="/?from=orders&amp;page=materials"><span aria-hidden="true">▱</span>素材管理</a>
+      <a href="/?from=orders&amp;page=users" id="orders-users" hidden><span aria-hidden="true">◉</span>账户管理</a>
+      <a href="/?from=orders&amp;page=logs"><span aria-hidden="true">▤</span>操作日志</a>
+      <a href="/?from=orders&amp;page=decisions"><span aria-hidden="true">◆</span>决策记录</a>
+      <a href="/?from=orders&amp;page=timeline"><span aria-hidden="true">◷</span>活动时间轴</a>
+    </nav>
+  </aside>
+  <div class="orders-page">
+  <header class="top">
+    <div class="frame top-inner">
+      <button class="product-menu" id="orders-menu" type="button" aria-controls="orders-nav" aria-expanded="false">☰ 全局导航</button>
+      <a class="back" href="/?from=orders">返回工作台 <span aria-hidden="true">↗</span></a>
+    </div>
+  </header>
+  <main class="frame">
+    <header class="page-title">
+      <h1>店铺订单</h1>
+      <label id="shop-field" hidden>店铺与数据来源 <select id="shop"></select></label>
+    </header>
+    <p id="notice" role="status">正在读取店铺权限…</p>
+    <a href="/" id="login" hidden>前往工作台登录</a>
+    <div id="workspace" hidden>
+      <section class="summary" aria-label="店铺数据概览">
+        <div><span>店铺订单</span><strong id="total-orders">—</strong></div>
+        <div><span>店铺行项</span><strong id="total-items">—</strong></div>
+        <div><span>数据来源</span><strong class="source-value" id="source-label"></strong><small id="shop-id"></small></div>
+      </section>
+      <p class="source-note"><span id="source-note"></span>
+        <span id="olist-links" hidden>
+          <a href="https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce" target="_blank" rel="noopener noreferrer">Olist 发布页</a>
+          · <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="noopener noreferrer">CC BY-NC-SA 4.0</a>
+        </span>
+      </p>
+      <section id="sales-panel" class="panel" aria-labelledby="sales-heading" hidden>
+        <div class="panel-head"><h2 id="sales-heading">商品销量对比</h2></div>
+        <form id="sales-filters" class="sales-filters">
+          <label>产品 ID <select id="sales-product" required></select></label>
+          <label>订单状态
+            <select id="sales-status">
+              <option value="">已交运与已送达</option>
+              <option value="shipped">仅已交运</option>
+              <option value="delivered">仅已送达</option>
+            </select>
+          </label>
+          <label>基准开始 <input id="baseline_start" type="date" required></label>
+          <label>基准结束 <input id="baseline_end" type="date" required></label>
+          <label>当前开始 <input id="current_start" type="date" required></label>
+          <label>当前结束 <input id="current_end" type="date" required></label>
+          <button id="sales-submit" class="primary" disabled>对比销量</button>
+        </form>
+        <p id="sales-notice" class="sales-caption" role="status"></p>
+        <div id="sales-result" hidden>
+          <p id="sales-source" class="sales-caption"></p>
+          <div id="sales-totals" class="sales-totals"></div>
+          <div id="sales-chart" role="img" aria-label="每日销量与去重订单数趋势"></div>
+          <details class="sales-days">
+            <summary>查看每日数据</summary>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th scope="col">日期窗</th><th scope="col">下单日期</th><th scope="col">销量（件）</th><th scope="col">去重订单数</th></tr></thead>
+                <tbody id="sales-points"></tbody>
+              </table>
+            </div>
+          </details>
+        </div>
+      </section>
+      <section class="panel" aria-labelledby="order-heading">
+        <div class="panel-head">
+          <h2 id="order-heading">订单列表</h2>
+          <form id="filters">
+            <label>订单号 <input name="search" id="search" maxlength="128" placeholder="输入完整或部分订单号"></label>
+            <label>原始状态 <select name="status" id="status"><option value="">全部状态</option></select></label>
+            <button class="primary" type="submit">筛选</button>
+          </form>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">外部订单号</th><th scope="col">原始状态</th><th scope="col">下单时间</th><th scope="col">店铺行项</th><th scope="col" id="time-column">源更新时间</th></tr></thead>
+            <tbody id="orders"></tbody>
+          </table>
+        </div>
+        <div class="pager">
+          <span id="range" aria-live="polite"></span>
+          <div><button id="previous">上一页</button><button id="next">下一页</button></div>
+        </div>
+      </section>
+      <section class="panel" aria-labelledby="runs-heading">
+        <div class="panel-head">
+          <h2 id="runs-heading">接入记录</h2>
+          <form id="amazon" hidden>
+            <label>源更新时间起（含时区） <input id="after" placeholder="2026-01-01T00:00:00Z" required></label>
+            <label>源更新时间止（含时区） <input id="before" placeholder="2026-01-02T00:00:00Z" required></label>
+            <button type="button" id="preflight">连接预检</button>
+            <button type="submit" class="primary" id="sync">手动同步</button>
+          </form>
+        </div>
+        <p id="sync-notice" role="status" hidden></p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">完成时间（UTC）</th><th scope="col">操作</th><th scope="col">结果</th><th scope="col">写入订单 / 行项</th></tr></thead>
+            <tbody id="runs"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+  <dialog id="detail" aria-labelledby="detail-title">
+    <div class="detail-head">
+      <div><p id="detail-source"></p><h2 id="detail-title">订单详情</h2></div>
+      <button id="close-detail" aria-label="关闭详情">关闭</button>
+    </div>
+    <div id="detail-content"></div>
+  </dialog>
+  </div>
+</body>
+</html>

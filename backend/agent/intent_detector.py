@@ -2,6 +2,7 @@
 """意图检测模块 — 识别用户意图 + 检测意图漂移"""
 
 import re
+from dataclasses import dataclass
 from datetime import datetime
 from backend.config.config import settings
 
@@ -240,6 +241,27 @@ class IntentManager:
         self.last_message = ""
         self.history = []
         self._conversation_topic = None
+
+
+@dataclass(frozen=True)
+class IntentSnapshot:
+    current: str | None
+    last: str | None
+    change_type: str
+    prompt: str
+
+
+def intent_from_history(messages):
+    """Replay only this request's bounded user history into a local manager."""
+    manager = IntentManager()
+    result = None
+    for message in messages:
+        if message.get("role") == "user" and message.get("content"):
+            result = manager.update(message["content"])
+    return IntentSnapshot(
+        manager.current_intent, manager.last_intent,
+        result["change_type"] if result else "first", manager.get_prompt_section(),
+    )
 
 
 # ==================== LLM 意图深度分析 ====================

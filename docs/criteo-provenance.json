@@ -1,0 +1,27 @@
+{
+  "source_id": "criteo-attribution-2017",
+  "data_version": "b0dba3715c56871fad76d6b570520b9ea29a25a62af16bf1d9780451dc1ecf78",
+  "kind": "public",
+  "source_url": "https://ailab.criteo.com/criteo-attribution-modeling-bidding-dataset/",
+  "download_url": "https://huggingface.co/datasets/criteo/criteo-attribution-dataset/resolve/904188a63cbad78bee43cd26ff5ee4ac77903986/criteo_attribution_dataset.tsv.gz",
+  "revision": "904188a63cbad78bee43cd26ff5ee4ac77903986",
+  "license": "CC-BY-NC-SA-4.0",
+  "license_url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "attribution": "Diemert, Meynet, Galland, Lefortier (2017), Attribution Modeling Increases Efficiency of Bidding in Display Advertising",
+  "compressed_sha256": "94ac7a465564349bc7ba008602211d5990a3c53cc133abc0aadef61ea2391a98",
+  "tsv_sha256": "0cd0c6ee363f9d6a47d9b6c6735159d22ffa4301f3b136b0c34bb00a68315be3",
+  "sampling": "all rows of pinned, already sub-sampled anonymized public release; no additional row sampling",
+  "rows": 16468027,
+  "campaigns": 675,
+  "timestamp_min": 0,
+  "timestamp_max": 2671199,
+  "time_mapping": {
+    "anchor_date": "2026-10-01",
+    "formula": "demo_date = anchor_date + floor(timestamp / 86400) days",
+    "timezone": "relative 86400-second bins; no original calendar date or timezone inferred",
+    "original_calendar_dates": false
+  },
+  "complete_start_date": "2026-10-01",
+  "complete_end_date": "2026-10-30",
+  "artifact_sha256": "cbc14383dd8862a488fd2864b88c50077b8e713338d6bba0c5f4f54564d019e1"
+}

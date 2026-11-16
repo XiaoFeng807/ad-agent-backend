@@ -1,17 +1,20 @@
-﻿version: "3.8"
-
 services:
   web:
     build: .
-    container_name: ad-agent
     ports:
-      - "5001:5001"
-    volumes:
-      # 挂载 .env 配置文件（API Key 等）
-      - ./.env:/app/.env:ro
-      # 挂载数据库文件（持久化，重启不丢失）
-      - ./data:/app/data
+      - "127.0.0.1:5010:5010"
+    env_file:
+      - .env
     environment:
-      - TZ=Asia/Shanghai
+      TZ: Asia/Shanghai
+      HF_HOME: /app/model-cache
+    volumes:
+      - storepilot-data:/app/data
+      - storepilot-memory:/app/backend/memory/user_memory
+      - storepilot-model-cache:/app/model-cache
     restart: unless-stopped
 
+volumes:
+  storepilot-data:
+  storepilot-memory:
+  storepilot-model-cache:

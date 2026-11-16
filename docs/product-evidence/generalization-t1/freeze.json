@@ -1,0 +1,38 @@
+{
+  "files": {
+    "manifest.json": "7d45d9bd5ed0c356539837413fa4ab24de3ed50d21921c051615c3283249b050",
+    "questions.json": "d848e29ae72aa43a76552c3accd1cb4467ea3774f159727c5feb0229edbfa0ec",
+    "probes.json": "59e288bb609c641f0dd1825f31237336b8c75790e8d9a1c21845d59b4bc7f309",
+    "rubric.md": "d3249f0b0350e590b1b459b5b2cc3f7b335dda1cd89b101a6347ff2bebc135c8",
+    "sources/arc220-faq.md": "82d187d020dfbcd70f98f1c7717f9ad303756342db7b485fb9f72fa6dafc8b30",
+    "sources/arc220-manual.md": "ea1ce9a10cda6f29c7cd65ba228f416fb8aaa611c7379e99552fb8773de57f7d",
+    "sources/arc220-outlet-faq.md": "82d187d020dfbcd70f98f1c7717f9ad303756342db7b485fb9f72fa6dafc8b30",
+    "sources/arc220-outlet-manual.md": "ea1ce9a10cda6f29c7cd65ba228f416fb8aaa611c7379e99552fb8773de57f7d",
+    "sources/arc220-outlet-specs.tsv": "930ce6ab8cc006ccc1cef6dc5dfba8d2fea114fb94ca84ebd6492b8774abe315",
+    "sources/arc220-specs.tsv": "49f2de14a5a71f59d813461680d0957976bcb4a352c24dba708a070b2e425188",
+    "sources/arc480-faq.md": "82d187d020dfbcd70f98f1c7717f9ad303756342db7b485fb9f72fa6dafc8b30",
+    "sources/arc480-manual.md": "ea1ce9a10cda6f29c7cd65ba228f416fb8aaa611c7379e99552fb8773de57f7d",
+    "sources/arc480-specs.tsv": "1685729ed19e65cb97d5b811e144a3065750b12875c397bb5a797a25a21643f3",
+    "sources/drift-v1-faq.md": "d772ec02383437e0f62de59faad2888242eb2b2534eaa54fc208b3972071a67a",
+    "sources/drift-v1-manual.md": "699f4fce3cdee44f75a6a5a65ac9e2872b720a3cd223b674608ab2cca63adf31",
+    "sources/drift-v1-specs.tsv": "906532cd57cf6f2678242121ab2a5c4f31b6f678b3c6df47bf62cdd05ddd14bc",
+    "sources/drift-v2-faq.md": "d772ec02383437e0f62de59faad2888242eb2b2534eaa54fc208b3972071a67a",
+    "sources/drift-v2-manual.md": "13c5cbec2f2d0640df62657049b0ac89a87b7957ac5a8d387d2b0dd3e6e270fd",
+    "sources/drift-v2-specs.tsv": "eeeaa205114ed1001fd4a3f2e14f4c9fc62ce969aefe288083ac09c58989ad08"
+  },
+  "model": "BAAI/bge-small-zh-v1.5@7999e1d3359715c523056ef9478215996d62a620",
+  "settings": {
+    "strategy": "structured",
+    "mode": "vector",
+    "expansion": "both",
+    "candidate_k": 20,
+    "policy": {
+      "original_slots": 5,
+      "english_part_terms": true,
+      "catalog_intents": true
+    },
+    "device": "cpu",
+    "PRODUCT_R4_CPU_ENABLED": true,
+    "PRODUCT_RERANK_ENABLED": false
+  }
+}

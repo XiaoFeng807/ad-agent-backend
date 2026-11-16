@@ -45,6 +45,7 @@ def api_chat():
 def api_chat_stream():
     """流式聊天：逐字返回AI回复，前端实时显示"""
     data = request.get_json(silent=True) or {}
+    chat_view_id = data.get("chat_view_id")
     message = data.get("message", "").strip()
     user_id = request.current_user["user_id"]
     if not message:
@@ -69,13 +70,13 @@ def api_chat_stream():
             yield "data: " + json.dumps({"type": "thinking"}) + "\n\n"
             task_status, task_type, task_detail = track_message(intent, message)
             task_context = get_task_context()
-            _shared.agent.save_conversation(user_id, "user", message, priority=1)
+            _shared.agent.save_conversation(user_id, "user", message, priority=1, chat_view_id=chat_view_id)
             history, _ = _shared.agent.get_optimized_context(user_id)
             full_reply = ""
             for chunk in _shared.agent.chat_stream(history, user_id, task_context=task_context):
                 full_reply += chunk
                 yield "data: " + json.dumps({"type": "text", "content": chunk}) + "\n\n"
-            _shared.agent.save_conversation(user_id, "assistant", full_reply, priority=1)
+            _shared.agent.save_conversation(user_id, "assistant", full_reply, priority=1, chat_view_id=chat_view_id)
             # 对话摘要：保存关键信息供后续参考
             from backend.memory.memory_manager import store_conversation_summary
             store_conversation_summary(user_id, message, full_reply)
@@ -95,5 +96,7 @@ def api_chat_stream():
 @login_required
 def api_chat_history():
     """获取聊天历史记录"""
-    history, _ = _shared.agent.get_optimized_context(request.current_user["user_id"])
+    history, _ = _shared.agent.get_optimized_context(
+        request.current_user["user_id"], exclude_chat_view_id=request.args.get("exclude_chat_view_id"),
+    )
     return jsonify({"code": 200, "data": history})

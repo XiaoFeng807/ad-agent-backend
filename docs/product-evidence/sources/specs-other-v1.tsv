@@ -1,0 +1,27 @@
+Attribute	Value	Unit	Part	Restriction
+Nominal volume	920	mL	Bottle body	Other shop edition
+Body diameter	68	mm	Bottle body	Measured at widest point, excluding the carry loop
+Overall height	215	mm	Assembled bottle	Measured upright with the cap closed
+Empty weight	268	g	Assembled bottle	Includes cap and fitted gasket, dry
+Mouth inner diameter	42	mm	Bottle neck	Excludes screw threads
+Service code LID-M500	LID-M500	part ID	Screw cap	Only for Metro 500 body with thread B42
+Gasket service code GSK-R42	GSK-R42	part ID	Removable seal	Use only with B42 cap groove
+洗碗机温度上限	60	°C	杯身	仅上层架。拆除杯盖和密封圈后再放入，烘干温度同限
+杯盖清洗	手洗	方式	杯盖及密封圈	温和皂液。不可放入洗碗机
+Cap torque inspection	1.5	N·m	Screw cap	Factory inspection only. Do not use tools for normal closing
+Seal material	Silicone	material	Removable seal	Replace if torn or permanently distorted
+Maximum fill temperature	85	°C	Bottle body	Pour only after the drink stops actively boiling. Keep upright
+Pack depth	78	mm	Retail carton	Includes the protective insert
+Neck thread	B42	thread code	Bottle neck	Use the cap listed for this SKU only
+Cap shell resin	PP	material	Screw cap outer shell	This specification excludes the fitted silicone seal
+运输防护	原外盒	要求	杯口	不得承受侧向冲击。运输前排空并擦干
+Replacement carton code BOX-M500	BOX-M500	part ID	Retail carton	Fits only Metro 500 with carry loop folded
+外壁表面	粉末涂层	工艺	杯身外壁	避免金属刷及研磨粉
+First rinse detergent	Mild soap	cleaner	All washable parts	Rinse away residue before filling
+Seal press tool	None	tool	Removable seal	Fit using fingers only
+Inner liner	Borosilicate glass	material	Drink contact liner	Other shop edition
+Bottle sleeve fit	69	mm	Optional sleeve opening	Sleeve sold separately and may stretch when fitted
+Batch label location	Base	position	Bottle body	Use for production-lot support cases
+Food contact insert	None	material	Assembled bottle	Remove the shipping insert before first use
+Cap carry loop	Fold-flat	shape	Screw cap	Fold loop when packing in the original carton
+Body finish color	Graphite	finish	Bottle body	Printed cartons may show a representative color

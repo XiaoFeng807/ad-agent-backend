@@ -1,0 +1,105 @@
+{
+  "sources_and_questions": {
+    "manifest.json": "85def8037111163a7303296988133d833bd2d5af69f6c2708655e03cec587915",
+    "questions.json": "15cd39880e598f6500b715b37bbcd613e2283c7b50f9448de14fa385707d6701",
+    "sources/lamp-specs.tsv": "b06f0d0c1bab6037509c72bb954982fdc6f336070aef6838556a7870298f1144",
+    "sources/pump-manual.md": "3b3fef1895d174177413b7891c98fce03abf7ce323aff77acdc572e41455dc8f",
+    "sources/pump-specs.tsv": "ff6b3d25f0afe7d7120a17e1427bd654696d712f05561e84e76efb26d5d7ac44"
+  },
+  "config_code": {
+    "backend/rag/product_attribute_queries.py": "275b01a3c84a93e3aca0c655445bc666f8e515aa78bafec3f9f2c0bc0e8da8e4",
+    "backend/rag/product_query_expansion.py": "a95e6874461c10d60566e02c185625077a0fb6e08ec9193ee5097d95bd719fb2",
+    "backend/rag/product_evidence.py": "23cddd0b3cb6328d3890a1199f99dceaf03cf002aaddff2fbf248b6ffd60390e",
+    "backend/rag/product_chat_search.py": "7a45db40c0bb37035584e24c00fc83fbe0c0e3d04ac07739aa9b299ba679b509"
+  },
+  "model": "BAAI/bge-small-zh-v1.5@7999e1d3359715c523056ef9478215996d62a620",
+  "variants": {
+    "r3": "both"
+  },
+  "base": {
+    "mode": "vector",
+    "expansion": "both"
+  },
+  "production": {
+    "mode": "vector",
+    "expansion": "both",
+    "attribute_expansion": "both"
+  },
+  "device": "cpu",
+  "gpu": false,
+  "original_slots": 5,
+  "top_k": 20,
+  "rubric": "Exact complete original regions at K=5,20. All required groups for multi. Near-part negatives have no gold; check expansion and final citations separately.",
+  "gold": {
+    "T01": [
+      [
+        {
+          "location": "row:11",
+          "start_offset": 519,
+          "end_offset": 603,
+          "document_id": "specs",
+          "filename": "lamp-specs.tsv",
+          "quote": "Built-in lithium cell capacity\t3100\tmAh\tRated capacity of the installed cell\tKITE-95"
+        }
+      ]
+    ],
+    "T02": [
+      [
+        {
+          "location": "row:21",
+          "start_offset": 1074,
+          "end_offset": 1151,
+          "document_id": "specs",
+          "filename": "lamp-specs.tsv",
+          "quote": "Thickness in storage position\t41\tmm\tKickstand latched completely shut\tKITE-95"
+        }
+      ]
+    ],
+    "T03": [],
+    "T04": [
+      [
+        {
+          "location": "row:11",
+          "start_offset": 518,
+          "end_offset": 589,
+          "document_id": "specs",
+          "filename": "pump-specs.tsv",
+          "quote": "Nominal water tank volume\t5.4\tL\tLevel bench, up to MAX marking\tFJORD-14"
+        }
+      ],
+      [
+        {
+          "location": "page:1",
+          "start_offset": 0,
+          "end_offset": 90,
+          "document_id": "manual",
+          "filename": "pump-manual.md",
+          "quote": "## 1 | Trigger held open\nLimit uninterrupted spray time to 11 minutes. Let the motor cool."
+        }
+      ]
+    ],
+    "T05": [
+      [
+        {
+          "location": "page:2",
+          "start_offset": 92,
+          "end_offset": 177,
+          "document_id": "manual",
+          "filename": "pump-manual.md",
+          "quote": "## 2 | Warm feed water\nThe maximum feed water temperature at the pump inlet is 39 °C."
+        }
+      ],
+      [
+        {
+          "location": "row:21",
+          "start_offset": 1074,
+          "end_offset": 1158,
+          "document_id": "specs",
+          "filename": "pump-specs.tsv",
+          "quote": "Hose assembly catalogue code\tFJ-R14\tcode\tReplacement straight delivery hose\tFJORD-14"
+        }
+      ]
+    ],
+    "T06": []
+  }
+}

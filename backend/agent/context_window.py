@@ -7,6 +7,7 @@
 
 import json
 from datetime import datetime
+from backend.agent.request_budget import tool_call_fields
 
 # ==================== 精准 Token 计数 ====================
 _tiktoken_enc = None
@@ -63,7 +64,8 @@ def estimate_messages_tokens(messages):
         tool_calls = msg.get("tool_calls")
         if tool_calls:
             for tc in tool_calls:
-                total += estimate_tokens(tc.function.name) + estimate_tokens(tc.function.arguments)
+                _, name, arguments = tool_call_fields(tc)
+                total += estimate_tokens(name) + estimate_tokens(arguments)
         # RAG 搜索结果
         if isinstance(content, dict) and content.get("source") == "rag":
             total += estimate_tokens(json.dumps(content, ensure_ascii=False))

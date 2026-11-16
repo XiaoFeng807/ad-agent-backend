@@ -1,0 +1,114 @@
+[
+  {
+    "id": "D01",
+    "principal": "owner",
+    "target": {
+      "shop_id": "r3-development",
+      "marketplace_id": "US",
+      "sku": "LUMA-71"
+    },
+    "version": "v1",
+    "query": "这台检修灯里头的电芯容量有多大？",
+    "category": "cell",
+    "expectation": "supported",
+    "required": [
+      [
+        "specs",
+        "row:11"
+      ]
+    ]
+  },
+  {
+    "id": "D02",
+    "principal": "owner",
+    "target": {
+      "shop_id": "r3-development",
+      "marketplace_id": "US",
+      "sku": "LUMA-71"
+    },
+    "version": "v1",
+    "query": "How thick is the unit with its stand folded?",
+    "category": "fold",
+    "expectation": "supported",
+    "required": [
+      [
+        "specs",
+        "row:21"
+      ]
+    ]
+  },
+  {
+    "id": "D03",
+    "principal": "owner",
+    "target": {
+      "shop_id": "r3-development",
+      "marketplace_id": "US",
+      "sku": "LUMA-71"
+    },
+    "version": "v1",
+    "query": "充电器的电芯标了多少毫安时？",
+    "category": "near_part_no_answer",
+    "expectation": "insufficient",
+    "required": []
+  },
+  {
+    "id": "D04",
+    "principal": "owner",
+    "target": {
+      "shop_id": "r3-development",
+      "marketplace_id": "US",
+      "sku": "RILL-60"
+    },
+    "version": "v1",
+    "query": "额定容积有多少升？一直扣住扳机连续喷多久？",
+    "category": "capacity_and_time",
+    "expectation": "supported",
+    "required": [
+      [
+        "specs",
+        "row:11"
+      ],
+      [
+        "manual",
+        "page:1"
+      ]
+    ]
+  },
+  {
+    "id": "D05",
+    "principal": "owner",
+    "target": {
+      "shop_id": "r3-development",
+      "marketplace_id": "US",
+      "sku": "RILL-60"
+    },
+    "version": "v1",
+    "query": "What is the maximum inlet temperature, and what is the order number for the replacement hose?",
+    "category": "temperature_and_hose",
+    "expectation": "supported",
+    "required": [
+      [
+        "manual",
+        "page:2"
+      ],
+      [
+        "specs",
+        "row:21"
+      ]
+    ]
+  },
+  {
+    "id": "D06",
+    "principal": "owner",
+    "target": {
+      "shop_id": "r3-development",
+      "marketplace_id": "US",
+      "sku": "RILL-60"
+    },
+    "version": "v1",
+    "query": "这个软管接头的替换订货号怎么写？",
+    "category": "near_part_no_answer",
+    "expectation": "insufficient",
+    "required": []
+  }
+]

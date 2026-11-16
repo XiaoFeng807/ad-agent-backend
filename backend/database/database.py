@@ -1,23 +1,69 @@
 ﻿"""数据库模块 — 建表 + 初始化数据"""
-import sqlite3, os, hashlib
+import sqlite3, hashlib
+from contextlib import closing
+from pathlib import Path
 
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "ad_agent.db")
+from backend.config.config import settings
+from backend.database import mysql_diagnosis
+from backend.database.listing_operations import SCHEMA as LISTING_SCHEMA
+from backend.database.orders import SCHEMA as ORDER_SCHEMA
+from backend.database.product_documents import SCHEMA as PRODUCT_DOCUMENT_SCHEMA
 
-def get_db():
-    conn = sqlite3.connect(DB_PATH)
+DEFAULT_DB_PATH = Path(__file__).resolve().parents[2] / "ad_agent.db"
+DB_PATH = str(DEFAULT_DB_PATH)
+
+
+def sandbox_db_path():
+    configured = settings.DIAGNOSIS_SANDBOX_DB_PATH
+    if not configured:
+        return None
+    path = Path(configured).resolve()
+    protected_paths = [DEFAULT_DB_PATH, Path(DB_PATH)]
+    if settings.PLAN_METRICS_DB_PATH:
+        protected_paths.append(Path(settings.PLAN_METRICS_DB_PATH))
+    for protected in protected_paths:
+        if path == protected.resolve() or (path.exists() and protected.exists() and path.samefile(protected)):
+            raise ValueError("暂停沙箱必须使用独立的 SQLite 文件")
+    return path
+
+
+def sandbox_memory_root():
+    """Keep each sandbox's persistent memory beside its resolved SQLite file."""
+    path = sandbox_db_path()
+    return path.parent / (path.name + ".memory") if path is not None else None
+
+def get_db(*, read_only=False):
+    sandbox = sandbox_db_path()
+    if sandbox is not None and sandbox.exists():
+        # Recognize importer output before opening a writable connection or enabling WAL.
+        with closing(sqlite3.connect(f"{sandbox.as_uri()}?mode=ro", uri=True)) as inspection:
+            metric_tables = inspection.execute(
+                "SELECT count(*) FROM sqlite_schema WHERE type='table' "
+                "AND name IN ('metadata', 'plan_daily_metrics')"
+            ).fetchone()[0]
+        if metric_tables == 2:
+            raise ValueError("暂停沙箱必须使用独立的 SQLite 文件，不能使用计划历史指标库")
+    if read_only:
+        path = Path(sandbox or DB_PATH).resolve()
+        conn = sqlite3.connect(f"{path.as_uri()}?mode=ro", uri=True)
+    else:
+        conn = sqlite3.connect(sandbox or DB_PATH)
+        conn.execute("PRAGMA journal_mode=WAL")
     conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA journal_mode=WAL")
     return conn
 
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
+
+def get_diagnosis_db(*, read_only=False):
+    connect = mysql_diagnosis.connect if settings.DIAGNOSIS_MYSQL_ENABLED else get_db
+    return connect(read_only=read_only) if read_only else connect()
+
 def init_db():
     """创建所有表（幂等：IF NOT EXISTS）"""
-    conn = get_db()
-    c = conn.cursor()
-
     tables = [
+        *ORDER_SCHEMA,
         """CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
@@ -36,7 +82,71 @@ def init_db():
             user_id INTEGER,
             role TEXT,
             content TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            priority INTEGER DEFAULT 1,
+            chat_view_id TEXT
+        )""",
+        """CREATE TABLE IF NOT EXISTS diagnosis_tasks (
+            user_id INTEGER NOT NULL,
+            task_id TEXT NOT NULL,
+            plan_id NOT NULL,
+            rule_id TEXT NOT NULL,
+            baseline_start TEXT NOT NULL,
+            baseline_end TEXT NOT NULL,
+            current_start TEXT NOT NULL,
+            current_end TEXT NOT NULL,
+            mode TEXT NOT NULL DEFAULT 'structured',
+            PRIMARY KEY (user_id, task_id)
+        )""",
+        """CREATE TABLE IF NOT EXISTS plan_metric_bindings (
+            plan_id INTEGER PRIMARY KEY NOT NULL REFERENCES ad_plans(id),
+            source_id TEXT NOT NULL,
+            data_version TEXT NOT NULL,
+            source_plan_id TEXT NOT NULL
+        )""",
+        """CREATE TABLE IF NOT EXISTS diagnosis_turns (
+            id INTEGER PRIMARY KEY,
+            user_id INTEGER NOT NULL,
+            task_id TEXT NOT NULL,
+            message TEXT NOT NULL,
+            reply TEXT,
+            snapshot TEXT,
+            FOREIGN KEY (user_id, task_id) REFERENCES diagnosis_tasks (user_id, task_id)
+        )""",
+        """CREATE INDEX IF NOT EXISTS diagnosis_turns_task
+            ON diagnosis_turns (user_id, task_id, id)""",
+        """CREATE TABLE IF NOT EXISTS diagnosis_review_proposals (
+            action_id TEXT PRIMARY KEY NOT NULL,
+            turn_id INTEGER NOT NULL UNIQUE REFERENCES diagnosis_turns (id),
+            snapshot TEXT NOT NULL
+        )""",
+        """CREATE TABLE IF NOT EXISTS diagnosis_reviews (
+            review_id TEXT PRIMARY KEY NOT NULL,
+            action_id TEXT NOT NULL UNIQUE REFERENCES diagnosis_review_proposals (action_id),
+            user_id INTEGER NOT NULL,
+            turn_id INTEGER NOT NULL,
+            snapshot TEXT NOT NULL,
+            created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+        )""",
+        """CREATE TABLE IF NOT EXISTS diagnosis_sandbox_targets (
+            plan_id INTEGER PRIMARY KEY REFERENCES ad_plans(id),
+            user_id INTEGER NOT NULL REFERENCES users(id),
+            registration_id TEXT NOT NULL UNIQUE
+        )""",
+        """CREATE TABLE IF NOT EXISTS diagnosis_pause_proposals (
+            action_id TEXT PRIMARY KEY NOT NULL,
+            review_action_id TEXT NOT NULL UNIQUE REFERENCES diagnosis_review_proposals(action_id),
+            plan_id INTEGER NOT NULL,
+            registration_id TEXT NOT NULL,
+            plan_name TEXT NOT NULL,
+            expected_status TEXT NOT NULL CHECK (expected_status = 'active')
+        )""",
+        """CREATE TABLE IF NOT EXISTS diagnosis_pause_receipts (
+            receipt_id TEXT PRIMARY KEY NOT NULL,
+            action_id TEXT NOT NULL UNIQUE REFERENCES diagnosis_pause_proposals(action_id),
+            execution_trace_id TEXT NOT NULL,
+            committed_status TEXT NOT NULL CHECK (committed_status = 'paused'),
+            created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
         )""",
         """CREATE TABLE IF NOT EXISTS messages (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -71,6 +181,12 @@ def init_db():
             user_id INTEGER,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )""",
+        """CREATE TRIGGER IF NOT EXISTS diagnosis_sandbox_target_deleted
+            AFTER DELETE ON ad_plans
+            BEGIN DELETE FROM diagnosis_sandbox_targets WHERE plan_id=OLD.id; END""",
+        """CREATE TRIGGER IF NOT EXISTS diagnosis_sandbox_target_transferred
+            AFTER UPDATE OF user_id ON ad_plans WHEN OLD.user_id IS NOT NEW.user_id
+            BEGIN DELETE FROM diagnosis_sandbox_targets WHERE plan_id=OLD.id; END""",
         """CREATE TABLE IF NOT EXISTS alerts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             type TEXT,
@@ -78,7 +194,8 @@ def init_db():
             level TEXT DEFAULT "warning",
             is_read INTEGER DEFAULT 0,
             user_id INTEGER,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            plan_id INTEGER
         )""",
         """CREATE TABLE IF NOT EXISTS daily_reports (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -118,10 +235,34 @@ def init_db():
         )""",
     ]
 
-    for sql in tables:
-        c.execute(sql)
-    conn.commit()
-    conn.close()
+    with closing(get_db()) as conn, conn:
+        conn.execute("BEGIN IMMEDIATE")
+        for sql in tables:
+            conn.execute(sql)
+        conversation_columns = {row[1] for row in conn.execute("PRAGMA table_info(conversations)")}
+        if "priority" not in conversation_columns:
+            conn.execute("ALTER TABLE conversations ADD COLUMN priority INTEGER DEFAULT 1")
+        if "chat_view_id" not in conversation_columns:
+            conn.execute("ALTER TABLE conversations ADD COLUMN chat_view_id TEXT")
+        from backend.database.chat_storage import upgrade_sqlite as upgrade_chat_turns
+        upgrade_chat_turns(conn)
+        from backend.database.chat_groups import upgrade_sqlite
+        upgrade_sqlite(conn)
+        for sql in (*LISTING_SCHEMA, *PRODUCT_DOCUMENT_SCHEMA):
+            conn.execute(sql)
+        turn_columns = {row[1] for row in conn.execute("PRAGMA table_info(diagnosis_turns)")}
+        if "snapshot" not in turn_columns:
+            conn.execute("ALTER TABLE diagnosis_turns ADD COLUMN snapshot TEXT")
+        task_columns = {row[1] for row in conn.execute("PRAGMA table_info(diagnosis_tasks)")}
+        if "mode" not in task_columns:
+            conn.execute("ALTER TABLE diagnosis_tasks ADD COLUMN mode TEXT NOT NULL DEFAULT 'structured'")
+        alert_columns = {row[1] for row in conn.execute("PRAGMA table_info(alerts)")}
+        for name, kind in (("plan_id", "INTEGER"), ("ctr_check_key", "TEXT"), ("ctr_check_evidence", "TEXT")):
+            if name not in alert_columns:
+                conn.execute(f"ALTER TABLE alerts ADD COLUMN {name} {kind}")
+        conn.execute("CREATE INDEX IF NOT EXISTS alerts_review_period ON alerts(user_id, type, level, created_at)")
+        conn.execute("""CREATE UNIQUE INDEX IF NOT EXISTS alerts_ctr_check_identity
+                      ON alerts(user_id, plan_id, ctr_check_key)""")
 
 
 def seed_data():

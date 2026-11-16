@@ -1,0 +1,20 @@
+{
+  "branch-1": {
+    "answer_pass": true,
+    "disclosed_plan_ids": [101],
+    "note": "四窗覆盖、曝光、点击、CTR 和相对变化匹配 SQL。引用 v1 分块及两窗各 1,000 曝光和相对下降至少 20% 的门槛。清单只列 #101 北岸搜索、active、310.0。"
+  },
+  "swap-1": {
+    "answer_pass": true,
+    "disclosed_plan_ids": [102],
+    "note": "换绑后四窗数据随绑定交换，#102 的 33.75% 与 SQL 33.757786% 相差 0.007786 个百分点，在 0.01 容差内。引用 v1 条文，清单只列 #102 南桥搜索、paused、720.0。"
+  },
+  "gap-1": {
+    "answer_pass": true,
+    "gap_reported": true,
+    "disclosed_plan_ids": [],
+    "note": "保留 #101 两窗和 v1 条文，明确 #102 两窗未绑定、暂缓清单，未披露任何计划详情。#101 的达标说明仅为可核实的指标结论。",
+    "rule_output_scope_pass": false,
+    "rule_output_scope_note": "额外报告 v2 门槛，超出生产提示词要求的版本范围。实际判定使用 v1。冻结业务口径以指定版本检索、引用和应用为准，版本展示范围单独记录。"
+  }
+}

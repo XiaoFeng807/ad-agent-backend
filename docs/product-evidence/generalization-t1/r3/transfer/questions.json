@@ -1,0 +1,114 @@
+[
+  {
+    "id": "T01",
+    "principal": "owner",
+    "target": {
+      "shop_id": "r3-transfer",
+      "marketplace_id": "US",
+      "sku": "KITE-95"
+    },
+    "version": "v1",
+    "query": "信号灯内置电池标的是多少毫安时呀？",
+    "category": "cell",
+    "expectation": "supported",
+    "required": [
+      [
+        "specs",
+        "row:11"
+      ]
+    ]
+  },
+  {
+    "id": "T02",
+    "principal": "owner",
+    "target": {
+      "shop_id": "r3-transfer",
+      "marketplace_id": "US",
+      "sku": "KITE-95"
+    },
+    "version": "v1",
+    "query": "支架完全闭合放包里，灯壳厚度是多少毫米？",
+    "category": "fold",
+    "expectation": "supported",
+    "required": [
+      [
+        "specs",
+        "row:21"
+      ]
+    ]
+  },
+  {
+    "id": "T03",
+    "principal": "owner",
+    "target": {
+      "shop_id": "r3-transfer",
+      "marketplace_id": "US",
+      "sku": "KITE-95"
+    },
+    "version": "v1",
+    "query": "随附适配器本身的电池容量是多少 mAh？",
+    "category": "near_part_no_answer",
+    "expectation": "insufficient",
+    "required": []
+  },
+  {
+    "id": "T04",
+    "principal": "owner",
+    "target": {
+      "shop_id": "r3-transfer",
+      "marketplace_id": "US",
+      "sku": "FJORD-14"
+    },
+    "version": "v1",
+    "query": "How many liters is the water tank capacity, and what is the continuous spray duration?",
+    "category": "capacity_and_time",
+    "expectation": "supported",
+    "required": [
+      [
+        "specs",
+        "row:11"
+      ],
+      [
+        "manual",
+        "page:1"
+      ]
+    ]
+  },
+  {
+    "id": "T05",
+    "principal": "owner",
+    "target": {
+      "shop_id": "r3-transfer",
+      "marketplace_id": "US",
+      "sku": "FJORD-14"
+    },
+    "version": "v1",
+    "query": "请告知进水温度限值；更换整根出水软管时请给我配件号。",
+    "category": "temperature_and_hose",
+    "expectation": "supported",
+    "required": [
+      [
+        "manual",
+        "page:2"
+      ],
+      [
+        "specs",
+        "row:21"
+      ]
+    ]
+  },
+  {
+    "id": "T06",
+    "principal": "owner",
+    "target": {
+      "shop_id": "r3-transfer",
+      "marketplace_id": "US",
+      "sku": "FJORD-14"
+    },
+    "version": "v1",
+    "query": "备用软管弯头的配件编号是什么？",
+    "category": "near_part_no_answer",
+    "expectation": "insufficient",
+    "required": []
+  }
+]
