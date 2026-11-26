@@ -29,9 +29,14 @@ async function withChat(browser, test) {
         case "/":
           return route.fulfill({ path: html });
         case "/static/workbench.js":
-          return route.fulfill({ path: path.join(path.dirname(html), "workbench.js") });
+        case "/static/workbench-sources.js":
+        case "/static/search-terms.js":
         case "/static/product-shell.css":
         case "/static/workbench.css":
+        case "/static/workbench-shell.css":
+        case "/static/listing-review.css":
+        case "/static/search-terms.css":
+        case "/static/workbench-sources.css":
           return route.fulfill({ path: path.join(path.dirname(html), path.basename(url.pathname)) });
         case "/static/echarts.min.js":
           return route.fulfill({ contentType: "application/javascript", body:
@@ -151,7 +156,7 @@ const cases = [
     const [first] = await Promise.all([page.waitForResponse(historyResponse), chatLink.click()]);
     assert.equal(first.status(), 503);
     await first.finished();
-    await dashboardLink.click();
+    await dashboardLink.evaluate(link => link.click());
     await chatLink.click();
     await bubbles.getByText("Recovered history", { exact: true }).waitFor()
       .catch(error => { throw new Error(`History GET count after 503 and reentry: ${historyGets()}`, { cause: error }); });
@@ -176,7 +181,7 @@ const cases = [
       await bubbles.getByText("Reply Repeat", { exact: true }).waitFor();
       const localReply = await bubbles.nth(1).elementHandle();
       assert.equal(saved.length, 5); // The late snapshot would otherwise include both local rows.
-      await dashboardLink.click();
+      await dashboardLink.evaluate(link => link.click());
       await chatLink.click();
       await page.waitForTimeout(100); // The navigation loader is scheduled after 50 ms.
       assert.equal(historyGets(), 1);
@@ -200,7 +205,7 @@ const cases = [
     await send("B");
     await page.locator("#dashStats").evaluate(node => node.replaceChildren());
     const [dashboard] = await Promise.all([
-      page.waitForResponse(origin + "/api/dashboard"), dashboardLink.click(),
+      page.waitForResponse(origin + "/api/dashboard"), dashboardLink.evaluate(link => link.click()),
     ]);
     await page.locator("#dashStats").getByText("¥25", { exact: true }).waitFor();
     assert.equal(dashboard.status(), 200);

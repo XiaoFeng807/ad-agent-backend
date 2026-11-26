@@ -23,3 +23,5 @@ data/conv_memory/
 backend/memory/user_memory/
 *.memory/
 artifacts/
+
+output/

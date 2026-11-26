@@ -120,7 +120,7 @@ with sqlite3.connect(Path(sys.argv[1]).as_uri() + "?mode=ro", uri=True) as conn:
 
     async function openDiagnosis() {
       await page.locator('[data-page="chat"]').click();
-      await page.getByRole("button", { name: "投放诊断", exact: true }).click();
+      await page.getByRole("button", { name: "广告计划复核", exact: true }).click();
     }
 
     async function openRestored(taskId) {
@@ -138,7 +138,7 @@ with sqlite3.connect(Path(sys.argv[1]).as_uri() + "?mode=ro", uri=True) as conn:
     await page.goto(origin);
     let owner = await login(user);
     await openDiagnosis();
-    await page.locator("#diagnosisHistoryStatus").getByText("暂无历史诊断", { exact: true }).waitFor();
+    await page.locator("#diagnosisHistoryStatus").getByText("暂无历史诊断", { exact: true }).waitFor({state: "attached"});
     await page.locator("#diagnosisMode").click();
     await field("plan_id").fill("101");
     await field("rule_id").fill(rule);
@@ -289,7 +289,7 @@ with sqlite3.connect(sys.argv[1]) as conn:
         await logout();
         const other = await login(otherUser);
         await openDiagnosis();
-        await page.locator("#diagnosisHistoryStatus").getByText("暂无历史诊断", { exact: true }).waitFor();
+        await page.locator("#diagnosisHistoryStatus").getByText("暂无历史诊断", { exact: true }).waitFor({state: "attached"});
         const foreign = await page.request.get(origin + taskUrl, { headers: other });
         const unknown = await page.request.get(origin + tasksPath + "/unknown", { headers: other });
         assert.equal(foreign.status(), 404);

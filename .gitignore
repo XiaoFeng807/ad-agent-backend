@@ -50,3 +50,17 @@ _plan_method.txt
 学习计划.md
 简历项目描述.md
 langchain_study.md
+
+# Local task, career and experiment materials
+/output/
+/docs/task046/
+/docs/面试.md
+/docs/ENTERPRISE_READINESS.md
+/PROJECT_STATE.md
+/PROJECT_ROADMAP.md
+/OPEN_ISSUES.md
+/docs/criteo-recount.json
+/docs/task26-t2-collaboration-probes.json
+/docs/task27-t3/adjudication.json
+/docs/task27-t3a/adjudication.json
+*.log

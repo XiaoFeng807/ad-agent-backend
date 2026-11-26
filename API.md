@@ -1,4 +1,4 @@
-﻿# API 接口文档
+# API 接口文档
 
 应用统一通过 [fast_server.py](fast_server.py) 中的 `app` 启动。本文记录当前 FastAPI 契约，启动后可从 `/docs` 查阅 OpenAPI。启动命令见 [部署文档](DEPLOY.md)。
 
@@ -57,12 +57,13 @@ Amazon 只接收可确认的美国站卖家自发货订单。明确属于其他�
 
 群历史的 Listing 和 Olist 销量回复附带 `sales_summary`，包含两窗日期与件数、绝对变化和相对变化百分比。未取得的件数或变化为 `null`。Listing 回复也可包含 `has_product_details` 和 `evidence_gap_count`。完整数据仍通过对应轮次的证据入口回读。
 
-同店同站内的三款商品可发起逐款巡检。服务端先通过当前账号的授权目录确定三个不同 SKU，再按相同日期窗读取销量、现行 Listing 和生效商品事实。结果用 `evidence_kind=listing_inspection_v1` 标识，保留按商品核验的证据、规格冲突、缺项及优先项。巡检只读业务数据，不生成可批准的 Listing 动作。巡检和五点改写须分别提交。 [巡检与审批实拍](docs/SHOWCASE.md)
+同店同站内的三款商品可发起逐款只读巡检。结果用 `evidence_kind=listing_inspection_v1` 标识，保留按商品核验的证据、规格冲突、缺项及优先项。工作群请求同时包含巡检和英文卖点改写时，按北京时间最近两个完整七日窗比较同一批商品。可以点名商品，或在授权目录恰好只有同店同站三款时用「这三款商品」指代。销量齐全后，以 `LISTING_SIGNIFICANT_DECLINE_PCT` 筛选需核对当前五点的商品。唯一相对降幅最大且有原文支持的遗漏时，生成一份五点待审批提案，依据由 `operations_inspection` 保存。
 
 | 接口 | 行为 |
 | --- | --- |
 | `POST /api/chat/conversations/{conversation_id}/runs/{run_id}/listing-actions/{action_id}/confirm` | 核验会话、群主、来源轮次、店铺、SKU 和证据版本。只修改本地测试 Listing 五点及版本，回执同事务提交。重复批准读回同一回执。 |
 | `GET /api/chat/conversations/{conversation_id}/runs/{run_id}/listing-actions/{action_id}` | 独立读回草案、当前 `listing` 与历史 `receipt`，使用 `Cache-Control: no-store`。 |
+| `GET /api/chat/conversations/{conversation_id}/runs/{run_id}/listing-actions/{action_id}/review` | 从已执行的巡检待办读取回执以及审批日后七个完整日的销量，对照提案冻结的基准窗。返回两窗日点、总量、覆盖、缺报日期及可计算的变化量，使用 `Cache-Control: no-store`。 |
 
 审批面板打开待审批提案时可在同一 GET 附加 `?review=true`。服务端只读校验群归档状态及当前证据快照，失效时返回 `approval_blocked`。确认 POST 在写事务内重新校验。
 
@@ -79,7 +80,11 @@ SQLite 商品目录支持按授权店铺、站点和 SKU 查询当前有效资�
 
 `candidates` 用于查看召回排名。只有受支持的问题且必要原文齐全才返回 `evidence`。其余请求返回 `status=insufficient_evidence`，包括已授权但尚无有效资料的商品。未登录返回 401，越权商品、失效分块或不存在的分块返回 404。
 
-普通聊天和工作群可在 `POST /api/chat/stream` 的消息中输入「商品资料：店铺 站点 SKU 问题」。未选商品时，在站点后换行输入问题，聊天会列出该账号在店铺和站点内可见的商品名和完整 SKU。请选择 SKU 后按上述格式重新提交问题，服务端会重新核验权限并查询当时的生效版本。澄清提示和来源引用均可在刷新后读回。 [资料导入与版本切换命令](scripts/product_evidence.py)
+普通聊天和工作群可在 `POST /api/chat/stream` 的消息中输入「商品资料：店铺 站点 SKU 问题」。未选商品时，在站点后换行输入问题，聊天会列出该账号在店铺和站点内可见的商品名和完整 SKU。请选择 SKU 后按上述格式重新提交问题，服务端会重新核验权限并查询当时的生效版本。澄清提示和有效来源引用可在刷新后读回。 [资料导入与版本切换命令](scripts/product_evidence.py)
+
+普通聊天与工作群的历史回查按当前店铺读权和活动版本展示来源。引用失效时隐藏该来源及其版本元数据并显示失效提示。仍有效的引用、原问题和缺项说明保留。历史回执在读取时处理，响应使用 `Cache-Control: no-store`。
+
+无预配事实或引用规则的版本可通过已配置的 Provider 对候选原文逐项取证。服务端核验原文出处和适用条件，先显示支持的原文与链接，再列出缺少依据的子问题。原文回查和保存时使用当前会话、商品授权和活动版本。 [部署配置](DEPLOY.md#bge-与商品资料)
 
 ## 数据
 
@@ -187,6 +192,7 @@ SQLite 初始化幂等创建关联表，不从旧消息猜测配对。无法证�
 | `POST /api/chat/stream` | 群主提交 `{"conversation_id":"工作群 ID","date_change":{"run_id":"旧轮 ID","proposal_id":"提议 ID"}}` 确认。新轮使用原 SSE 协议。重复确认只返回带 `already_confirmed:true` 和新轮当前 `status` 的 `done`，`run_id` 与 `trace_id` 均指向同一个新轮。 |
 
 - `conversation_id` 跨登录和页面刷新保持稳定。`run_id` 每轮生成，与本轮 Worker 看板一致。`trace_id` 用于链路查询。`chat_view_id` 仅供兼容入口做页面去重。
+- 工作群消息可带 `Idempotency-Key` 请求头。同一账号、工作群和动作内，同键参数变化返回 HTTP 409（`idempotency_key_conflict`）。消息去除首尾空白，自动商品运营、显式开启和显式关闭分别参与参数比对。相同提交的重发返回一帧 `done`，含 `replayed: true`、原 `run_id`、`trace_id`、当前 `status` 和 `history_url`。运行中的 `status` 为 `running`，已提交的答案和动作经原历史入口读取。有效键为 1–128 个可打印 ASCII 字符，首尾须无空白。无键请求沿用独立受理，每次主动新跑使用新键。
 - 停止请求与答案保存竞争同一个 SQLite 写事务。停止提交后 `runs[].status` 为 `stopped`，`runs[].stop` 和停止响应的 `data` 均返回 `conversation_id`、`run_id`、`trace_id`、`stopped_by_user_id`、`stopped_by_name`（账户用户名）及 UTC `stopped_at`。群历史保留已提交进度，正在执行的调用退出后追加实际回收事件并发送一次 `stopped` SSE 终态。页面读到停止提交即可发送下一轮。停止仅操作工作群记录及指定轮的执行预算。
 - 显式配置隔离的 `DIAGNOSIS_SANDBOX_DB_PATH` 后，独立复核完成、证据齐全、命中 `ctr-review-v1#low-ctr` 且目标为本人已登记的 `active` 沙箱计划时，暂停提案随答案和依据一起提交。历史在原答案的 `pause_actions` 返回 `action_id`、目标、原因、审批状态和已批准回执摘要。审批前计划保持 `active`。
 - 批准事务检查当前会话、群主、群与轮次、原答案、计划属主、登记和预期状态，原子提交计划暂停和回执。回执含 `receipt_id`、`conversation_id`、`run_id`、`entry_id`、`source_trace_id`、`execution_trace_id`、`approved_by_user_id`、`approved_by_name`、UTC `created_at`、目标、证据快照和 `committed_status: "paused"`。独立 GET 读取计划当前状态。沙箱未启用、错群、错轮、非属主、登记失效或回执未提交时返回 404。无效会话返回 401，批准前目标状态变化返回 409，写入失败返回 503 并可用原动作重试。
@@ -195,6 +201,7 @@ SQLite 初始化幂等创建关联表，不从旧消息猜测配对。无法证�
 - 接收请求时读取该群已提交的历史。群内一次接收一轮，多个群可并发。Worker 接收任务单、授权工具及本轮引用的证据。群向量记忆按属主、会话和本轮消息边界过滤，随后核对有效 TTL，并回查已完成 `run_id` 的同轮问答及全文摘要校验值。无群归属的旧向量仅在兼容入口且可证明同轮时参与召回。
 - `entries` 的 `kind` 包括 `user`、`assistant`、`worker` 和 `change`。`entry_id` 用于回放去重。原历史使用 `legacy:<消息 ID>`，新增条目使用 `entry:<条目 ID>`，新增条目按服务端递增 ID 排序。Worker 事件包括 `queued`、`waiting`、`dispatched`、`tool_started`、`receipt`、`review_inputs`、`failed`、`succeeded` 和 `reclaimed`。新事件以 `run_id` 和服务端分配的 `task_label` 标识任务，并附适用的依赖、Worker、工具调用及产物标识。`tool_started` 记录通过校验后发起的读取，`runtime_call_id` 可与对应回执核对。`runs[].status` 可为 `running`、`completed`、`superseded`、`error` 或 `interrupted`。带 `has_evidence: true` 的答案可通过对应轮次的依据入口回读。
 - SQLite 启动时幂等建立会话表。隔离 MySQL 先完成 R2 安装或导入，再由演练库管理员应用 [TASK-027 SQL](scripts/mysql_task27_schema.sql)。普通聊天应用账号须能 SELECT 会话表并 INSERT 三张会话表，同时需要 UPDATE `chat_groups` 和 `chat_group_runs`。未安装扩展的 R2 演练继续使用兼容普通聊天。
+- 已安装工作群的 MySQL 演练库可重新应用上述 SQL 添加 `chat_group_run_requests`。有键的工作群提交要求应用账号可对该表 SELECT 和 INSERT。
 - 原 `conversations` 行按属主映射至稳定的「历史聊天」，消息主键和原文保留。无 `conversation_id` 的 SSE、旧历史和 WebSocket 仍访问原消息表。群页面从「历史聊天」发起的新轮次使用群存储。诊断请求使用原有独立任务契约。
 - 持久工作群支持两条明确 `#计划ID`、同一绝对日期窗及一个 CTR 百分比阈值的条件读取，例如「仅在确认恰好一条计划的 CTR 达到 20% 时，再查该计划名称、状态和日预算」。服务端固定本轮条件，并按已核验回执计算 CTR。主 Agent 与 Worker 仅在两条指标均可判定、且恰好一条符合条件时读取该计划一次。检测到条件但参数不明确时，请求澄清。条件未核实时，回复列出已核验指标和缺项。该规则使用有明确边界的首版请求语法。
 - 工作群的多窗复核请求支持两条 `#计划ID`、等长且互不重叠的基准窗与当前窗、明确的点击率下降复核规则版本，以及「清单确定后，只读取入选计划的详情」的前提。详情读取前核对四份计划窗口回执和精确版本规则，按已核验指标复算入选目标。若请求声明严重 CTR 告警前提，也须核实本轮本人未读严重 CTR 告警。主 Agent 和 Worker 使用同一准入，每个入选计划详情最多读取一次。已识别但参数不齐时先澄清。缺项时列出可核验的证据并暂缓清单。 [交接与结果实拍](docs/SHOWCASE.md)
@@ -354,6 +361,39 @@ data: {"type":"done","task_id":"a1b2c3d4e5f6478899aabbccddeeff00","trace_id":"4d
 
 ### GET /api/chat/history
 获取 token 对应用户的普通对话历史（Bearer）。可选查询参数 `exclude_chat_view_id` 排除该页面标识对应的消息，历史中没有页面标识的旧消息仍可返回。结构化诊断历史使用[本人诊断任务详情](#读取本人的诊断任务)。
+
+### 工作台广告搜索词诊断
+
+以下 SQLite 工作台接口以 `/api/chat/conversations/{conversation_id}/search-terms` 为前缀，需要该会话属主的 Bearer JWT。入口位于会话输入框上方的「上传广告报表」。
+
+| 方法和路径 | 请求与结果 |
+| --- | --- |
+| `GET /shops` | 列出当前账号获准导入报表的美国站店铺。 |
+| `POST /reports?filename=report.xlsx` | 请求体为 `.xlsx` 或 UTF-8 `.csv` 的原始字节，大小上限 16 MB，超限返回 `413`。支持美国站 Sponsored Products 搜索词报表及既有测试 CSV。可用 `shop_id` 选择授权店铺。官方格式仅有一个授权店铺时可省略该参数，多店时必须选择。格式、字段或归属不符返回 `422`。成功返回 `201` 和 `{report, products}`，含导入版本、粒度、日期、活动、广告组及可选商品。会话内同一店铺重传相同文件复用原导入版本。 |
+| `GET /reports`、`GET /reports/{import_id}` | 列出近期导入或重新读取指定报表范围，详情读取会复核商品归属。 |
+| `POST /runs` | 请求含 `import_id`、`message`，可选 `batch`，默认从第 1 批开始，每批至多 24 个活动、广告组与搜索词组合。测试 CSV 须传 `sku`。官方格式可省略 `sku` 查询广告组级指标。服务端核验登记范围、复算指标并校验模型建议及原文，提交后返回 `run_id` 与 `trace_id`。会话历史记录实际执行阶段和诊断卡。 |
+| `POST /runs/{run_id}/rerun` | 无请求体。复用原轮的报表导入、批次、SKU 和问题，从当前资料和标题生成新一轮，返回新的 `run_id` 与 `trace_id`。 |
+| `GET /runs/{run_id}/items/{item_id}` | 返回该卡绑定的报表版本、原始行及指标、标题和资料快照、决策、人工投放复核待办或最新通过校验的标题草案。 |
+| `PUT /runs/{run_id}/items/{item_id}/draft` | 请求含 `title` 与上次读取的 `revision`。成功后返回已保存正文及修订号。 |
+| `GET /runs/{run_id}/items/{item_id}/draft/copy?revision=2` | 核验指定修订号，返回允许复制的已保存正文及修订号。 |
+
+`POST /runs` 和 `POST /runs/{run_id}/rerun` 接受同样格式的可选 `Idempotency-Key`。键按认证账号、工作群和动作隔离，诊断比较 `import_id`、`sku`、`batch` 和 `message`，重新诊断比较原轮 ID。相同请求重发返回原 `run_id`、`trace_id`、`replayed: true`、`status` 和 `history_url`。运行中返回 HTTP 202，终态返回 200。已提交时附原答案的 `entry_id`，详情经原 item GET 读取。重发和结果回查仍核验当前会话、群属主和店铺读权。无键沿用逐次受理，新的重新诊断操作使用新键并核对当前资料。
+
+保存和复制均重新核对原店铺、站点、SKU、资料内容及版本、原标题正文及版本。证据过期返回 `409`，其中 `detail.code` 为 `stale_title_draft`，`detail.reasons` 列出 `facts_changed`、`title_changed` 或 `product_unavailable`。草案修订号冲突也返回 `409`，提示重开卡片。标题校验失败返回 `422` 和具体问题。
+
+报告归属由账号下登记的测试店铺、活动、广告组和商品校验。混合广告组缺少逐行映射的组合保留广告组汇总。当前规则 `amazon-us-non-media-2026-07-27` 要求至少 100 次曝光和 20 次点击，标题候选须至少 2 单且转化率至少 10%。CTR、转化率、CPC 和 ACoS 均按总量计算，比率分母为零时返回 `null`。标题上限为 75 字符（含空格），标题词汇和商品声明须有原标题或已核验资料依据。会话写入限于导入、诊断、草案与人工待办。
+
+官方字段夹具的尺寸、兼容性和清洗限制诊断在详情中返回 `item.demand`、`item.source_chunks`、`item.citations` 和 `item.model_validation`。证据不足或模型校验失败的卡片显示继续观察，草案编辑和复制入口返回 `404`。这类草案的编辑和复制也复核当前报表归属，变更时 `409` 的原因可为 `ownership_changed`。冻结合成夹具位于 `tests/fixtures/search_terms_generalization/`，真实模型可通过验收脚本独立记录。
+
+适用证据诊断的多条目批次使用 v22 模型协议，逐项回传已解析需求、样本审计与分类引用。单条目沿用 v11。服务端独立核对条目和引用；批量内部协议与上述 HTTP 响应字段分开。真实 GLM 验收覆盖每批 5–6 项。
+
+适用 v22 的 24 项满批默认先发一次请求。流式读取超时、截断或未正常结束时弃用该响应，在预算内最多另请求四批，每批六项。服务端在构造 SDK 请求前、返回后及提交事务内核验权限、版本和广告归属，按报表文件及物理行核对重组条目。失败或失效条目可返回 `action: "incomplete"`、`code: "diagnosis_incomplete"` 和 `incomplete_cause`，无草案或复核待办。整轮权限失效时返回 `409`。主动串行 4×6 由验收脚本启用。
+
+商品归属失效的详情可按经核验的完整报表行返回 `item.attribution: "ad_group"`，`item.metrics` 和 `rows` 同属当前广告组口径。无法核验整组时返回 `item.attribution: "unavailable"`、`item.metrics: null` 和 `item.metrics_unavailable_reason`。已保存且可读取的原商品指标通过 `item.historical` 和 `historical_rows` 单列。失效项保持 `incomplete`，无新草案或复核待办。
+
+对于归属或报表范围已失效且缺少整组核验结果的旧诊断，通用 `GET /api/chat/conversations/{conversation_id}/runs/{run_id}/evidence` 的 `data.items[]` 与专用详情的 `item` 均返回 `attribution: "unavailable"`、`metrics: null` 和空的 `row_locations`。可识别的原商品指标通过各自的 `historical` 字段返回。
+
+在仓库根目录启动手动测试，准备仓库现有 GLM 配置，执行 `python -m scripts.accept_search_terms demo --output-dir logs/search-terms-demo`。用控制台给出的临时测试账号进入工作台，新建会话后上传 [冻结报表](tests/fixtures/search_terms/report.csv)，选择 `SP-LUNCH`，并提交 [冻结题面](tests/fixtures/search_terms/frozen.json)。验收依次执行 `python -m scripts.accept_search_terms fixed --output-dir logs/search-terms-run` 和 `python -m scripts.accept_search_terms live --output-dir logs/search-terms-run`，使用已安装的 Edge 和仓库 Playwright 运行环境。每次选择新的输出目录。
 
 ### WebSocket /ws/chat
 路由约定连接后发送 `{ "token": "...", "message": "今天 ROAS 多少" }`，响应消息类型为 `thinking`、`text`、`error` 或 `done`。该兼容路由的鉴权和连接生命周期尚待验证。工作台使用 `POST /api/chat/stream`。

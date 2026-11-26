@@ -163,7 +163,8 @@ def fixture(directory, mysqld, password):
                 for statement in upgrade.split(";"):
                     if statement.strip():
                         sql(statement)
-            for table in ("conversations", "chat_groups", "chat_group_runs", "chat_group_entries"):
+            for table in ("conversations", "chat_groups", "chat_group_runs", "chat_group_entries",
+                          "chat_group_run_requests"):
                 sql(f"GRANT INSERT ON mysql_r2.{table} TO 'mysql_r1_app'@'localhost'")
             for table in ("chat_groups", "chat_group_runs"):
                 sql(f"GRANT UPDATE ON mysql_r2.{table} TO 'mysql_r1_app'@'localhost'")

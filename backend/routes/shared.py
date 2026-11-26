@@ -3,6 +3,19 @@
    不要用 from .shared import xxx，否则拿不到更新后的值"""
 import datetime
 
+from fastapi import HTTPException
+
+
+def optional_idempotency_key(request):
+    values = request.headers.getlist("idempotency-key")
+    if not values:
+        return None
+    key = values[0]
+    if not (len(values) == 1 and 1 <= len(key) <= 128 and key.isascii()
+            and key.isprintable() and key == key.strip()):
+        raise HTTPException(422, "请提供有效的 Idempotency-Key")
+    return key
+
 # 兼容蓝图通过 init() 设置这些变量
 db_provider = None       # 数据库提供者
 auth_instance = None     # 认证实例

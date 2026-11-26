@@ -40,6 +40,7 @@ class Settings(BaseSettings):
     HOST: str = "0.0.0.0"
     PORT: int = 5010
     DEBUG: bool = True
+    APP_STARTUP_MODE: Literal["business", "demo"] = "business"
     RAG_DB_PATH: str = ""
     PLAN_METRICS_DB_PATH: str = ""
     DIAGNOSIS_SANDBOX_DB_PATH: str = ""
@@ -56,6 +57,7 @@ class Settings(BaseSettings):
     AMAZON_LWA_REFRESH_TOKEN: SecretStr = SecretStr("")
 
     PRODUCT_R4_CPU_ENABLED: bool = True
+    PRODUCT_EVIDENCE_MODEL_ADMISSION_ENABLED: bool = True
     PRODUCT_RERANK_ENABLED: bool = False
     PRODUCT_RERANK_USER_IDS: frozenset[int] = frozenset()
     PRODUCT_RERANK_MAX_CONCURRENCY: int = Field(default=1, ge=1)

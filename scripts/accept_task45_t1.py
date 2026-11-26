@@ -271,7 +271,7 @@ def score(case, browser, trace, before, after, rows, barrier, sources, sql, *, f
     draft_calls = [row for row in rows if row["body"]["messages"][0]["content"].startswith("Produce only a JSON object")]
     draft_format_rejections = sum(step.get("error_code") == "listing_invalid_draft_format" for step in steps)
     response = "\n".join(event.get("content", "") for event in round_data.get("events", []) if event["type"] == "text")
-    outside = (case.get("variant") or case["id"]) in ("missing-day", "missing-fact")
+    outside = case.get("expect_no_proposal") or (case.get("variant") or case["id"]) in ("missing-day", "missing-fact")
     missing_day = case.get("variant") == "missing-day"
     missing_fact = case.get("variant") == "missing-fact"
     comparison = case["group"] == "task" and not case.get("context")
@@ -306,7 +306,7 @@ def score(case, browser, trace, before, after, rows, barrier, sources, sql, *, f
                    args.get(key) == dates[key] for key in (("current_start", "current_end") if case.get("context")
                                                          else fixture.KEYS))
                    and (not case.get("context") or not ({"baseline_start", "baseline_end"} & args.keys()))
-                   or read_step["action"] != SALES and args["sku"] == sku)
+                   or read_step["action"] != SALES and args["sku"] in case.get("product_read_skus", (sku,)))
               and any(s["stage"] == "tool_result" and s.get("runtime_call_id") == read_step["runtime_call_id"]
                       and s["status"] == "ok" for s in steps))
     sales_metrics = evidence.get("metrics") or {}

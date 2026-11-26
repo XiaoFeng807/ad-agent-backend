@@ -1,0 +1,16 @@
+{
+  "cases": {
+    "tray-19-support": {"action": "observe", "code": "sample", "source_rows": [], "demand": {"product_type": "sliding shelf monitor tray", "attribute": "vesa", "value": "75x75", "unit": "mm", "conditions": {}}},
+    "tray-20-support": {"action": "title", "code": "supported_missing", "source_rows": [2, 3], "demand": {"product_type": "sliding shelf monitor tray", "attribute": "vesa", "value": "75x75", "unit": "mm", "conditions": {}}},
+    "tray-20-single-axis": {"action": "observe", "code": "unverified", "source_rows": [], "demand": {"product_type": "sliding shelf monitor tray", "attribute": "vesa", "value": "75x75", "unit": "mm", "conditions": {}}},
+    "tray-20-conflict": {"action": "review", "code": "fact_conflict", "source_rows": [2, 3], "demand": {"product_type": "sliding shelf monitor tray", "attribute": "vesa", "value": "75x75", "unit": "mm", "conditions": {}}},
+    "tray-19-group-only": {"action": "observe", "code": "unattributed", "source_rows": [], "demand": {"product_type": "sliding shelf monitor tray", "attribute": "vesa", "value": "75x75", "unit": "mm", "conditions": {}}},
+    "tray-20-empty": {"action": "observe", "code": "unverified", "source_rows": [], "demand": {"product_type": "sliding shelf monitor tray", "attribute": "vesa", "value": "75x75", "unit": "mm", "conditions": {}}},
+    "frame-19-support": {"action": "observe", "code": "sample", "source_rows": [], "demand": {"product_type": "tilt wall display frame", "attribute": "vesa", "value": "100x100", "unit": "mm", "conditions": {}}},
+    "frame-20-support": {"action": "title", "code": "supported_missing", "source_rows": [2, 3], "demand": {"product_type": "tilt wall display frame", "attribute": "vesa", "value": "100x100", "unit": "mm", "conditions": {}}},
+    "frame-20-single-axis": {"action": "observe", "code": "unverified", "source_rows": [], "demand": {"product_type": "tilt wall display frame", "attribute": "vesa", "value": "100x100", "unit": "mm", "conditions": {}}},
+    "frame-20-conflict": {"action": "review", "code": "fact_conflict", "source_rows": [2, 3], "demand": {"product_type": "tilt wall display frame", "attribute": "vesa", "value": "100x100", "unit": "mm", "conditions": {}}},
+    "frame-19-group-only": {"action": "observe", "code": "unattributed", "source_rows": [], "demand": {"product_type": "tilt wall display frame", "attribute": "vesa", "value": "100x100", "unit": "mm", "conditions": {}}},
+    "frame-20-group-only": {"action": "observe", "code": "unattributed", "source_rows": [], "demand": {"product_type": "tilt wall display frame", "attribute": "vesa", "value": "100x100", "unit": "mm", "conditions": {}}}
+  }
+}

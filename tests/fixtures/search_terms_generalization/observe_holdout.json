@@ -1,0 +1,68 @@
+{
+  "label": "官方字段夹具 · 合成数据",
+  "question": "帮我看看这款商品的广告搜索词，哪些值得写进标题，哪些需要复核投放？先给我建议和依据。",
+  "rules": {"min_impressions": 100, "min_clicks": 20, "title_min_orders": 2, "title_min_cvr_pct": 10, "title_max_length": 75},
+  "report_header": "Date,Campaign Name,Ad Group Name,Campaign ID,Ad Group ID,Customer Search Term,Impressions,Clicks,Spend,Purchases,Sales,Currency",
+  "report_defaults": {"Date": "2026-11-12", "Impressions": 360, "Clicks": 36, "Spend": "25.20", "Purchases": 5, "Sales": "124.95", "Currency": "USD"},
+  "low_report_changes": {"Clicks": 18},
+  "membership": {"shop": "sp-observe-holdout", "marketplace": "US", "advertiser": "OBSERVE-HOLDOUT-US",
+    "from": "2026-11-11", "to": "2026-11-13", "control_sku": "OBS-CONTROL", "control_asin": "B0OBS00009"},
+  "products": [
+    {
+      "id": "cable-tray", "sku": "OBS-TRAY", "asin": "B0OBS00001", "intent": "size",
+      "term": "4 inch deep under desk cable tray",
+      "title": "Bastion Under Desk Cable Tray",
+      "covered_title": "Bastion Under Desk Cable Tray 101.6 mm Deep",
+      "support": ["Product type\tUnder Desk Cable Tray\t-\tWhole\t-", "Depth\t101.6\tmm\tWhole\t-"],
+      "conflict": ["Product type\tUnder Desk Cable Tray\t-\tWhole\t-", "Depth\t120\tmm\tWhole\t-"],
+      "missing": ["Product type\tUnder Desk Cable Tray\t-\tWhole\t-", "Width\t101.6\tmm\tWhole\t-"],
+      "no_type": ["Depth\t101.6\tmm\tWhole\t-"]
+    },
+    {
+      "id": "adapter", "sku": "OBS-ADAPTER", "asin": "B0OBS00002", "intent": "compatibility",
+      "term": "vesa 100×100 display adapter",
+      "title": "Gannet Display Adapter",
+      "support": ["Product type\tDisplay Adapter\t-\tWhole\t-", "VESA\t75x75 | 100x100\tmm\tMount\tComplete list"],
+      "missing": ["Product type\tDisplay Adapter\t-\tWhole\t-", "VESA\t100\tmm\tMount\t-"]
+    },
+    {
+      "id": "cartridge", "sku": "OBS-CARTRIDGE", "asin": "B0OBS00003", "intent": "compatibility",
+      "term": "water cartridge for velin v-62 plus",
+      "title": "Lakefell Water Cartridge",
+      "support": ["Product type\tWater Cartridge\t-\tWhole\t-", "Compatible models\tVelin V-62 Plus | Velin V-72\t-\tWhole\tComplete list"],
+      "conflict": ["Product type\tWater Cartridge\t-\tWhole\t-", "Compatible models\tVelin V-62 | Velin V-72\t-\tWhole\tComplete list"],
+      "missing": ["Product type\tWater Cartridge\t-\tWhole\t-", "Compatible models\tVelin V-62 | Velin V-72\t-\tWhole\t-"]
+    },
+    {
+      "id": "feeding-bowl", "sku": "OBS-BOWL", "asin": "B0OBS00004", "intent": "restriction",
+      "term": "pet feeding bowl insert top rack dishwasher safe",
+      "title": "Kittiwake Pet Feeding Bowl",
+      "covered_title": "Kittiwake Pet Feeding Bowl, Insert Top Rack Only Dishwasher Safe",
+      "support": ["Product type\tPet Feeding Bowl\t-\tWhole\t-", "Cleaning\tDishwasher safe\t-\tInsert\tTop rack only", "Cleaning\tHand wash only\t-\tBase\t-"],
+      "ambiguous": ["Product type\tPet Feeding Bowl\t-\tWhole\t-", "Cleaning\tDishwasher safe\t-\tInsert\tTop rack only", "Cleaning\tHand wash only\t-\tInsert\t-"],
+      "missing": ["Product type\tPet Feeding Bowl\t-\tWhole\t-", "Cleaning\tDishwasher safe\t-\tInsert\tSee packaging", "Cleaning\tHand wash only\t-\tBase\t-"]
+    }
+  ],
+  "cases": [
+    {"id": "cable-tray-support", "product": "cable-tray", "variant": "support"},
+    {"id": "cable-tray-conflict", "product": "cable-tray", "variant": "conflict"},
+    {"id": "cable-tray-missing-axis", "product": "cable-tray", "variant": "missing"},
+    {"id": "cable-tray-missing-type", "product": "cable-tray", "variant": "support", "document_version": "no_type"},
+    {"id": "cable-tray-covered", "product": "cable-tray", "variant": "covered"},
+    {"id": "adapter-support", "product": "adapter", "variant": "support"},
+    {"id": "adapter-low-clicks", "product": "adapter", "variant": "low"},
+    {"id": "adapter-one-axis", "product": "adapter", "variant": "missing"},
+    {"id": "cartridge-support", "product": "cartridge", "variant": "support"},
+    {"id": "cartridge-complete-list-conflict", "product": "cartridge", "variant": "conflict"},
+    {"id": "cartridge-open-list", "product": "cartridge", "variant": "missing"},
+    {"id": "cartridge-group-only", "product": "cartridge", "variant": "mixed"},
+    {"id": "bowl-support", "product": "feeding-bowl", "variant": "support"},
+    {"id": "bowl-low-cvr", "product": "feeding-bowl", "variant": "support", "report_changes": {"Purchases": 3}},
+    {"id": "bowl-covered", "product": "feeding-bowl", "variant": "covered"},
+    {"id": "bowl-group-only", "product": "feeding-bowl", "variant": "mixed"},
+    {"id": "bowl-missing-seal", "product": "feeding-bowl", "variant": "support",
+      "term": "pet feeding bowl seal top rack dishwasher safe"},
+    {"id": "bowl-unclear-condition", "product": "feeding-bowl", "variant": "missing"},
+    {"id": "bowl-conflicting-sources", "product": "feeding-bowl", "variant": "support", "document_version": "ambiguous"}
+  ]
+}

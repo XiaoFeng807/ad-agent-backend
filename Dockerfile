@@ -1,4 +1,5 @@
-FROM python:3.12-slim
+ARG PYTHON_BASE=python:3.12-slim
+FROM ${PYTHON_BASE}
 
 WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
@@ -12,5 +13,5 @@ RUN mkdir -p /app/data /app/backend/memory/user_memory && \
 
 EXPOSE 5010
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD ["python", "-c", "from urllib.request import urlopen; urlopen('http://127.0.0.1:5010/api/health', timeout=3).close()"]
+    CMD ["python", "-c", "from http.client import HTTPConnection; c = HTTPConnection('127.0.0.1', 5010, timeout=3); c.request('GET', '/api/ready'); raise SystemExit(c.getresponse().status != 200)"]
 CMD ["python", "-m", "uvicorn", "fast_server:app", "--host", "0.0.0.0", "--port", "5010"]

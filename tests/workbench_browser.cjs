@@ -133,12 +133,36 @@ async function browserChecks(page, report) {
   await page.waitForFunction(() => Boolean(window._captchaId));
   await page.locator("#loginCaptcha").fill("0726");
   await page.locator("#loginPass").press("Enter");
-  await expect(page.locator("#sidebarNav a[data-page=chat]")).toHaveAttribute("aria-current", "page");
+  await expect(page.locator("#workbenchHome")).toHaveAttribute("aria-current", "page");
+  await expect(page.locator("#sidebarNav")).not.toBeVisible();
   await expect(input).toBeVisible();
   await expect(messages).toContainText("旧聊天原文");
   await expect(messages.locator('.assistant[data-entry-id^="legacy:"] .workbench-card')).toHaveCount(0);
   const legacy = await page.locator("#chatGroupList [aria-current=true]").getAttribute("data-conversation-id");
   report.legacy = { id: legacy, originalReply: "旧聊天原文" };
+
+  const groupToggle = page.locator("#chatGroupToggle");
+  const groupRail = page.locator("#chatGroupControls");
+  for (const width of [830, 914]) {
+    await viewport(width);
+    await expect(groupRail).not.toBeVisible();
+    await groupToggle.click();
+    await expect(groupRail).toBeVisible();
+    await expect(groupToggle).toHaveAttribute("aria-expanded", "true");
+    const railBounds = await groupRail.boundingBox();
+    const threadBounds = await messages.boundingBox();
+    assert.ok(railBounds.x + railBounds.width <= threadBounds.x,
+      `At ${width}px, the session rail must leave the full chat thread visible`);
+    assert.ok(threadBounds.x + threadBounds.width <= width);
+    await input.click({ trial: true });
+    await page.keyboard.press("Escape");
+    await expect(groupRail).not.toBeVisible();
+    await expect(groupToggle).toBeFocused();
+  }
+  await viewport(1440);
+  await expect(groupRail).toBeVisible();
+  await expect(groupToggle).not.toBeVisible();
+  report.sessionRail = { inlineAt: [830, 914], pinnedAt: 1440 };
 
   const failedTitle = "首次未成功的工作群";
   const { dialog: creationDialog, name: creationName, submit: creationSubmit } = await openGroupCreation(page, "   ");
@@ -318,11 +342,16 @@ async function browserChecks(page, report) {
     await changeCard.click();
     assert.match((await checked).url(), /\?review=true$/);
     await expect(approve).toBeEnabled();
-    await expect(detail).toContainText("task42-test · US · SKU " + sku);
+    await expect(detail.locator(".workbench-listing-product")).toHaveText(evidence.listing.title);
+    await expect(detail).toContainText("店铺 task42-test · 站点 US · 商品编号 " + sku);
     await expect(detail.locator('[data-bullet-version="before"] li')).toHaveText(evidence.listing.bullets);
     assert.deepEqual(await detail.locator('[data-bullet-version="proposed"] li').evaluateAll(rows =>
       rows.map(row => row.firstChild.textContent)), proposed);
     await expect(detail.locator('[data-bullet-version="proposed"] [data-fact-id]')).toHaveCount(5);
+    const source = detail.locator(".workbench-listing-source").first();
+    await source.locator("summary").click();
+    await expect(source).toHaveAttribute("open", "");
+    await expect(source.locator("p")).toContainText(evidence.facts.facts[0].statement);
     assert.ok(evidence.listing.bullets[0].length > 120 && proposed[0].length > 120);
     assert.equal(await body.evaluate(element => element.scrollWidth > element.clientWidth), false);
     await screenshot("pending", width);
@@ -429,25 +458,36 @@ async function browserChecks(page, report) {
   await page.locator("#loginCaptcha").fill("0726");
   await page.locator("#loginPass").press("Enter");
   await page.getByRole("link", { name: "AI 工作台", exact: true }).click();
-  await page.getByRole("button", { name: "投放诊断", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "投放诊断" })).toBeVisible();
+  await page.getByRole("button", { name: "广告计划复核", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "广告计划复核" })).toBeVisible();
   await page.getByRole("button", { name: "返回工作台" }).click();
   await expect(input).toBeVisible();
-  await page.getByRole("link", { name: "店铺订单", exact: true }).click();
-  await page.waitForURL("**/orders");
+  await expect(page.getByRole("link", { name: "店铺订单", exact: true })).not.toBeVisible();
+  const amazonRequests = [];
+  page.on("request", request => {
+    if (/\/api\/orders\/shops\/amazon-us-fbm\/.*\/(preflight|sync)$/.test(new URL(request.url()).pathname)) {
+      amazonRequests.push(request.url());
+    }
+  });
+  const sources = page.locator("#workbenchSourcesTrigger");
+  await sources.click();
+  const sourceDialog = page.getByRole("dialog", { name: "数据来源" });
+  await expect(sourceDialog).toContainText("本地测试数据");
+  await expect(sourceDialog).toContainText("已登记 · 待验证");
+  await page.screenshot({ path: path.join(output, "1440-data-sources.png") });
+  await sourceDialog.getByRole("link", { name: "管理订单连接 · workbench-qa-amazon" }).click();
+  await page.waitForURL(url => url.pathname === "/orders" && url.searchParams.get("source") === "amazon-us-fbm");
   await expect(page).toHaveTitle(/订单/);
   await page.getByRole("link", { name: "返回工作台", exact: true }).click();
   await page.waitForURL(url => url.origin === origin && url.pathname === "/");
-  await expect(page.locator("#sidebarNav a[data-page=chat]")).toHaveAttribute("aria-current", "page");
+  await expect(page.locator("#workbenchHome")).toHaveAttribute("aria-current", "page");
   await expect(groupButton(group)).toHaveAttribute("aria-current", "true");
-  await page.locator("#sidebarNav a[data-page=dashboard]").click();
-  await expect(page.locator("#dashStats .stat-card").first()).toBeVisible();
-  await expect(page.locator("#chatGroupControls")).not.toBeVisible();
-  await page.screenshot({ path: path.join(output, "1440-dashboard.png") });
-  await page.locator("#sidebarNav a[data-page=chat]").click();
-  await expect(page.locator("#sidebarNav a[data-page=chat]")).toHaveAttribute("aria-current", "page");
-  await expect(groupButton(group)).toHaveAttribute("aria-current", "true");
-  report.routes = { diagnosis: true, orders: true, dashboard: true, returnToSelectedGroup: true };
+  await expect(page.locator("#sidebarNav a[data-page=dashboard]")).not.toBeVisible();
+  await page.getByRole("button", { name: "查销量", exact: true }).click();
+  await expect(input).toHaveValue(/商品名.*上周卖了多少件/);
+  await input.fill("");
+  assert.deepEqual(amazonRequests, []);
+  report.routes = { diagnosis: true, ordersViaSources: true, legacyNavHidden: true, returnToSelectedGroup: true };
   const delayedTitle = "甲创建但响应迟到";
   await page.evaluate(pathname => {
     const fetch = window.fetch;
@@ -479,7 +519,7 @@ async function browserChecks(page, report) {
     await page.locator("#loginCaptcha").fill("0726");
     await page.locator("#loginPass").press("Enter");
     await expect(page.locator("#chatGroupNew")).toBeVisible();
-    await expect(page.locator(".workbench-group-empty")).toHaveText(/还没有工作群/);
+    await expect(page.locator("#chatGroupList .workbench-group-empty")).toHaveText("还没有会话");
     await expect(input).toBeDisabled();
     await expect(page.locator("#chatGroupList [data-conversation-id]")).toHaveCount(0);
   } finally { releaseCreate(); }
@@ -489,6 +529,16 @@ async function browserChecks(page, report) {
   await expect(groupButton(lateGroup.conversation_id)).toHaveCount(0);
   await expect(messages).not.toContainText("旧聊天原文");
   await expect(input).toBeDisabled();
+  await viewport(390);
+  await page.locator("#chatGroupToggle").click();
+  await page.locator("#workbenchSourcesTrigger").click();
+  await expect(sourceDialog).toContainText("未登记");
+  await expect(sourceDialog.getByRole("link", { name: /管理订单连接/ })).toHaveCount(0);
+  await page.screenshot({ path: path.join(output, "390-data-sources.png") });
+  await page.keyboard.press("Escape");
+  await expect(sourceDialog).not.toBeVisible();
+  await expect(page.locator("#workbenchSourcesTrigger")).toBeFocused();
+  report.sources = { unregistered: true, noOutboundSync: amazonRequests.length === 0 };
   report.creationGuards.staleResponseAfterAccountChange = { ignored: true, committedFirstAccount: lateGroup.conversation_id };
   assert.deepEqual(errors, []);
 }

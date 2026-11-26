@@ -57,6 +57,11 @@ class ExecutionStopped(RuntimeError):
         return self.args[0]
 
 
+class ChatSessionInvalid(ExecutionStopped):
+    def __init__(self):
+        super().__init__("chat_session_invalid")
+
+
 class RequestBudget:
     def __init__(self, trace_id, *, limit=32000, output_limit=3000, safety_margin=512):
         self.trace_id = trace_id

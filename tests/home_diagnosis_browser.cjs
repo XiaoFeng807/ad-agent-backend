@@ -35,12 +35,13 @@ async function login(page, username = "diagnosis-demo") {
   await page.locator("#loginPass").fill("demo-password");
   await page.locator("#loginCaptcha").fill("0726");
   await page.locator("#loginCaptcha").press("Enter");
-  await page.locator("#navUsername").getByText(username, { exact: true }).waitFor();
+  await page.locator("#navUsername").getByText(username, { exact: true }).waitFor({ state: "attached" });
+  await page.locator("#workbenchHome").waitFor({ state: "visible" });
 }
 
 async function openDiagnosis(page) {
   await page.locator('[data-page="chat"]').click();
-  await page.getByRole("button", { name: "投放诊断", exact: true }).click();
+  await page.getByRole("button", { name: "广告计划复核", exact: true }).click();
   await page.waitForFunction(() => !document.getElementById("diagnosisInputs").disabled);
   if (!(await page.locator("#diagnosisStructuredFields").isVisible())) await page.locator("#diagnosisMode").click();
 }
@@ -181,11 +182,14 @@ async function inspectRound(page, directory, round, index, request) {
   assert.equal(chunk.content, original);
   await round.locator(".diagnosis-citation pre").getByText(original, { exact: true }).waitFor();
 
-  await round.getByRole("button", { name: "复制 Trace ID" }).click();
-  await round.getByText("已复制", { exact: true }).waitFor();
+  await round.getByRole("button", { name: "执行记录" }).click();
+  const execution = page.locator("#diagnosisExecution");
+  await execution.getByRole("button", { name: "复制 Trace ID" }).click();
+  await execution.getByText("已复制", { exact: true }).waitFor();
   const traceId = await page.evaluate(() => navigator.clipboard.readText());
   assert.match(traceId, /^[a-f0-9]{12}$/);
-  assert.equal(traceId, await round.locator(".diagnosis-trace code").textContent());
+  assert.equal(traceId, await execution.locator(".diagnosis-trace code").textContent());
+  await execution.getByRole("button", { name: "关闭" }).click();
   const trace = (await readTraces(directory)).find(row => row.trace_id === traceId);
   assert.equal(trace?.status, "completed");
   assert.ok(trace.steps.some(step => step.stage === "persistence" && step.action === "save_reply"));
@@ -306,7 +310,7 @@ async function concurrency({ page, origin }) {
       page.waitForRequest(req => matchesPath(req, streamPath) && req.postDataJSON().message),
       page.locator("#chatInput").press("Enter"),
     ]);
-    await page.locator('[data-page="dashboard"]').click();
+    await page.locator('[data-page="dashboard"]').evaluate(link => link.click());
     await page.locator("#dashStats .stat-card").first().waitFor();
     diagnosis.resolve();
     await page.waitForFunction(() => document.querySelector(".diagnosis-status")?.dataset.state === "done");

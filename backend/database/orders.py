@@ -69,6 +69,15 @@ class Order(NamedTuple):
     items: tuple[Item, ...]
 
 
+class FetchedOrder(NamedTuple):
+    order: Order
+    origin: dict
+
+
+class IngestionConflict(RuntimeError):
+    pass
+
+
 def utc_text(value):
     return value.astimezone(UTC).isoformat(timespec="microseconds").replace("+00:00", "Z")
 
@@ -225,7 +234,12 @@ def write_orders(conn, source, shop_id, records, *, synced_at, replace_snapshot=
                     status=excluded.status, ordered_at=excluded.ordered_at, source_updated_at=excluded.source_updated_at,
                     ship_by=excluded.ship_by, carrier_at=excluded.carrier_at, mixed_seller=excluded.mixed_seller,
                     synced_at=excluded.synced_at
-                WHERE excluded.source_updated_at > shop_orders.source_updated_at
+                WHERE (CASE WHEN substr(excluded.source_updated_at,20)='Z'
+                            THEN substr(excluded.source_updated_at,1,19) || '.000000Z'
+                            ELSE excluded.source_updated_at END) >
+                      (CASE WHEN substr(shop_orders.source_updated_at,20)='Z'
+                            THEN substr(shop_orders.source_updated_at,1,19) || '.000000Z'
+                            ELSE shop_orders.source_updated_at END)
                    OR (excluded.source_updated_at IS NOT NULL AND shop_orders.source_updated_at IS NULL)""",
             (*scope, *order[:-1], synced_at),
         ).rowcount

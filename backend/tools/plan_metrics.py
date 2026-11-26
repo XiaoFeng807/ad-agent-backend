@@ -96,6 +96,16 @@ def plan_metric_coverage(candidates):
         return None, "plan_history_unavailable"
 
 
+def owned_metric_binding(conn, plan_id, user_id):
+    """Return the current binding for an owned plan, including an unmapped plan."""
+    lookup_id = plan_key(plan_id) if is_mysql(conn) else plan_id
+    return conn.execute(
+        """SELECT b.source_id, b.data_version, b.source_plan_id FROM ad_plans p
+           LEFT JOIN plan_metric_bindings b ON b.plan_id=p.id WHERE p.id=? AND p.user_id=?""",
+        (lookup_id, user_id),
+    ).fetchone()
+
+
 def query_plan_metrics(plan_id, start_date, end_date, user_id, connect):
     if type(user_id) is not int or user_id <= 0:
         return {"success": False, "error_code": "authentication_required"}
@@ -109,12 +119,10 @@ def query_plan_metrics(plan_id, start_date, end_date, user_id, connect):
         return {"success": False, "error_code": "invalid_date_window"}
     # Ownership precedes artifact access, even if no binding or file is configured.
     with closing(connect()) as conn:
-        lookup_id = plan_key(plan_id) if is_mysql(conn) else plan_id
-        if conn.execute("SELECT 1 FROM ad_plans WHERE id=? AND user_id=?", (lookup_id, user_id)).fetchone() is None:
-            return {"success": False, "error_code": "plan_not_found"}
-        binding = conn.execute("SELECT source_id, data_version, source_plan_id FROM plan_metric_bindings WHERE plan_id=?",
-                               (lookup_id,)).fetchone()
+        binding = owned_metric_binding(conn, plan_id, user_id)
     if binding is None:
+        return {"success": False, "error_code": "plan_not_found"}
+    if binding["source_plan_id"] is None:
         return {"success": False, "error_code": "plan_history_not_mapped"}
     if not settings.PLAN_METRICS_DB_PATH:
         return {"success": False, "error_code": "plan_history_not_configured"}

@@ -20,11 +20,14 @@ from scripts.accept_task42_t1 import configure, write
 from scripts.storepilot_gateway import Journal
 
 
-CASES = ("race", "kill-before", "kill-after", "final-commit")
+RACE_CASES = ("race", "race-stale")
+CASES = (*RACE_CASES, "kill-before", "kill-after", "final-commit")
 FACT = g3.FACT_STEP
 SALES = f"{g3.base.TOTE}/{g3.sql.SALES}"
 CURRENT = f"{g3.base.TOTE}/{g3.sql.CURRENT}"
 AUDIT = {"releases": "g4_releases", "final_inserts": "g4_final_inserts"}
+EXECUTION = ("generation", "executor_id", "trace_id")
+SCAN_ACTIONS = {"claim_attempt", "claimed", "lock_busy", "no_longer_pending"}
 
 
 def read(path):
@@ -39,7 +42,11 @@ def lines(path):
 
 
 def snapshot(folder, name=None):
-    result = g3.snapshot(folder / "run.sqlite3", extra_tables=AUDIT)
+    db = folder / "run.sqlite3"
+    with closing(g3.sql.sql_connection(db)) as conn:
+        claim_writes = conn.execute("SELECT 1 FROM sqlite_schema WHERE type='table' AND name='g4_claim_writes'").fetchone()
+    tables = {**AUDIT, "claim_writes": "g4_claim_writes ORDER BY rowid"} if claim_writes else AUDIT
+    result = g3.snapshot(db, extra_tables=tables)
     if name:
         write(folder / f"sql-{name}.json", result)
     return result
@@ -57,6 +64,9 @@ def seed(db, password):
             CREATE TRIGGER g4_final_insert AFTER INSERT ON background_inspection_events
             WHEN new.kind='finished'
             BEGIN INSERT INTO g4_final_inserts VALUES (new.run_id, new.seq); END;
+            CREATE TABLE g4_claim_writes (run_id TEXT, previous_generation INTEGER, generation INTEGER, executor_id TEXT);
+            CREATE TRIGGER g4_claim_write AFTER UPDATE OF generation, executor_id ON background_inspections
+            BEGIN INSERT INTO g4_claim_writes VALUES (new.run_id, old.generation, new.generation, new.executor_id); END;
         """)
         conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
 
@@ -71,9 +81,12 @@ def fixture_worker(folder, case, label):
     active = None
     receipt = None
     race_ready = False
+    followup_scanned = False
     plan = read(folder / "plan.json")
+    first = plan["first_run_id"]
     original_lock, original_execute = worker.executor_lock, worker.execute
     original_pending, original_checkpoint, original_finish = storage.pending, storage.checkpoint, storage.finish
+    original_claim = storage.claim
 
     def record(event, **fields):
         journal.log(event, label=label, pid=os.getpid(),
@@ -85,20 +98,42 @@ def fixture_worker(folder, case, label):
     @contextmanager
     def lock(directory, run_id):
         nonlocal race_ready
-        if case == "race" and not race_ready:
-            assert run_id == plan["first_run_id"]
+        if case in RACE_CASES and not race_ready:
+            assert run_id == first
             race_ready = True
             journal.mark("race-ready", pid=os.getpid(), run_id=run_id, label=label)
             g3.wait_for(lambda: (folder / "release-race").exists(), "shared A/B barrier")
         with original_lock(directory, run_id) as acquired:
             yield acquired
+        if case in RACE_CASES and acquired and run_id == first and active and active["run_id"] == first:
+            journal.mark("race-first-unlocked", label=label, pid=os.getpid(), run_id=first,
+                         trace_id=active["trace_id"])
 
     def pending():
+        nonlocal followup_scanned
+        # Let the other process complete its own run before controlling its next scan of the first run.
+        if case in RACE_CASES and active and active["run_id"] != first and not followup_scanned:
+            followup_scanned = True
+            stale = case == "race-stale"
+            rows = original_pending() if stale else None
+            journal.mark("race-scan-gated", label=label, pid=os.getpid(), run_id=first, pending=rows)
+            g3.wait_for(lambda: journal.signal("release-race-scan"), "release follow-up scan")
+            if not stale:
+                rows = original_pending()
+            journal.mark("race-scan-returned", label=label, pid=os.getpid(), run_id=first, pending=rows)
+            return rows
         probe = (here / "probe-scan").exists() and not journal.signal("scan-observed")
         rows = original_pending()
         if probe:
             journal.mark("scan-observed", label=label, pid=os.getpid(), run_id=plan["first_run_id"], pending=rows)
         return rows
+
+    def claim(run_id, executor_id, trace_id):
+        job = original_claim(run_id, executor_id, trace_id)
+        if case == "race-stale" and run_id == first and followup_scanned:
+            journal.log("race-claim-rechecked", label=label, pid=os.getpid(), run_id=run_id, trace_id=trace_id,
+                        executor_id=executor_id, generation=job["generation"] if job else None)
+        return job
 
     def execute(job, provider):
         nonlocal active
@@ -118,7 +153,7 @@ def fixture_worker(folder, case, label):
             record("bottom-tool-start", step=step, runtime_call_id=call_id)
             result = reader(conn, owner, **arguments)
             record("bottom-tool-return", step=step, runtime_call_id=call_id)
-            if case == "race" and active["run_id"] == plan["first_run_id"] and step == SALES:
+            if case in RACE_CASES and active["run_id"] == first and step == SALES:
                 g3.hold(here, "race-tool")
             if label == "A" and step == FACT and case in {"kill-before", "kill-after"}:
                 receipt = {"step": step, "tool": tool, "runtime_call_id": call_id, "result": result}
@@ -153,7 +188,8 @@ def fixture_worker(folder, case, label):
         for obj, name, value in (
             (observability, "TRACE_LOG_FILE", here / "traces.jsonl"),
             (worker, "executor_lock", lock), (worker, "execute", execute),
-            (storage, "pending", pending), (storage, "checkpoint", checkpoint), (storage, "finish", finish),
+            (storage, "pending", pending), (storage, "claim", claim),
+            (storage, "checkpoint", checkpoint), (storage, "finish", finish),
             (worker.ProviderFactory, "create", lambda: g3.fixed_provider(record)),
             (listing_operations, "read_sales", wrap(g3.sql.SALES, listing_operations.read_sales)),
             (listing_operations, "read_listing", wrap(g3.sql.CURRENT, listing_operations.read_listing)),
@@ -224,9 +260,9 @@ def kill(folder, label, proc, run_id, job):
     journal.log("process_exit_observed", run_id=run_id, returncode=proc.wait(timeout=12), **fields)
 
 
-def busy(folder, label, run_id):
+def skipped(folder, label, run_id, action):
     return any(trace["status"] == "skipped" and any(
-        step["action"] == "lock_busy" and step.get("runtime_call_id") == run_id for step in trace["steps"])
+        step["action"] == action and step.get("runtime_call_id") == run_id for step in trace["steps"])
         for trace in lines(folder / label / "traces.jsonl"))
 
 
@@ -262,26 +298,38 @@ def run_case(root, case, seed_db, password):
 
         run_id, path, group, request_id = start(origin_a, case)
         write(folder / "plan.json", {"first_run_id": run_id, "group": group, "case": case,
-                                     "origins": g3.ORIGINS, "path": path, "start_request_id": request_id})
+                                     "origins": g3.ORIGINS, "path": path, "start_request_id": request_id,
+                                     "model": g3.MODEL})
         a = workers.enter_context(start_worker(folder, case, "A", env))
-        if case == "race":
-            b = workers.enter_context(start_worker(folder, case, "B", env))
+        if case in RACE_CASES:
+            workers.enter_context(start_worker(folder, case, "B", env))
             wait_for(lambda: all((folder / label / "race-ready").exists() for label in ("A", "B")), "both race arrivals")
             (folder / "release-race").touch()
             winner = wait_for(lambda: next((label for label in ("A", "B")
                                            if (folder / label / "held-race-tool").exists()), None), "winner in tool")
             loser = "A" if winner == "B" else "B"
-            wait_for(lambda: busy(folder, loser, run_id), "loser Trace")
-            second, *_ = start(origin_b, "overlap")
-            wait_for(lambda: any(row["run_id"] == second and row["finalized"]
-                                 for row in snapshot(folder)["jobs"]), "other executor completed overlap")
+            wait_for(lambda: skipped(folder, loser, run_id, "lock_busy"), "loser Trace")
+            second, second_path, _, second_request = start(origin_b, "overlap")
+            wait_for(lambda: (folder / loser / "race-scan-gated").exists(), "loser completed overlap and reached follow-up scan")
             snapshot(folder, "overlap")
             (folder / winner / "release-race-tool").touch()
+            wait_for(lambda: (folder / winner / "race-first-unlocked").exists(), "winner completed and released the process lock")
+            before_scan = snapshot(folder, "before-followup-scan")
+            (folder / loser / "release-race-scan").touch()
+            wait_for(lambda: (folder / loser / "race-scan-returned").exists(), "loser returned from follow-up scan")
+            if case == "race-stale":
+                wait_for(lambda: skipped(folder, loser, run_id, "no_longer_pending"), "loser safely skipped stale candidate")
+            assert before_scan == snapshot(folder, "after-followup-scan")
+            second_get = g3.request(origin_a, second_path, token=token)
+            assert second_get["status"] == 200
+            write(folder / "api-overlap-answer.json", {"origin": origin_a, "request_id": second_get["request_id"],
+                  "start_request_id": second_request, "run_id": second, "status": second_get["status"],
+                  "answer_id": second_get["body"]["data"]["answer"]["entry_id"]})
         else:
             barrier = "before-final" if case == "final-commit" else "fault"
             wait_for(lambda: (folder / "A" / f"held-{barrier}").exists(), "A reached the fault boundary")
             b = workers.enter_context(start_worker(folder, case, "B", env))
-            wait_for(lambda: busy(folder, "B", run_id), "B polling while A holds the lock")
+            wait_for(lambda: skipped(folder, "B", run_id, "lock_busy"), "B polling while A holds the lock")
             before = snapshot(folder, "before")
             [job] = before["jobs"]
             assert (a.poll(), b.poll(), job["generation"], before["slots"][0]["released_ns"]) == (None, None, 1, None)
@@ -305,7 +353,7 @@ def run_case(root, case, seed_db, password):
         if case != "final-commit":
             wait_for(lambda: any(trace["status"] == "completed" for trace in lines(folder / "B" / "traces.jsonl")),
                      "B flushed its completion Trace")
-            if case == "race":
+            if case in RACE_CASES:
                 wait_for(lambda: any(trace["status"] == "completed" for trace in lines(folder / "A" / "traces.jsonl")),
                          "A flushed its completion Trace")
         answer_get = g3.request(origin_b, path, token=token)
@@ -321,32 +369,149 @@ def run_case(root, case, seed_db, password):
                                check=True, timeout=60)
 
 
+def execution_key(row):
+    return tuple(row[key] for key in EXECUTION)
+
+
+def scan_traces(worker_traces, worker_pids, run_ids):
+    scans = {}
+    executor_ids = {}
+    for trace, label in worker_traces:
+        assert trace["source"] == "background_inspection"
+        assert len(trace["steps"]) >= 2, "scan Trace is missing its outcome"
+        attempt, outcome = trace["steps"][:2]
+        run_id = attempt["runtime_call_id"]
+        trace_id = trace["trace_id"]
+        assert run_id in run_ids, f"unknown scan run: {run_id}"
+        scan_steps = [step for step in trace["steps"] if step["action"] in SCAN_ACTIONS]
+        assert scan_steps == [attempt, outcome], f"unexpected scan steps: {trace_id}"
+        assert attempt["action"] == "claim_attempt" and attempt["epoch_ns"] <= outcome["epoch_ns"]
+        assert all(step["stage"] == "background_inspection" and step["runtime_call_id"] == run_id
+                   and step["status"] == "ok" for step in scan_steps), f"unpaired scan: {trace_id}"
+        evidence = attempt["evidence"]
+        pid, executor = evidence["pid"], evidence["executor_id"]
+        assert pid == worker_pids[label] and executor
+        assert executor_ids.setdefault(label, executor) == executor
+        action = outcome["action"]
+        assert action in {"claimed", "lock_busy", "no_longer_pending"}
+        if action != "claimed":
+            assert trace["status"] == "skipped" and trace["steps"] == scan_steps, f"skip has execution steps: {trace_id}"
+        scans.setdefault(run_id, []).append({"trace_id": trace_id, "action": action, "label": label,
+                                             "pid": pid, "executor_id": executor, "attempt": attempt, "outcome": outcome})
+    assert len(set(executor_ids.values())) == len(executor_ids)
+    return scans
+
+
+def reconcile_scans(scans, claims, finished, events, transport):
+    successful = {scan["trace_id"]: scan for scan in scans if scan["action"] == "claimed"}
+    assert set(successful) == {claim["trace_id"] for claim in claims}, "Trace and durable claims disagree"
+    for claim in claims:
+        scan = successful[claim["trace_id"]]
+        outcome = scan["outcome"]
+        assert scan["attempt"]["evidence"]["observed_generation"] == claim["generation"] - 1
+        assert outcome["evidence"] == {"executor_id": claim["executor_id"], "generation": claim["generation"],
+                                       "pid": scan["pid"]}
+        assert scan["executor_id"] == claim["executor_id"]
+        assert scan["attempt"]["epoch_ns"] <= claim["epoch_ns"] <= outcome["epoch_ns"]
+
+    busy = [scan for scan in scans if scan["action"] == "lock_busy"]
+    late = [scan for scan in scans if scan["action"] == "no_longer_pending"]
+    assert len({scan["executor_id"] for scan in late}) == len(late), "repeated terminal skip by the same executor"
+    for scan in busy + late:
+        trace_id = scan["trace_id"]
+        observed = scan["attempt"]["evidence"]["observed_generation"]
+        assert type(observed) is int and 0 <= observed <= finished["generation"]
+        assert not any(row.get("trace_id") == trace_id for row in events), f"skip owns durable events: {trace_id}"
+        assert not any(row.get("trace_id") == trace_id and row["event"] != "race-claim-rechecked"
+                       for row in transport), f"skip owns process work: {trace_id}"
+        if scan["action"] == "lock_busy":
+            assert scan["outcome"]["epoch_ns"] <= finished["epoch_ns"], f"lock contention outside execution: {trace_id}"
+        else:
+            assert scan["executor_id"] != finished["executor_id"], f"terminal skip by finisher: {trace_id}"
+            assert finished["epoch_ns"] <= scan["outcome"]["epoch_ns"], f"skip preceded terminal commit: {trace_id}"
+            assert any(row["executor_id"] == scan["executor_id"] and
+                       row["outcome"]["epoch_ns"] <= scan["attempt"]["epoch_ns"] for row in busy), (
+                f"terminal skip is missing the preceding contention: {trace_id}")
+    return busy, late
+
+
+def reconcile_race_probe(folder, plan, journal, claims, finished, busy, late, state):
+    [contender] = busy
+    assert contender["executor_id"] != claims[0]["executor_id"]
+    if "model" not in plan:
+        # Historical runs predate the scan barrier and recheck journal.
+        return
+    [gated] = [row for row in journal if row["event"] == "race-scan-gated"]
+    [unlocked] = [row for row in journal if row["event"] == "race-first-unlocked"]
+    [returned] = [row for row in journal if row["event"] == "race-scan-returned"]
+    assert gated["pid"] == returned["pid"] == contender["pid"]
+    assert unlocked["trace_id"] == claims[0]["trace_id"] and unlocked["pid"] != contender["pid"]
+    assert int(gated["epoch_ns"]) <= finished["epoch_ns"] <= int(unlocked["epoch_ns"]) <= int(returned["epoch_ns"])
+    assert read(folder / "sql-before-followup-scan.json") == read(folder / "sql-after-followup-scan.json") == state
+    rechecks = [row for row in journal if row["event"] == "race-claim-rechecked"]
+    if plan["case"] == "race":
+        assert gated["pending"] is None and returned["pending"] == []
+        assert not late and not rechecks, "fresh scan must omit the completed run"
+        return
+    [skip] = late
+    [checked] = rechecks
+    assert gated["pending"] == returned["pending"] == [[plan["first_run_id"], finished["generation"]]]
+    assert checked["trace_id"] == skip["trace_id"] and checked["pid"] == skip["pid"] == contender["pid"]
+    assert checked["executor_id"] == skip["executor_id"] and checked["generation"] is None
+    assert skip["attempt"]["evidence"]["observed_generation"] == finished["generation"]
+    assert int(returned["epoch_ns"]) <= skip["attempt"]["epoch_ns"] <= int(checked["epoch_ns"]) <= skip["outcome"]["epoch_ns"]
+
+
 def reconcile(folder, case):
     plan = read(folder / "plan.json")
     run_id = plan["first_run_id"]
+    assert plan["case"] == case and plan.get("model", g3.MODEL) == g3.MODEL
     state = snapshot(folder)
-    assert state == read(folder / "sql-final.json")
-    assert len(state["jobs"]) == (2 if case == "race" else 1)
+    assert state == read(folder / "sql-final.json"), "saved and independent SQL snapshots disagree"
+    race = case in RACE_CASES
+    assert len(state["jobs"]) == (2 if race else 1)
     assert all(not state[key] for key in ("listing_proposals", "listing_receipts", "pause_proposals",
                                          "pause_receipts", "change_proposals", "product_mutations"))
     transport = lines(folder / "transport.jsonl")
-    traces = lines(folder / "injection-traces.jsonl")
+    injections = lines(folder / "injection-traces.jsonl")
+    worker_traces = []
+    worker_pids = {}
     for label in ("A", "B"):
-        transport.extend(lines(folder / label / "transport.jsonl"))
-        traces.extend(lines(folder / label / "traces.jsonl"))
+        worker_log = lines(folder / label / "transport.jsonl")
+        [online] = [row for row in worker_log if row["event"] == "worker-online"]
+        worker_pids[label] = online["pid"]
+        assert all(row["pid"] == online["pid"] and row["label"] == label for row in worker_log)
+        transport.extend(worker_log)
+        worker_traces.extend((trace, label) for trace in lines(folder / label / "traces.jsonl"))
         active = folder / label / "interrupted-trace.json"
         if active.exists():
-            traces.append(read(active))
+            worker_traces.append((read(active), label))
+    traces = [trace for trace, _ in worker_traces] + injections
     by_trace = {trace["trace_id"]: trace for trace in traces}
+    assert len(by_trace) == len(traces), "duplicate Trace ID"
+    run_ids = {job["run_id"] for job in state["jobs"]}
+    assert run_id in run_ids and len(run_ids) == len(state["jobs"])
+    assert all(row["run_id"] in run_ids for table in state.values() for row in table)
+    assert all(row.get("run_id") in run_ids for row in transport if "trace_id" in row)
+    assert all(trace["source"] == "background_inspection_fence" and trace["status"] == "rejected"
+               and len(trace["steps"]) == 1 and trace["steps"][0]["action"] == "write_rejected"
+               and trace["steps"][0]["runtime_call_id"] == run_id for trace in injections)
+    assert len(injections) == (2 if case in {"kill-before", "kill-after"} else 0)
+    scans = scan_traces(worker_traces, worker_pids, run_ids)
     api = read(folder / "api-answer.json")
     report = {}
     for job in state["jobs"]:
         current = job["run_id"]
+        assert json.loads(job["spec"])["model"] == g3.MODEL
         rows = {key: [row for row in state[key] if row["run_id"] == current] for key in state}
-        [run], [slot], [answer], [insert], [release], [final_insert] = (
-            rows[key] for key in ("runs", "slots", "answers", "answer_inserts", "releases", "final_inserts"))
+        for table in ("runs", "slots", "answers", "answer_inserts", "releases", "final_inserts"):
+            assert len(rows[table]) == 1, f"{current}: expected one row in {table}"
+        run, slot, answer, insert, release, final_insert = (
+            rows[key][0] for key in ("runs", "slots", "answers", "answer_inserts", "releases", "final_inserts"))
         events = rows["events"]
-        [finished] = [row for row in events if row["kind"] == "finished"]
+        finals = [row for row in events if row["kind"] == "finished"]
+        assert len(finals) == 1, f"{current}: expected one durable terminal event"
+        [finished] = finals
         claims = [row for row in events if row["kind"] == "claimed"]
         assert [row["seq"] for row in events] == list(range(1, len(events) + 1))
         assert job["finalized"] == 1 and run["status"] == finished["status"] == "completed"
@@ -354,41 +519,103 @@ def reconcile(folder, case):
         assert answer["id"] == insert["answer_id"] == finished["answer_id"] == job["answer_id"]
         assert final_insert["seq"] == finished["seq"] == events[-1]["seq"]
         expected_attempts = 2 if case in {"kill-before", "kill-after"} else 1
-        assert [row["generation"] for row in claims] == list(range(1, expected_attempts + 1))
-        assert job["executor_id"] == claims[-1]["executor_id"]
+        assert [row["generation"] for row in claims] == list(range(1, expected_attempts + 1)), (
+            f"{current}: unexpected persistent claim generations")
+        assert job["generation"] == expected_attempts and job["executor_id"] == claims[-1]["executor_id"], (
+            f"{current}: final job does not match its last claim")
+        if "model" in plan:
+            assert rows["claim_writes"] == [
+                {"run_id": current, "previous_generation": row["generation"] - 1, "generation": row["generation"],
+                 "executor_id": row["executor_id"]} for row in claims
+            ], f"{current}: unexpected physical claim updates"
         assert len({row["executor_id"] for row in claims}) == expected_attempts
+        assert len({row["trace_id"] for row in claims}) == expected_attempts
+        assert execution_key(finished) == execution_key(claims[-1])
+        [accepted] = [row for row in events if row["kind"] == "accepted"]
+        assert accepted["seq"] == 1 and accepted["acquired_ns"] == slot["acquired_ns"]
+        assert accepted["trace_id"] == run["trace_id"]
+        execution_events = [row for row in events if row["kind"] != "accepted"]
+        claims_by_generation = {row["generation"]: row for row in claims}
+        assert [row["generation"] for row in execution_events] == sorted(row["generation"] for row in execution_events)
+        assert all(execution_key(row) == execution_key(claims_by_generation[row["generation"]]) and
+                   row["seq"] >= claims_by_generation[row["generation"]]["seq"] for row in execution_events)
+        run_scans = scans[current]
+        busy, late = reconcile_scans(run_scans, claims, finished, state["events"], transport)
+        claim_steps = [(scan["trace_id"], step) for scan in run_scans for step in (scan["attempt"], scan["outcome"])]
+        release_steps = [(claim["trace_id"], step) for claim in claims for step in by_trace[claim["trace_id"]]["steps"]
+                         if step["stage"] == "admission" and step["action"] == "released"]
+        if case == "final-commit":
+            assert not release_steps and by_trace[finished["trace_id"]]["status"] == "running"
+        else:
+            [(trace_id, release_step)] = release_steps
+            assert trace_id == finished["trace_id"] and by_trace[trace_id]["status"] == "completed"
+            assert release_step["runtime_call_id"] == current and release_step["evidence"]["released_ns"] == slot["released_ns"]
         checkpoints = {row["step"]: row["artifact_id"] for row in rows["checkpoints"]}
-        assert len(checkpoints) == 10 and set(checkpoints.values()) == {row["artifact_id"] for row in rows["artifacts"]}
+        artifacts = {row["artifact_id"]: row for row in rows["artifacts"]}
+        completed = {row["step"]: row for row in events if row["kind"] == "step_completed"}
+        assert len(checkpoints) == len(artifacts) == len(completed) == 10
+        assert set(checkpoints.values()) == set(artifacts)
+        assert checkpoints == {step: row["artifact_id"] for step, row in completed.items()}
+        receipts = {}
         for product in json.loads(answer["details"])["products"]:
             assert product["review_complete"]
             for tool, receipt in product["receipts"].items():
-                assert receipt["artifact_id"] == checkpoints[f"{product['sku']}/{tool}"]
+                name = f"{product['sku']}/{tool}"
+                assert name not in receipts
+                receipts[name] = receipt
+                committed = completed[name]
+                artifact = artifacts[receipt["artifact_id"]]
+                saved = json.loads(artifact["result"])
+                assert artifact["generation"] == committed["generation"]
+                assert receipt["artifact_id"] == committed["artifact_id"]
+                assert receipt["tool_call_id"] == committed["runtime_call_id"] == saved["tool_call_id"]
+                assert receipt["result"] == saved["result"]
         journal = [row for row in transport if row.get("run_id") == current]
+        if case != "race-stale" or current != run_id:
+            assert not any(row["event"] == "race-claim-rechecked" for row in journal)
+        entered = [row for row in journal if row["event"] == "execute_entered"]
+        assert [execution_key(row) for row in entered] == [execution_key(row) for row in claims]
+        [committed] = [row for row in journal if row["event"] == "final_committed"]
+        assert execution_key(committed) == execution_key(finished)
+        assert committed["status"] == finished["status"] and committed["released_ns"] == slot["released_ns"]
         actual = [row for row in journal if row["event"] == "bottom-tool-start"]
         counts = {step: sum(row["step"] == step for row in actual) for step in sorted({row["step"] for row in actual})}
-        assert len(counts) == 9
-        assert {step: count for step, count in counts.items() if count != 1} == ({FACT: 2} if case == "kill-before" else {})
+        assert len(counts) == 9 and set(counts) == set(receipts)
+        assert {step: count for step, count in counts.items() if count != 1} == (
+            {FACT: 2} if case == "kill-before" else {}), f"{current}: unexpected bottom-tool reads"
         [model] = [row for row in journal if row["event"] == "fixed-model-review"]
-        assert model["trace_id"] == claims[-1]["trace_id"]
-        dispatch = {row["runtime_call_id"]: row for row in events if row["kind"] == "step_started" and row.get("tool")}
-        assert len({row["runtime_call_id"] for row in actual}) == len(actual) == len(dispatch)
+        assert execution_key(model) == execution_key(claims[-1])
+        dispatched = [row for row in events if row["kind"] == "step_started" and row.get("tool")]
+        dispatch = {row["runtime_call_id"]: row for row in dispatched}
+        returns = [row for row in journal if row["event"] == "bottom-tool-return"]
+        returned = {row["runtime_call_id"]: row for row in returns}
+        assert len({row["runtime_call_id"] for row in actual}) == len(actual) == len(dispatch) == len(dispatched)
+        assert len(returns) == len(returned) == len(actual)
         for call in actual:
-            committed = dispatch[call["runtime_call_id"]]
-            assert all(call[key] == committed[key] for key in ("generation", "trace_id", "step", "executor_id"))
-            assert any(step["stage"] == "tool_call" and step.get("runtime_call_id") == call["runtime_call_id"]
-                       for step in by_trace[call["trace_id"]]["steps"])
+            call_id = call["runtime_call_id"]
+            started, result = dispatch[call_id], returned[call_id]
+            assert execution_key(call) == execution_key(started) == execution_key(result)
+            assert call["step"] == started["step"] == result["step"]
+            assert started["epoch_ns"] <= int(call["epoch_ns"]) <= int(result["epoch_ns"])
+            tool_steps = [step for step in by_trace[call["trace_id"]]["steps"]
+                          if step["stage"] in {"tool_call", "tool_result"} and step.get("runtime_call_id") == call_id]
+            interrupted = case == "kill-before" and call["generation"] == 1 and call["step"] == FACT
+            assert [step["stage"] for step in tool_steps] == (["tool_call"] if interrupted else ["tool_call", "tool_result"])
+            assert all(step["action"] == started["tool"] for step in tool_steps)
+            if not interrupted:
+                evidence = tool_steps[-1]["evidence"]
+                assert evidence["run_id"] == current and evidence["step"] == call["step"]
+                assert execution_key(evidence) == execution_key(call)
+        assert all(dispatch[receipt["tool_call_id"]]["step"] == name for name, receipt in receipts.items())
         reused = {row["step"]: row["artifact_id"] for row in events if row["kind"] == "reused"}
-        claim_steps = [(trace["trace_id"], step) for trace in traces for step in trace["steps"]
-                       if step.get("runtime_call_id") == current and step["stage"] == "background_inspection"
-                       and step["action"] in {"claim_attempt", "lock_busy", "claimed", "write_rejected"}]
-        for row in claims:
-            assert any(trace_id == row["trace_id"] and step["action"] == "claimed" and
-                       step["evidence"]["executor_id"] == row["executor_id"] for trace_id, step in claim_steps)
+        rejections = [(trace["trace_id"], step) for trace in injections for step in trace["steps"]
+                      if step.get("runtime_call_id") == current and step["stage"] == "background_inspection"
+                      and step["action"] == "write_rejected"]
+        claim_steps.extend(rejections)
         if current == run_id:
             assert api["answer_id"] == f"entry:{answer['id']}"
-            if case == "race":
-                assert sorted(step["action"] for _, step in claim_steps) == [
-                    "claim_attempt", "claim_attempt", "claimed", "lock_busy"]
+            if race:
+                reconcile_race_probe(folder, plan, journal, claims, finished, busy, late, state)
                 first_executor = model["executor_id"]
                 [second_job] = [row for row in state["jobs"] if row["run_id"] != run_id]
                 assert second_job["executor_id"] != first_executor
@@ -429,9 +656,14 @@ def reconcile(folder, case):
                     fault_receipt = read(folder / "A" / "receipt.json")
                     [fault_call] = [row for row in actual if row["step"] == FACT and row["generation"] == 1]
                     assert fault_receipt["runtime_call_id"] == fault_call["runtime_call_id"]
-                    rejections = {step["detail"]: step["error_code"] for _, step in claim_steps
-                                  if step["action"] == "write_rejected"}
-                    assert rejections == {"checkpoint": "generation_mismatch", "finish": "generation_mismatch"}
+                    assert len(rejections) == 2
+                    assert {step["detail"]: step["error_code"] for _, step in rejections} == {
+                        "checkpoint": "generation_mismatch", "finish": "generation_mismatch"}
+                    assert all(execution_key(step["evidence"]) == execution_key(claims[0]) for _, step in rejections)
+        elif "model" in plan:
+            api_second = read(folder / "api-overlap-answer.json")
+            assert api_second["run_id"] == current and api_second["answer_id"] == f"entry:{answer['id']}"
+            assert api_second["start_request_id"] == accepted["request_id"] and api_second["status"] == 200
 
         timeline = [{**row, "source": "process"} for row in journal]
         timeline.extend({**row, "epoch_ns": str(row.get("epoch_ns", row.get("acquired_ns"))), "source": "sqlite"}
@@ -439,13 +671,18 @@ def reconcile(folder, case):
         timeline.extend({**step, "epoch_ns": str(step["epoch_ns"]), "trace_id": trace_id, "source": "trace"}
                         for trace_id, step in claim_steps)
         report[current] = {"case": case, "run_id": current, "claims": claims, "reused": reused,
+                           "model": g3.MODEL,
+                           "scan_traces": sorted(run_scans, key=lambda scan: scan["attempt"]["epoch_ns"]),
                            "tool_counts": counts, "rerun_steps": [step for step, count in counts.items() if count > 1],
                            "checkpoints": checkpoints, "slot": slot, "answer_id": answer["id"],
-                           "audit_counts": {"assistant_inserts": len(rows["answer_inserts"]),
+                           "audit_counts": {"claim_updates": len(rows["claim_writes"]) if "claim_writes" in rows else None,
+                                            "assistant_inserts": len(rows["answer_inserts"]),
                                             "final_events": len(rows["final_inserts"]), "slot_releases": len(rows["releases"])},
                            "timeline": sorted(timeline, key=lambda row: int(row["epoch_ns"]))}
         if current == run_id:
             report[current]["api"] = api
+        elif "model" in plan:
+            report[current]["api"] = api_second
     write(folder / "reconciliation.json", report)
     return report
 
@@ -466,6 +703,9 @@ def main():
         print(json.dumps(snapshot(root), ensure_ascii=False, indent=2))
         return
     cases = (args.case,) if args.case else CASES
+    if args.stage == "audit" and args.case is None and not (root / "race-stale").exists():
+        if "model" not in read(root / "race" / "plan.json"):
+            cases = tuple(case for case in CASES if case != "race-stale")
     if args.stage == "run":
         root.mkdir(parents=True, exist_ok=False)
         password = token_urlsafe(24)

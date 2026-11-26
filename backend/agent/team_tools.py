@@ -2,7 +2,7 @@
 
 import json
 import sqlite3
-from contextlib import nullcontext
+from contextlib import closing, nullcontext
 from copy import deepcopy
 from math import isfinite
 from threading import Lock
@@ -13,6 +13,7 @@ from uuid import uuid4
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, ValidationError
 
 from backend.agent.diagnosis import DateWindow, valid_plan_metrics
+from backend.agent.request_budget import ChatSessionInvalid
 from backend.observability import add_trace_step, trace_tool_call
 from backend.rag.rule_reference import canonical_rule_query, rule_query_scope
 
@@ -65,7 +66,11 @@ LISTING_READS = {
     "get_listing_current": "Read the current Listing version and five bullet points for this test SKU.",
     "get_listing_facts": "Read versioned product facts and approved English wording options for this test SKU.",
 }
-DELEGATION_SCHEMAS = {**SCHEMAS, **dict.fromkeys(LISTING_READS, ListingArgs),
+OPERATIONS_READS = {
+    "get_inspection_report": "Read Sponsored Products search terms and source row attribution for an eligible SKU in the current sales window.",
+    "get_inspection_sources": "Read versioned product sources for qualified search terms of an eligible SKU.",
+}
+DELEGATION_SCHEMAS = {**SCHEMAS, **dict.fromkeys(LISTING_READS | OPERATIONS_READS, ListingArgs),
                       "get_listing_sales": ListingSalesArgs, "get_olist_product_sales": OlistSalesArgs}
 TOOL_ERRORS = {"temporary_tool_failure", "plan_not_found", "plan_history_not_mapped",
                "plan_history_not_configured", "source_version_mismatch", "plan_history_unavailable", "olist_product_not_found"}
@@ -88,8 +93,17 @@ def plan_scope_error(plan_id, user_id):
         return "read_scope_unverified"
 
 
+def current_metric_bindings(plan_ids, user_id):
+    from backend.database import database, mysql_diagnosis
+    from backend.tools.plan_metrics import owned_metric_binding
+
+    connect = mysql_diagnosis.connect if mysql_diagnosis.chat_enabled() else database.get_db
+    with closing(connect(read_only=True)) as conn:
+        return {plan_id: owned_metric_binding(conn, plan_id, user_id) for plan_id in plan_ids}
+
+
 def tool_arguments(name, arguments):
-    return DELEGATION_SCHEMAS[name].model_validate(arguments).model_dump(exclude_unset=name in LISTING_READS)
+    return DELEGATION_SCHEMAS[name].model_validate(arguments).model_dump(exclude_unset=name in LISTING_READS or name in OPERATIONS_READS)
 
 
 def read_key(name, args):
@@ -138,7 +152,7 @@ def receipt_error(name, result, args, user_id):
 
 
 class TeamBudget:
-    def __init__(self, *, tool_limit=12, model_limit=12, seconds=90):
+    def __init__(self, *, tool_limit=12, model_limit=12, seconds=90, check_session=None):
         if (any(type(limit) is not int or limit < 0 for limit in (tool_limit, model_limit))
                 or not isfinite(seconds) or seconds <= 0):
             raise ValueError("invalid_budget")
@@ -146,6 +160,13 @@ class TeamBudget:
         self._deadline = monotonic() + seconds
         self._stop_reason = None
         self._lock = Lock()
+        self._check_session = check_session
+
+    def require_session(self, trace_id, boundary, *, connection=None, **link):
+        if self._check_session is not None and not self._check_session(connection):
+            error = ChatSessionInvalid()
+            add_trace_step(trace_id, "session", boundary, status="error", error_code=error.code, **link)
+            raise error
 
     def cancel(self, code="run_cancelled"):
         with self._lock:
@@ -272,6 +293,12 @@ class GuardedTools:
                 return reject(error)
             condition = self._condition
             decision = None
+
+            def trace_detail(verdict):
+                add_trace_step(self._trace_id, "conditional_detail", "allowed" if verdict["executed"] else "blocked",
+                               role=self._role, tool_call_id=tool_call_id, runtime_call_id=runtime_call_id,
+                               parent_call_id=parent_call_id, error_code=verdict["error_code"], evidence=verdict)
+
             if condition and name == "get_plan_metrics_by_date":
                 if code := condition.metric_error(args, None):
                     if code == "review_metric_out_of_scope":
@@ -288,10 +315,8 @@ class GuardedTools:
                     worker_id=parent_call_id if self._role == "team_worker" else None,
                     runtime_call_id=runtime_call_id,
                 )
-                add_trace_step(self._trace_id, "conditional_detail", "allowed" if decision["executed"] else "blocked",
-                               role=self._role, tool_call_id=tool_call_id, runtime_call_id=runtime_call_id,
-                               parent_call_id=parent_call_id, error_code=decision["error_code"], evidence=decision)
                 if code := decision["error_code"]:
+                    trace_detail(decision)
                     return {**reject(code), "condition": decision}
             if decision is None and not self._budget.reserve("tool"):
                 return reject("budget_exhausted_or_cancelled")
@@ -311,7 +336,19 @@ class GuardedTools:
                 self._on_read(name, args, runtime_call_id)
                 if not self._budget.active():
                     return reject("budget_exhausted_or_cancelled")
+                if decision is not None:
+                    current = condition.decision()
+                    if code := current["error_code"] or condition.target_error(args["plan_id"], basis, current):
+                        blocked = {**current, "error_code": code, "requested_plan_id": args["plan_id"],
+                                   "executed": False, "phase": "after_read_progress"}
+                        trace_detail(blocked)
+                        return {**reject(code), "condition": blocked}
             try:
+                self._budget.require_session(self._trace_id, "tool_read", role=self._role,
+                                             tool_call_id=tool_call_id, runtime_call_id=runtime_call_id,
+                                             parent_call_id=parent_call_id)
+                if decision is not None:
+                    trace_detail(decision)
                 executed = True
                 if self._read_cache is not None or self._effective_args is not None:
                     add_trace_step(self._trace_id, "business_read", name, role=self._role,
@@ -320,8 +357,16 @@ class GuardedTools:
                                    evidence={**({"run_id": self._read_cache.run_id} if self._read_cache else {}),
                                              **({"arguments": args} if self._effective_args else {})})
                 result = self._functions[name](**scoped)
+                self._budget.require_session(self._trace_id, "tool_receipt", role=self._role,
+                                             tool_call_id=tool_call_id, runtime_call_id=runtime_call_id,
+                                             parent_call_id=parent_call_id)
                 if name == "search_knowledge" and isinstance(result, str):
                     result = json.loads(result)
+            except ChatSessionInvalid as error:
+                step["error_code"] = error.code
+                if decision is not None and not executed:
+                    trace_detail({**decision, "error_code": error.code, "executed": False})
+                raise
             except Exception as error:
                 if not self._budget.active():
                     return reject("expired_receipt")

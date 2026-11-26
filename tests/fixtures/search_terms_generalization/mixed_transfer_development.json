@@ -1,0 +1,55 @@
+{
+  "label": "官方字段夹具 · 合成开发数据",
+  "question": "帮我看看这款商品的广告搜索词，哪些值得写进标题，哪些需要复核投放？先给我建议和依据。",
+  "rules": {"min_impressions": 100, "min_clicks": 20, "title_min_orders": 2, "title_min_cvr_pct": 10, "title_max_length": 75},
+  "report_header": "Date,Campaign Name,Ad Group Name,Campaign ID,Ad Group ID,Customer Search Term,Impressions,Clicks,Spend,Purchases,Sales,Currency",
+  "report_defaults": {"Date": "2026-11-13", "Impressions": 320, "Clicks": 20, "Spend": "14.00", "Purchases": 4, "Sales": "99.60", "Currency": "USD"},
+  "membership": {"shop": "sp-batch-transfer-dev", "marketplace": "US", "advertiser": "BATCH-DEV-US", "from": "2026-11-13", "to": "2026-11-15", "control_sku": "BTDEV-CONTROL", "control_asin": "B0BDV00009"},
+  "batches": [
+    {
+      "id": "dev-rinse-bin", "sku": "BTDEV-BIN", "asin": "B0BDV00001", "title": "Quill Gear Rinse Bin",
+      "original": ["Product type\tGear Rinse Bin\t-\tWhole\t-", "Width\t127\tmm\tWhole\t-",
+        "Compatible models\tHearth HB-7 | Hearth HB-9\t-\tWhole\tComplete list",
+        "Cleaning\tDishwasher safe\t-\tBody\tTop rack only"],
+      "items": [
+        {"id": "dev-bin-conflict", "intent": "compatibility", "group": "verified", "term": "gear rinse bin for hearth hb-7 plus"},
+        {"id": "dev-bin-19", "intent": "size", "group": "low", "term": "5 inch wide gear rinse bin", "report_changes": {"Clicks": 19}},
+        {"id": "dev-bin-missing", "intent": "restriction", "group": "verified", "term": "gear rinse bin seal top rack dishwasher safe"},
+        {"id": "dev-bin-20", "intent": "size", "group": "verified", "term": "5 inch wide gear rinse bin"},
+        {"id": "dev-bin-mixed", "intent": "size", "group": "mixed", "term": "5 inch wide gear rinse bin",
+         "report_changes": {"Impressions": 150, "Clicks": 9, "Spend": "6.30", "Purchases": 2, "Sales": "49.80"},
+         "second_row": {"Date": "2026-11-14", "Impressions": 170, "Clicks": 10, "Spend": "7.00", "Purchases": 2, "Sales": "49.80"}}
+      ]
+    },
+    {
+      "id": "dev-steam-tray", "sku": "BTDEV-TRAY", "asin": "B0BDV00002", "title": "Sable Counter Steam Tray",
+      "original": ["Product type\tCounter Steam Tray\t-\tWhole\t-", "Width\t187\tmm\tWhole\t-",
+        "Compatible models\tFinch FC-80 Max | Finch FC-90\t-\tWhole\tComplete list",
+        "Cleaning\tHand wash only\t-\tInsert\t-", "Cleaning\tDishwasher safe\t-\tBody\tTop rack only"],
+      "items": [
+        {"id": "dev-tray-mixed", "intent": "compatibility", "group": "mixed", "term": "counter steam tray fits finch fc-80 max",
+         "report_changes": {"Impressions": 150, "Clicks": 10, "Spend": "7.00", "Purchases": 2, "Sales": "49.80"},
+         "second_row": {"Date": "2026-11-14", "Impressions": 170, "Clicks": 10, "Spend": "7.00", "Purchases": 2, "Sales": "49.80"}},
+        {"id": "dev-tray-conflict", "intent": "restriction", "group": "verified", "term": "counter steam tray insert top rack dishwasher safe"},
+        {"id": "dev-tray-20", "intent": "compatibility", "group": "verified", "term": "counter steam tray fits finch fc-80 max"},
+        {"id": "dev-tray-missing", "intent": "size", "group": "verified", "term": "8 inch deep counter steam tray"},
+        {"id": "dev-tray-19", "intent": "compatibility", "group": "low", "term": "counter steam tray fits finch fc-80 max", "report_changes": {"Clicks": 19}}
+      ]
+    },
+    {
+      "id": "dev-brew-tank", "sku": "BTDEV-TANK", "asin": "B0BDV00003", "title": "Vale Brew Water Tank",
+      "original": ["Product type\tBrew Water Tank\t-\tWhole\t-", "Width\t152.4\tmm\tWhole\t-",
+        "Compatible models\tPour PR-18\t-\tWhole\t-", "Cleaning\tHand wash only\t-\tLid\t-",
+        "Cleaning\tDishwasher safe\t-\tBody\tTop rack only"],
+      "items": [
+        {"id": "dev-tank-20", "intent": "restriction", "group": "verified", "term": "brew water tank lid hand wash only"},
+        {"id": "dev-tank-conflict", "intent": "size", "group": "verified", "term": "5 inch wide brew water tank"},
+        {"id": "dev-tank-19", "intent": "restriction", "group": "low", "term": "brew water tank lid hand wash only", "report_changes": {"Clicks": 19}},
+        {"id": "dev-tank-mixed", "intent": "restriction", "group": "mixed", "term": "brew water tank lid hand wash only",
+         "report_changes": {"Impressions": 170, "Clicks": 11, "Spend": "7.70", "Purchases": 2, "Sales": "49.80"},
+         "second_row": {"Date": "2026-11-14", "Impressions": 150, "Clicks": 10, "Spend": "7.00", "Purchases": 2, "Sales": "49.80"}},
+        {"id": "dev-tank-missing", "intent": "compatibility", "group": "verified", "term": "brew water tank for pour pr-18 max"}
+      ]
+    }
+  ]
+}

@@ -3,6 +3,7 @@ from contextlib import closing
 
 import pandas as pd
 from backend.database import mysql_diagnosis
+from backend.database import database
 from backend.database.database import get_db
 from backend.database.mysql_diagnosis import is_mysql, plan_key
 from backend.tools.daily_reports import query_daily_reports
@@ -17,8 +18,7 @@ def _home_read_db():
 
 def owns_plan(plan_id, user_id):
     with closing(_home_read_db()) as conn:
-        lookup = plan_key(plan_id) if is_mysql(conn) else plan_id
-        return conn.execute("SELECT 1 FROM ad_plans WHERE id=? AND user_id=?", (lookup, user_id)).fetchone() is not None
+        return database.owns_plan(conn, plan_id, user_id)
 
 
 def get_real_trends(keyword="AI 广告", user_id=None):

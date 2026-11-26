@@ -110,7 +110,7 @@ def trace_tool_call(trace_id, role, tool_name, tool_call_id=None, *, runtime_cal
     try:
         yield result
     except BaseException:
-        result["error_code"] = "tool_exception"
+        result["error_code"] = result["error_code"] or "tool_exception"
         raise
     finally:
         error_code = result["error_code"]

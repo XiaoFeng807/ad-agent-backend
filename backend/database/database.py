@@ -6,11 +6,19 @@ from pathlib import Path
 from backend.config.config import settings
 from backend.database import mysql_diagnosis
 from backend.database.listing_operations import SCHEMA as LISTING_SCHEMA
+from backend.database.order_sales import SCHEMA as ORDER_SALES_SCHEMA
 from backend.database.orders import SCHEMA as ORDER_SCHEMA
 from backend.database.product_documents import SCHEMA as PRODUCT_DOCUMENT_SCHEMA
+from backend.database.search_term_reports import SCHEMA as SEARCH_TERM_SCHEMA
 
 DEFAULT_DB_PATH = Path(__file__).resolve().parents[2] / "ad_agent.db"
 DB_PATH = str(DEFAULT_DB_PATH)
+DEMO_USERS = (
+    (1, "boss", "admin123", "boss"),
+    (2, "admin", "admin123", "admin"),
+    (3, "zhangsan", "user123", "user"),
+    (4, "lisi", "user123", "user"),
+)
 
 
 def sandbox_db_path():
@@ -32,22 +40,23 @@ def sandbox_memory_root():
     path = sandbox_db_path()
     return path.parent / (path.name + ".memory") if path is not None else None
 
-def get_db(*, read_only=False):
+def get_db(*, read_only=False, must_exist=False, timeout=5.0):
     sandbox = sandbox_db_path()
     if sandbox is not None and sandbox.exists():
         # Recognize importer output before opening a writable connection or enabling WAL.
-        with closing(sqlite3.connect(f"{sandbox.as_uri()}?mode=ro", uri=True)) as inspection:
+        with closing(sqlite3.connect(f"{sandbox.as_uri()}?mode=ro", uri=True, timeout=timeout)) as inspection:
             metric_tables = inspection.execute(
                 "SELECT count(*) FROM sqlite_schema WHERE type='table' "
                 "AND name IN ('metadata', 'plan_daily_metrics')"
             ).fetchone()[0]
         if metric_tables == 2:
             raise ValueError("暂停沙箱必须使用独立的 SQLite 文件，不能使用计划历史指标库")
-    if read_only:
+    if read_only or must_exist:
         path = Path(sandbox or DB_PATH).resolve()
-        conn = sqlite3.connect(f"{path.as_uri()}?mode=ro", uri=True)
+        mode = "ro" if read_only else "rw"
+        conn = sqlite3.connect(f"{path.as_uri()}?mode={mode}", uri=True, timeout=timeout)
     else:
-        conn = sqlite3.connect(sandbox or DB_PATH)
+        conn = sqlite3.connect(sandbox or DB_PATH, timeout=timeout)
         conn.execute("PRAGMA journal_mode=WAL")
     conn.row_factory = sqlite3.Row
     return conn
@@ -60,10 +69,26 @@ def get_diagnosis_db(*, read_only=False):
     connect = mysql_diagnosis.connect if settings.DIAGNOSIS_MYSQL_ENABLED else get_db
     return connect(read_only=read_only) if read_only else connect()
 
+
+def owns_plan(conn, plan_id, user_id):
+    return owns_plans(conn, (plan_id,), user_id)
+
+
+def owns_plans(conn, plan_ids, user_id):
+    if not plan_ids:
+        return True
+    ids = tuple(map(mysql_diagnosis.plan_key, plan_ids)) if mysql_diagnosis.is_mysql(conn) else tuple(plan_ids)
+    marks = ",".join("?" for _ in ids)
+    row = conn.execute(f"SELECT count(*) AS owned FROM ad_plans WHERE user_id=? AND id IN ({marks})",
+                       (user_id, *ids)).fetchone()
+    return row["owned"] == len(ids)
+
+
 def init_db():
     """创建所有表（幂等：IF NOT EXISTS）"""
     tables = [
         *ORDER_SCHEMA,
+        *ORDER_SALES_SCHEMA,
         """CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
@@ -248,7 +273,7 @@ def init_db():
         upgrade_chat_turns(conn)
         from backend.database.chat_groups import upgrade_sqlite
         upgrade_sqlite(conn)
-        for sql in (*LISTING_SCHEMA, *PRODUCT_DOCUMENT_SCHEMA):
+        for sql in (*LISTING_SCHEMA, *PRODUCT_DOCUMENT_SCHEMA, *SEARCH_TERM_SCHEMA):
             conn.execute(sql)
         turn_columns = {row[1] for row in conn.execute("PRAGMA table_info(diagnosis_turns)")}
         if "snapshot" not in turn_columns:
@@ -265,21 +290,46 @@ def init_db():
                       ON alerts(user_id, plan_id, ctr_check_key)""")
 
 
-def seed_data():
-    """初始化示例数据（幂等：已有数据则跳过）"""
-    conn = get_db()
+def seed_data(*, require_sandbox=False):
+    """Seed an explicitly selected demo database or a caller's test fixture."""
+    if require_sandbox and sandbox_db_path() is None:
+        raise ValueError("Demo startup requires an independent DIAGNOSIS_SANDBOX_DB_PATH")
+    with closing(get_db()) as conn, conn:
+        conn.execute("BEGIN IMMEDIATE")
+        if require_sandbox:
+            _require_demo_database(conn)
+        _seed_demo_data(conn)
+
+
+def _require_demo_database(conn):
+    users = {tuple(row) for row in conn.execute("SELECT id, username, role FROM users")}
+    demo_users = {(uid, name, role) for uid, name, _, role in DEMO_USERS}
+    if users:
+        if users != demo_users:
+            raise ValueError("Demo startup requires the dedicated demo accounts")
+        return
+
+    # An empty users table alone does not identify a new demo database.
+    for (name,) in conn.execute("SELECT name FROM sqlite_schema WHERE type='table'"):
+        if name.startswith("sqlite_"):
+            continue
+        table = '"' + name.replace('"', '""') + '"'
+        if conn.execute(f"SELECT 1 FROM {table} LIMIT 1").fetchone() is not None:
+            raise ValueError("Demo startup requires an empty database or an existing demo database")
+
+
+def _seed_demo_data(conn):
+    from backend.mock_ad_data.mock_ad_data import generate_mock_daily_reports
+
     c = conn.cursor()
 
     # 用户
     exist = c.execute("SELECT COUNT(*) FROM users").fetchone()[0]
     if exist == 0:
-        users = [
-            ("boss", hash_password("admin123"), "boss"),
-            ("admin", hash_password("admin123"), "admin"),
-            ("zhangsan", hash_password("user123"), "user"),
-            ("lisi", hash_password("user123"), "user"),
-        ]
-        c.executemany("INSERT INTO users (username, password, role) VALUES (?, ?, ?)", users)
+        c.executemany(
+            "INSERT INTO users (id, username, password, role) VALUES (?, ?, ?, ?)",
+            [(uid, name, hash_password(password), role) for uid, name, password, role in DEMO_USERS],
+        )
 
     # 广告账户
     exist = c.execute("SELECT COUNT(*) FROM ad_accounts").fetchone()[0]
@@ -293,8 +343,9 @@ def seed_data():
             ("测试账户", "Google Ads", 3000, 100, "active", 3),
         ]
         c.executemany(
-            "INSERT INTO ad_accounts (account_name, platform, balance, daily_budget, status, user_id) VALUES (?,?,?,?,?,?)",
-            accounts
+            "INSERT INTO ad_accounts (id, account_name, platform, balance, daily_budget, status, user_id) "
+            "VALUES (?,?,?,?,?,?,?)",
+            [(account_id, *account) for account_id, account in enumerate(accounts, 1)],
         )
 
     # 广告计划
@@ -333,26 +384,4 @@ def seed_data():
             alerts
         )
 
-    # 每日报告（最近30天）
-    exist = c.execute("SELECT COUNT(*) FROM daily_reports").fetchone()[0]
-    if exist == 0:
-        import random
-        from datetime import datetime, timedelta
-        base_cost = 1500
-        base_imp = 30000
-        base_clicks = 600
-        base_sales = 4000
-        for day_offset in range(30):
-            date = (datetime.now() - timedelta(days=29 - day_offset)).strftime("%Y-%m-%d")
-            for uid in range(1, 5):
-                cost = base_cost + random.randint(-200, 200)
-                imp = base_imp + random.randint(-2000, 2000)
-                clicks = base_clicks + random.randint(-50, 50)
-                sales = base_sales + random.randint(-500, 500)
-                c.execute(
-                    "INSERT OR IGNORE INTO daily_reports (report_date, cost, impressions, clicks, sales, user_id) VALUES (?,?,?,?,?,?)",
-                    (date, max(0, cost), max(0, imp), max(0, clicks), max(0, sales), uid)
-                )
-
-    conn.commit()
-    conn.close()
+    generate_mock_daily_reports(c)

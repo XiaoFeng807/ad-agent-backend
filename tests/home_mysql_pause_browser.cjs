@@ -26,7 +26,7 @@ async function run() {
     await page.locator("#loginCaptcha").press("Enter");
     await page.locator("#navUsername").getByText("diagnosis-demo", { exact: true }).waitFor();
     await page.locator('[data-page="chat"]').click();
-    await page.getByRole("button", { name: "投放诊断", exact: true }).click();
+    await page.getByRole("button", { name: "广告计划复核", exact: true }).click();
     // The migrated fixture already has history and the page opens its latest structured task.
     await page.locator("#diagnosisNew").click();
     const field = name => page.locator(`#diagnosisForm input[name="${name}"]`);

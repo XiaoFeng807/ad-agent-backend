@@ -4,7 +4,7 @@ param(
     [string]$Python = '.\.venv-acceptance\Scripts\python.exe',
     [ValidateSet('full', 'lifecycle', 'rate', 'approval', 'mix-a', 'mix-b', 'g3', 'g4')][string]$Selection = 'full',
     [ValidateSet('reconnect', 'lost-start', 'kill-before', 'kill-after', 'version-change')][string]$G3Case,
-    [ValidateSet('race', 'kill-before', 'kill-after', 'final-commit')][string]$G4Case
+    [ValidateSet('race', 'race-stale', 'kill-before', 'kill-after', 'final-commit')][string]$G4Case
 )
 $ErrorActionPreference = 'Stop'
 $env:PYTHONUTF8 = '1'

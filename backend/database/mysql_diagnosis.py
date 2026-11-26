@@ -146,10 +146,17 @@ def validate_schema_connection(conn, schema):
         expected = expected | {"conversation_turns"}
         # Optional additive upgrade; old R2 schemas still validate for non-chat callers.
         turn_columns = {"conversation_turns": ("user_message_id", "assistant_message_id", "user_id")}
+        if "conversation_review_receipts" in engines:
+            expected = expected | {"conversation_review_receipts"}
+            turn_columns["conversation_review_receipts"] = ("assistant_message_id", "receipt")
     else:
         turn_columns = {}
     groups = schema == R2_SCHEMA and group_columns.keys() <= engines.keys()
     if groups:
+        if "chat_group_run_requests" in engines:
+            group_columns["chat_group_run_requests"] = (
+                "user_id", "conversation_id", "action", "request_key", "fingerprint", "run_id", "shop_id", "marketplace",
+            )
         expected = expected | group_columns.keys()
     if (schema not in (SCHEMA, R2_SCHEMA) or server["db"] != schema
             or not re.fullmatch(r"8\.4\.\d+(?:-commercial)?", server["version"]) or server["foreign_keys"] != 1
@@ -195,6 +202,27 @@ def _validate_r2(conn, group_columns):
                 or turn_foreign != {("user_message_id", "conversations", "id"),
                                     ("assistant_message_id", "conversations", "id")}):
             raise MySQLStorageError("Expected the TASK-025 committed turn keys")
+    if "chat_group_run_requests" in shape:
+        request_indexes = [row for row in indexes if row["tab"] == "chat_group_run_requests"]
+        request_foreign = {(row["cols"], row["parent"], row["parent_cols"]) for row in relations
+                           if row["tab"] == "chat_group_run_requests"}
+        if (not any(row["name"] == "PRIMARY" and row["cols"] == "user_id,conversation_id,action,request_key"
+                    for row in request_indexes)
+                or not any(not row["non_unique"] and row["cols"] == "run_id" for row in request_indexes)
+                or not any(row["tab"] == "chat_group_run_requests" and row["name"] == "request_key"
+                           and row["kind"] == "varbinary" for row in columns)
+                or request_foreign != {("run_id", "chat_group_runs", "run_id"),
+                                       ("conversation_id", "chat_groups", "conversation_id")}):
+            raise MySQLStorageError("Expected the scoped chat run request keys")
+    if "conversation_review_receipts" in shape:
+        table = "conversation_review_receipts"
+        if (not any(row["tab"] == table and row["name"] == "PRIMARY" and row["cols"] == "assistant_message_id"
+                    for row in indexes)
+                or not any(row["tab"] == table and row["name"] == "receipt" and row["kind"] == "json"
+                           for row in columns)
+                or {(row["cols"], row["parent"], row["parent_cols"]) for row in relations if row["tab"] == table}
+                    != {("assistant_message_id", "conversations", "id")}):
+            raise MySQLStorageError("Expected the conversation review receipt keys")
     if any(tuple(shape.pop(table, ())) != fields for table, fields in group_columns.items()):
         raise MySQLStorageError("Expected the TASK-027 chat group columns")
     columns = [row for row in columns if row["tab"] not in group_columns]

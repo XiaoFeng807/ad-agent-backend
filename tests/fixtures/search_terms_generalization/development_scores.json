@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "support": {"action": "title", "code": "supported_missing", "source_rows": [2, 3]},
+    "conflict": {"action": "review", "code": "fact_conflict", "source_rows": [2, 3]},
+    "missing": {"action": "observe", "code": "unverified", "source_rows": []},
+    "covered": {"action": "observe", "code": "already_in_title", "source_rows": [2, 3]},
+    "low": {"action": "observe", "code": "sample", "source_rows": []},
+    "low-conversion": {"action": "observe", "code": "sample", "source_rows": []},
+    "mixed": {"action": "observe", "code": "unattributed", "source_rows": []}
+  },
+  "demands": {
+    "size": {"product_type": "desk tray", "attribute": "width", "value": "127", "unit": "mm", "conditions": {}},
+    "vesa": {"product_type": "monitor bracket", "attribute": "vesa", "value": "100x100", "unit": "mm", "conditions": {}},
+    "cleaning": {"product_type": "travel mug", "attribute": "cleaning", "value": "dishwasher safe", "unit": "", "conditions": {"part": "body", "restriction": "top rack only"}},
+    "cabinet": {"product_type": "under cabinet display bracket", "attribute": "vesa", "value": "100x100", "unit": "mm", "conditions": {}}
+  },
+  "attacks": {"wrong-sku": "citation_mismatch", "widened-condition": "demand_mismatch",
+    "low-sample-title": "sample", "fake-sample-audit": "sample_audit_mismatch"}
+}

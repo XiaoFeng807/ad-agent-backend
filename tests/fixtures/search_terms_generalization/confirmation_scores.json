@@ -1,0 +1,16 @@
+{
+  "cases": {
+    "divider-support": {"action": "title", "code": "supported_missing", "source_rows": [2, 3], "demand": {"product_type": "drawer divider", "attribute": "width", "value": "127", "unit": "mm", "conditions": {}}},
+    "divider-conflict": {"action": "review", "code": "fact_conflict", "source_rows": [2, 3], "demand": {"product_type": "drawer divider", "attribute": "width", "value": "127", "unit": "mm", "conditions": {}}},
+    "divider-missing": {"action": "observe", "code": "unverified", "source_rows": [], "demand": {"product_type": "drawer divider", "attribute": "width", "value": "127", "unit": "mm", "conditions": {}}},
+    "divider-covered": {"action": "observe", "code": "already_in_title", "source_rows": [2, 3], "demand": {"product_type": "drawer divider", "attribute": "width", "value": "127", "unit": "mm", "conditions": {}}},
+    "arm-support": {"action": "title", "code": "supported_missing", "source_rows": [2, 3], "demand": {"product_type": "desk monitor arm", "attribute": "vesa", "value": "75x75", "unit": "mm", "conditions": {}}},
+    "arm-conflict": {"action": "review", "code": "fact_conflict", "source_rows": [2, 3], "demand": {"product_type": "desk monitor arm", "attribute": "vesa", "value": "75x75", "unit": "mm", "conditions": {}}},
+    "brush-support": {"action": "title", "code": "supported_missing", "source_rows": [2, 3], "demand": {"product_type": "vacuum brush", "attribute": "model", "value": "raven rv-70 max", "unit": "", "conditions": {}}},
+    "brush-missing": {"action": "observe", "code": "unverified", "source_rows": [], "demand": {"product_type": "vacuum brush", "attribute": "model", "value": "raven rv-70 max", "unit": "", "conditions": {}}},
+    "brush-mixed": {"action": "observe", "code": "unattributed", "source_rows": [], "demand": {"product_type": "vacuum brush", "attribute": "model", "value": "raven rv-70 max", "unit": "", "conditions": {}}},
+    "jar-lid": {"action": "title", "code": "supported_missing", "source_rows": [2, 4], "demand": {"product_type": "blender jar", "attribute": "cleaning", "value": "hand wash only", "unit": "", "conditions": {"part": "lid", "restriction": ""}}},
+    "jar-whole-conflict": {"action": "review", "code": "fact_conflict", "source_rows": [2, 3, 4], "demand": {"product_type": "blender jar", "attribute": "cleaning", "value": "dishwasher safe", "unit": "", "conditions": {"part": "whole", "restriction": ""}}},
+    "jar-seal-missing": {"action": "observe", "code": "unverified", "source_rows": [], "demand": {"product_type": "blender jar", "attribute": "cleaning", "value": "dishwasher safe", "unit": "", "conditions": {"part": "seal", "restriction": ""}}}
+  }
+}

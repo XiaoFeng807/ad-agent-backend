@@ -1,0 +1,40 @@
+{
+  "label": "官方字段夹具 · 合成数据",
+  "question": "帮我看看这款商品的广告搜索词，哪些值得写进标题，哪些需要复核投放？先给我建议和依据。",
+  "rules": {"min_impressions": 100, "min_clicks": 20, "title_min_orders": 2, "title_min_cvr_pct": 10, "title_max_length": 75},
+  "report_header": "Date,Campaign Name,Ad Group Name,Campaign ID,Ad Group ID,Customer Search Term,Impressions,Clicks,Spend,Purchases,Sales,Currency",
+  "report_defaults": {"Date": "2026-11-16", "Impressions": 340, "Clicks": 20, "Spend": "16.00", "Purchases": 4, "Sales": "119.80", "Currency": "USD"},
+  "membership": {"shop": "sp-evidence-holdout", "marketplace": "US", "advertiser": "EVIDENCE-HOLDOUT-US",
+    "from": "2026-11-15", "to": "2026-11-17", "control_sku": "EVIDENCE-CONTROL", "control_asin": "B0EVD00009"},
+  "products": [
+    {
+      "id": "sliding-tray", "sku": "EVIDENCE-TRAY", "asin": "B0EVD00001", "intent": "compatibility",
+      "term": "vesa 75 x 75 sliding shelf monitor tray", "title": "Goldenrod Sliding Shelf Monitor Tray",
+      "support": ["Product type\tSliding Shelf Monitor Tray\t-\tWhole\t-", "VESA\t75x75\tmm\tMount\tComplete list"],
+      "conflict": ["Product type\tSliding Shelf Monitor Tray\t-\tWhole\t-", "VESA\t100x100\tmm\tMount\tComplete list"],
+      "missing": ["Product type\tSliding Shelf Monitor Tray\t-\tWhole\t-", "VESA\t75\tmm\tMount\t-"],
+      "empty": ["Color\tGraphite\t-\tWhole\t-"]
+    },
+    {
+      "id": "wall-frame", "sku": "EVIDENCE-FRAME", "asin": "B0EVD00002", "intent": "compatibility",
+      "term": "tilt wall display frame vesa 100×100 mm", "title": "Tilia Tilt Wall Display Frame",
+      "support": ["Product type\tTilt Wall Display Frame\t-\tWhole\t-", "VESA\t100x100\tmm\tMount\tComplete list"],
+      "conflict": ["Product type\tTilt Wall Display Frame\t-\tWhole\t-", "VESA\t75x75\tmm\tMount\tComplete list"],
+      "missing": ["Product type\tTilt Wall Display Frame\t-\tWhole\t-", "VESA\t100\tmm\tMount\t-"]
+    }
+  ],
+  "cases": [
+    {"id": "tray-19-support", "product": "sliding-tray", "variant": "support", "report_changes": {"Clicks": 19}, "boundary": ["clicks", "below"]},
+    {"id": "tray-20-support", "product": "sliding-tray", "variant": "support", "boundary": ["clicks", "at"]},
+    {"id": "tray-20-single-axis", "product": "sliding-tray", "variant": "missing", "boundary": ["clicks", "at"]},
+    {"id": "tray-20-conflict", "product": "sliding-tray", "variant": "conflict", "boundary": ["clicks", "at"]},
+    {"id": "tray-19-group-only", "product": "sliding-tray", "variant": "mixed", "report_changes": {"Clicks": 19}, "boundary": ["clicks", "below"]},
+    {"id": "tray-20-empty", "product": "sliding-tray", "variant": "missing", "document_version": "empty", "boundary": ["clicks", "at"]},
+    {"id": "frame-19-support", "product": "wall-frame", "variant": "support", "report_changes": {"Clicks": 19}, "boundary": ["clicks", "below"]},
+    {"id": "frame-20-support", "product": "wall-frame", "variant": "support", "boundary": ["clicks", "at"]},
+    {"id": "frame-20-single-axis", "product": "wall-frame", "variant": "missing", "boundary": ["clicks", "at"]},
+    {"id": "frame-20-conflict", "product": "wall-frame", "variant": "conflict", "boundary": ["clicks", "at"]},
+    {"id": "frame-19-group-only", "product": "wall-frame", "variant": "mixed", "report_changes": {"Clicks": 19}, "boundary": ["clicks", "below"]},
+    {"id": "frame-20-group-only", "product": "wall-frame", "variant": "mixed", "boundary": ["clicks", "at"]}
+  ]
+}

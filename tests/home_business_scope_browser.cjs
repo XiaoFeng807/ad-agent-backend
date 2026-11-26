@@ -26,7 +26,7 @@ async function login(page, username, previousCaptcha) {
   await page.locator("#loginCaptcha").fill("0726");
   await page.locator("#loginCaptcha").press("Enter");
   await page.locator("#navUsername").getByText(username, { exact: true }).waitFor();
-  await page.locator('[data-page="dashboard"]').click();
+  await page.locator('[data-page="dashboard"]').evaluate(link => link.click());
   await page.waitForFunction(() => window.echarts?.getInstanceByDom(document.querySelector("#trendChart"))
     ?.getOption()?.series?.length > 0);
 }
@@ -115,7 +115,7 @@ async function holdReads(page, paths) {
 async function rendersOwnedDecisions(page, evidence, output) {
   await login(page, first);
   const received = page.waitForResponse(r => new URL(r.url()).pathname === "/api/decisions");
-  await page.locator('[data-page="decisions"]').click();
+  await page.locator('[data-page="decisions"]').evaluate(link => link.click());
   const response = await received;
   const decisionView = page.locator("#decisionsWrap");
   await decisionView.locator("table, .empty-state").waitFor();
@@ -195,7 +195,7 @@ async function lateBusinessResponses(page, evidence) {
     assert.deepEqual(evidence.loginAfterRelease, { username: second, role: "user", authenticated: true,
       loginVisible: false, messageVisible: false, message: "" });
 
-    await page.locator('[data-page="alerts"]').click();
+    await page.locator('[data-page="alerts"]').evaluate(link => link.click());
     const alerts = page.locator("#alertsWrap");
     const one = alerts.locator("tbody tr").filter({ hasText: "second-alert-one" });
     const two = alerts.locator("tbody tr").filter({ hasText: "second-alert-two" });

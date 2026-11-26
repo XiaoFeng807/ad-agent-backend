@@ -1,0 +1,546 @@
+{
+  "groups": {
+    "inspection": {
+      "question": "伸缩检查架能承载多重，有什么使用前提？",
+      "evidence": [
+        "检查架四足落在水平地面且保险插销锁紧时，承载上限为 28 kg。"
+      ],
+      "status": "supported",
+      "gaps": []
+    },
+    "sample": {
+      "question": "显影盒读数上限和适用条件是什么？",
+      "evidence": [
+        "在试纸干燥并样窗闭合时，显影盒的读数上限为 14 cm。"
+      ],
+      "status": "supported",
+      "gaps": []
+    },
+    "guide": {
+      "question": "导带盒横移、竖移分别有何上限，适用条件是什么？",
+      "evidence": [
+        "织带完全拉直且摆渡臂居中时：导带盒的横移上限为 11 mm；导带盒的竖移上限为 16 mm。"
+      ],
+      "status": "supported",
+      "gaps": []
+    },
+    "pump": {
+      "question": "何时可按资料使用取样泵，运行多久，封存计时器能持续计时多久，有没有外壳硬度资料？",
+      "evidence": [
+        "摇匀取样瓶时，建议取样泵运转 5 分钟。封存计时器保证持续计时 5 分钟。"
+      ],
+      "status": "partial_support",
+      "gaps": [
+        "外壳硬度"
+      ]
+    },
+    "offset": {
+      "question": "落锤空载且棘爪分离时，标线偏移是多少？",
+      "evidence": [
+        "## K31 测量卡\n在落锤空载且棘爪分离时，标线偏移为 4 mm。",
+        "## K32 台账\n在落锤空载且棘爪分离时，标线偏移为 6 mm。"
+      ],
+      "status": "conflict",
+      "gaps": []
+    },
+    "pair": {
+      "question": "压片盒的细孔和粗孔宽度上限分别是多少？在什么条件下测量？",
+      "evidence": [
+        "标片贴底时，压片盒的细孔宽度上限是 3 mm。标片贴底时，压片盒的粗孔宽度上限是 9 mm。"
+      ],
+      "status": "supported",
+      "gaps": []
+    }
+  },
+  "cases": [
+    {
+      "id": "condition_preserved",
+      "group": "inspection",
+      "draft": "检查架四足落在水平地面且保险插销锁紧时，承载上限为 28 kg[1]。",
+      "citations": [
+        1
+      ],
+      "issues": [],
+      "defects": [],
+      "status": "passed",
+      "raw": "{\"input_gaps\": [], \"issues\": [{\"code\": \"omitted_condition\", \"source_ids\": [1], \"source_span\": \"保险插销锁紧\", \"detail\": \"原文要求承载时锁紧插销。请核对此条件是否限定了承载值。\"}]}"
+    },
+    {
+      "id": "condition_negated",
+      "group": "inspection",
+      "draft": "检查架四足落在水平地面时，承载上限为 28 kg，无需保险插销锁紧[1]。",
+      "citations": [
+        1
+      ],
+      "issues": [],
+      "defects": [
+        "condition_mismatch"
+      ],
+      "status": "rejected",
+      "raw": "{\"input_gaps\": [], \"issues\": [{\"code\": \"omitted_condition\", \"source_ids\": [1], \"source_span\": \"保险插销锁紧\", \"detail\": \"原文要求承载时锁紧插销。请核对此条件是否限定了承载值。\"}]}"
+    },
+    {
+      "id": "condition_misattributed",
+      "group": "inspection",
+      "draft": "保险插销锁紧仅用于收纳，四足落在水平地面时承载上限为 28 kg[1]。",
+      "citations": [
+        1
+      ],
+      "issues": [],
+      "defects": [
+        "condition_mismatch"
+      ],
+      "status": "rejected",
+      "raw": "{\"input_gaps\": [], \"issues\": [{\"code\": \"omitted_condition\", \"source_ids\": [1], \"source_span\": \"保险插销锁紧\", \"detail\": \"原文要求承载时锁紧插销。请核对此条件是否限定了承载值。\"}]}"
+    },
+    {
+      "id": "S01",
+      "group": "sample",
+      "draft": "当试纸干燥且样窗闭合时，显影盒的读数上限是 14 厘米[1]。",
+      "citations": [
+        1
+      ],
+      "issues": [
+        {
+          "code": "omitted_condition",
+          "source_ids": [
+            1
+          ],
+          "detail": "未写样窗闭合限定读数上限。",
+          "source_span": "样窗闭合"
+        }
+      ],
+      "defects": [],
+      "status": "passed"
+    },
+    {
+      "id": "S02",
+      "group": "sample",
+      "draft": "只有把样窗关严并等试纸干透，显影盒读数才可到 14 厘米[1]。",
+      "citations": [
+        1
+      ],
+      "issues": [],
+      "defects": [],
+      "status": "passed"
+    },
+    {
+      "id": "S03",
+      "group": "sample",
+      "draft": "试纸干燥时，显影盒的读数上限是 14 厘米[1]。",
+      "citations": [
+        1
+      ],
+      "issues": [
+        {
+          "code": "omitted_condition",
+          "source_ids": [
+            1
+          ],
+          "detail": "未写样窗闭合限定读数上限。",
+          "source_span": "样窗闭合"
+        }
+      ],
+      "defects": [
+        "omitted_condition"
+      ],
+      "status": "rejected"
+    },
+    {
+      "id": "S04",
+      "group": "sample",
+      "draft": "当试纸干燥且样窗闭合时，显影盒的读数上限是 14 厘米[1]。样窗闭合不是该读数上限的前提[1]。",
+      "citations": [
+        1
+      ],
+      "issues": [
+        {
+          "code": "omitted_condition",
+          "source_ids": [
+            1
+          ],
+          "detail": "未写样窗闭合限定读数上限。",
+          "source_span": "样窗闭合"
+        }
+      ],
+      "defects": [
+        "condition_mismatch"
+      ],
+      "status": "rejected"
+    },
+    {
+      "id": "S05",
+      "group": "guide",
+      "draft": "织带完全拉直且摆渡臂居中时：导带盒的横移上限是 11 mm[1]；导带盒的竖移上限是 16 毫米[1]。",
+      "citations": [
+        1
+      ],
+      "issues": [
+        {
+          "code": "omitted_condition",
+          "source_ids": [
+            1
+          ],
+          "detail": "未用摆渡臂居中限定两项导带盒位移上限。",
+          "source_span": "摆渡臂居中"
+        }
+      ],
+      "defects": [],
+      "status": "passed"
+    },
+    {
+      "id": "S06",
+      "group": "guide",
+      "draft": "织带完全拉直且摆渡臂居中时：导带盒的横移上限是 11 mm[1]。导带盒的竖移上限是 16 毫米[1]。",
+      "citations": [
+        1
+      ],
+      "issues": [
+        {
+          "code": "omitted_condition",
+          "source_ids": [
+            1
+          ],
+          "detail": "未用摆渡臂居中限定两项导带盒位移上限。",
+          "source_span": "摆渡臂居中"
+        }
+      ],
+      "defects": [
+        "condition_mismatch"
+      ],
+      "status": "rejected"
+    },
+    {
+      "id": "S07",
+      "group": "guide",
+      "draft": "织带完全拉直且摆渡臂居中是上料盒的准备条件；导带盒的横移上限是 11 mm[1]，竖移上限是 16 毫米[1]。",
+      "citations": [
+        1
+      ],
+      "issues": [
+        {
+          "code": "omitted_condition",
+          "source_ids": [
+            1
+          ],
+          "detail": "未用摆渡臂居中限定两项导带盒位移上限。",
+          "source_span": "摆渡臂居中"
+        }
+      ],
+      "defects": [
+        "condition_mismatch"
+      ],
+      "status": "rejected"
+    },
+    {
+      "id": "M01",
+      "group": "pump",
+      "draft": "摇匀取样瓶时，建议取样泵运转 5 分钟[1]。封存计时器保证持续计时 5 分钟[1]。外壳硬度缺少资料。",
+      "citations": [
+        1
+      ],
+      "issues": [],
+      "defects": [],
+      "status": "passed"
+    },
+    {
+      "id": "M02",
+      "group": "pump",
+      "draft": "摇匀取样瓶时，建议取样泵运转 5 分钟，无法保证取样泵运转 5 分钟[1]。封存计时器保证持续计时 5 分钟[1]。外壳硬度缺少资料。",
+      "citations": [
+        1
+      ],
+      "issues": [],
+      "defects": [],
+      "status": "passed"
+    },
+    {
+      "id": "M03",
+      "group": "pump",
+      "draft": "摇匀取样瓶时，保证取样泵运转 5 分钟[1]。封存计时器保证持续计时 5 分钟[1]。外壳硬度缺少资料。",
+      "citations": [
+        1
+      ],
+      "issues": [],
+      "defects": [
+        "strengthened_claim"
+      ],
+      "status": "rejected"
+    },
+    {
+      "id": "M04",
+      "group": "pump",
+      "draft": "无需摇匀取样瓶，保证取样泵运转 5 分钟[1]。封存计时器保证持续计时 5 分钟[1]。外壳硬度缺少资料。",
+      "citations": [
+        1
+      ],
+      "issues": [
+        {
+          "code": "omitted_condition",
+          "source_ids": [
+            1
+          ],
+          "detail": "取样泵的建议运转时长需以摇匀取样瓶为前提。",
+          "source_span": "摇匀取样瓶"
+        }
+      ],
+      "defects": [
+        "condition_mismatch",
+        "strengthened_claim"
+      ],
+      "status": "rejected"
+    },
+    {
+      "id": "M05",
+      "group": "pump",
+      "draft": "保证取样泵运转 5 分钟[1]。封存计时器保证持续计时 5 分钟[1]。外壳硬度缺少资料。",
+      "citations": [
+        1
+      ],
+      "issues": [
+        {
+          "code": "omitted_condition",
+          "source_ids": [
+            1
+          ],
+          "detail": "取样泵的建议运转时长需以摇匀取样瓶为前提。",
+          "source_span": "摇匀取样瓶"
+        }
+      ],
+      "defects": [
+        "omitted_condition",
+        "strengthened_claim"
+      ],
+      "status": "rejected"
+    },
+    {
+      "id": "K01",
+      "group": "offset",
+      "draft": "落锤空载且棘爪分离时，两份资料对标线偏移的记载不一致。测量卡[1]记录 4 mm；台账有 6 mm[2]。",
+      "citations": [
+        1,
+        2
+      ],
+      "issues": [
+        {
+          "code": "conflict_side_citation",
+          "source_ids": [
+            1,
+            2
+          ],
+          "detail": "固定审阅误认为前置来源标记不能限定其后数值。"
+        },
+        {
+          "code": "omitted_condition",
+          "source_ids": [
+            1
+          ],
+          "detail": "棘爪分离须限定标线偏移。",
+          "source_span": "棘爪分离"
+        }
+      ],
+      "defects": [],
+      "status": "passed"
+    },
+    {
+      "id": "K02",
+      "group": "offset",
+      "draft": "落锤空载且棘爪分离时，两份资料对标线偏移的记载不一致。测量卡[1]记录 4 mm，另一方请看台账[2]。",
+      "citations": [
+        1,
+        2
+      ],
+      "issues": [
+        {
+          "code": "conflict_side_missing",
+          "source_ids": [
+            2
+          ],
+          "detail": "草稿缺台账数值。"
+        }
+      ],
+      "defects": [
+        "incomplete_answer"
+      ],
+      "status": "rejected"
+    },
+    {
+      "id": "K03",
+      "group": "offset",
+      "draft": "落锤空载且棘爪分离时，两份资料对标线偏移的记载不一致。测量卡[2]记录 4 mm；台账有 6 mm[1]。",
+      "citations": [
+        1,
+        2
+      ],
+      "issues": [
+        {
+          "code": "conflict_side_citation",
+          "source_ids": [
+            1,
+            2
+          ],
+          "detail": "固定审阅误认为前置来源标记不能限定其后数值。"
+        }
+      ],
+      "defects": [
+        "citation_attribution"
+      ],
+      "status": "rejected"
+    },
+    {
+      "id": "K04",
+      "group": "offset",
+      "draft": "落锤空载且无需棘爪分离时，两份资料对标线偏移的记载不一致。测量卡[1]记录 4 mm；台账有 6 mm[2]。",
+      "citations": [
+        1,
+        2
+      ],
+      "issues": [
+        {
+          "code": "omitted_condition",
+          "source_ids": [
+            1
+          ],
+          "detail": "棘爪分离须限定标线偏移。",
+          "source_span": "棘爪分离"
+        }
+      ],
+      "defects": [
+        "condition_mismatch"
+      ],
+      "status": "rejected"
+    },
+    {
+      "id": "K05",
+      "group": "offset",
+      "draft": "落锤空载且棘爪分离时，标线偏移可在 4–6 mm[1][2] 范围内。",
+      "citations": [
+        1,
+        2
+      ],
+      "issues": [
+        {
+          "code": "unsupported_claim",
+          "source_ids": [
+            1,
+            2
+          ],
+          "detail": "两方独立数值被改为允许区间。"
+        }
+      ],
+      "defects": [
+        "unsupported_claim"
+      ],
+      "status": "rejected"
+    },
+    {
+      "id": "K06",
+      "group": "offset",
+      "draft": "落锤空载且棘爪分离时，两份资料对标线偏移的记载不一致。测量卡[1]记录 4 mm；台账有 6 mm[2]。",
+      "citations": [
+        1,
+        2
+      ],
+      "issues": [],
+      "defects": [],
+      "status": "invalid_review",
+      "raw": "{\"input_gaps\":[],\"issues\":[{\"code\":\"omitted_condition\",\"source_ids\":[1],\"detail\":\"条件是棘爪分离\"}]}"
+    },
+    {
+      "id": "S08",
+      "group": "pair",
+      "draft": "标片贴底时，压片盒的细孔宽度上限是 3 mm[1]。标片贴底时，压片盒的粗孔宽度上限是 9 mm[1]。",
+      "citations": [
+        1
+      ],
+      "issues": [
+        {
+          "code": "omitted_condition",
+          "source_ids": [
+            1
+          ],
+          "source_span": "标片贴底",
+          "detail": "粗孔宽度上限应以标片贴底为条件。"
+        }
+      ],
+      "defects": [],
+      "status": "passed"
+    },
+    {
+      "id": "S09",
+      "group": "pair",
+      "draft": "标片贴底时，压片盒的细孔宽度上限是 3 mm[1]。压片盒的粗孔宽度上限是 9 mm[1]。",
+      "citations": [
+        1
+      ],
+      "issues": [
+        {
+          "code": "omitted_condition",
+          "source_ids": [
+            1
+          ],
+          "source_span": "标片贴底",
+          "detail": "粗孔宽度上限应以标片贴底为条件。"
+        }
+      ],
+      "defects": [
+        "condition_mismatch"
+      ],
+      "status": "rejected"
+    },
+    {
+      "id": "K07",
+      "group": "offset",
+      "draft": "Q-99 落锤空载且棘爪分离时，两份资料对标线偏移的记载不一致。测量卡[1]记录 4 mm；台账有 6 mm[2]。",
+      "citations": [
+        1,
+        2
+      ],
+      "issues": [
+        {
+          "code": "conflict_side_citation",
+          "source_ids": [
+            1,
+            2
+          ],
+          "detail": "固定审阅误认为前置来源标记不能限定其后数值。"
+        },
+        {
+          "code": "omitted_condition",
+          "source_ids": [
+            1
+          ],
+          "detail": "棘爪分离须限定标线偏移。",
+          "source_span": "棘爪分离"
+        }
+      ],
+      "defects": [
+        "citation_attribution",
+        "condition_mismatch"
+      ],
+      "status": "rejected"
+    },
+    {
+      "id": "S10",
+      "group": "sample",
+      "draft": "当试纸干燥且样窗闭合时，显影盒的读数上限是 14 厘米[1]。收纳时才需执行上述步骤，测量时可以跳过。",
+      "citations": [
+        1
+      ],
+      "issues": [
+        {
+          "code": "omitted_condition",
+          "source_ids": [
+            1
+          ],
+          "detail": "未写样窗闭合限定读数上限。",
+          "source_span": "样窗闭合"
+        }
+      ],
+      "defects": [
+        "condition_mismatch"
+      ],
+      "status": "rejected"
+    }
+  ]
+}

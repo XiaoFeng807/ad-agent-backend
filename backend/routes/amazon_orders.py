@@ -1,10 +1,12 @@
 """Read-only Amazon Orders v2026-01-01 adapter."""
 
 from datetime import UTC, datetime
+from hashlib import sha256
+import json
 
 import requests
 
-from backend.database.orders import Item, Order, utc_text
+from backend.database.orders import FetchedOrder, Item, Order, utc_text
 
 
 LWA_URL = "https://api.amazon.com/auth/o2/token"
@@ -124,7 +126,7 @@ def fetch_orders(settings, window, *, preflight=False):
     }
     if any(not value.strip() for value in credentials.values()):
         raise SyncError("amazon_credentials_missing")
-    records = {}
+    records = []
     tokens = set()
     pages = 0
     with requests.Session() as session:
@@ -151,21 +153,21 @@ def fetch_orders(settings, window, *, preflight=False):
                 pages += 1
                 if not isinstance(result.get("orders"), list):
                     raise ValueError("missing orders")
-                for raw in result["orders"]:
+                for position, raw in enumerate(result["orders"], start=1):
                     order = _order(raw)
                     if order is None:
                         continue
-                    previous = records.get(order.order_id)
-                    if previous is None or order.source_updated_at > previous.source_updated_at:
-                        records[order.order_id] = order
+                    encoded = json.dumps(raw, sort_keys=True, separators=(",", ":")).encode("utf-8")
+                    records.append(FetchedOrder(order, {"kind": "amazon_order", "page": pages,
+                                                       "position": position, "sha256": sha256(encoded).hexdigest()}))
                 if "pagination" not in result:
-                    return records.values(), pages
+                    return records, pages
                 pagination = result["pagination"]
                 token = pagination.get("nextToken") if isinstance(pagination, dict) else None
                 if not isinstance(token, str) or not token.strip():
                     raise SyncError("amazon_invalid_pagination", 200)
                 if preflight:
-                    return records.values(), pages
+                    return records, pages
                 if token in tokens:
                     raise SyncError("amazon_pagination_loop")
                 tokens.add(token)

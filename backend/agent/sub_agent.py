@@ -196,7 +196,8 @@ class SubAgent(Agent):
                     func = self.tool_registry.get_tool(fn_name)
                     if execution is not None:
                         with trace_tool_call(trace_id, self.name, fn_name if func else "unknown_tool", call_id) as step:
-                            result = scoped_read(fn_name, arguments, func, user_id, execution, step, legacy=True)
+                            result = scoped_read(fn_name, arguments, func, user_id, execution, step, legacy=True,
+                                                 trace_id=trace_id, role=self.name, call_id=call_id)
                     elif func:
                         with trace_tool_call(trace_id, self.name, fn_name, call_id) as step:
                             if user_id:

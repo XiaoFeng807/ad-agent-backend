@@ -10,13 +10,15 @@ from fastapi.responses import JSONResponse
 from pydantic import AwareDatetime, BaseModel, ConfigDict
 
 from backend.config.config import settings
-from backend.database import orders
+from backend.database import order_sales, orders
 from backend.database.database import get_db
 from backend.routes.amazon_orders import SyncError, fetch_orders
 
 
 ShopId = Annotated[str, Path(min_length=1, max_length=128)]
 OrderId = Annotated[str, Path(min_length=1, max_length=128)]
+After = Annotated[int, Query(ge=0, le=2**63 - 1)]
+PageSize = Annotated[int, Query(ge=1, le=100)]
 
 
 class SyncWindow(BaseModel):
@@ -72,6 +74,28 @@ def order_router(session_user):
             data = orders.read_order(conn, source, shop_id, order_id)
             if data is None:
                 raise HTTPException(404, "订单不存在")
+            return _response(data)
+
+    @router.get("/sales/publications")
+    def publications(request: Request, after: After = 0, limit: PageSize = 100):
+        with read_session(request) as (conn, user_id):
+            return _response(order_sales.list_publications(conn, user_id, after=after, limit=limit))
+
+    @router.get("/sales/publications/{publication_id}")
+    def publication(request: Request, publication_id: Annotated[str, Path(pattern=r"^osp_[0-9a-f]{32}$")]):
+        with read_session(request) as (conn, user_id):
+            data = order_sales.read_publication(conn, user_id, publication_id)
+            if data is None:
+                raise HTTPException(404, "销量发布不存在")
+            return _response(data)
+
+    @router.get("/shops/{source}/{shop_id}/sales-imports/{batch_id}")
+    def sales_import(request: Request, source: str, shop_id: ShopId,
+                     batch_id: Annotated[int, Path(ge=1, le=2**63 - 1)], after: After = 0, limit: PageSize = 100):
+        with read_session(request) as (conn, user_id):
+            data = order_sales.read_import(conn, user_id, source, shop_id, batch_id, after=after, limit=limit)
+            if data is None:
+                raise HTTPException(404, "订单导入不存在")
             return _response(data)
 
     @router.get("/shops/olist-v2/{shop_id}/sales/products")
@@ -135,17 +159,16 @@ def order_router(session_user):
             with closing(get_db()) as conn, conn:
                 conn.execute("PRAGMA foreign_keys=ON")
                 conn.execute("BEGIN IMMEDIATE")
-                _check_shop(conn, session_user(request, conn), source, shop_id)
-                written = (0, 0)
+                user_id = session_user(request, conn)
+                _check_shop(conn, user_id, source, shop_id)
                 if not preflight and error is None:
-                    written = orders.write_orders(
-                        conn, source, shop_id, records, synced_at=orders.utc_text(datetime.now(UTC)),
+                    receipt = order_sales.import_sync(conn, user_id, source, shop_id, records, window=window, pages=pages)
+                else:
+                    receipt = orders.record_run(
+                        conn, source, shop_id, operation, window=window, pages=pages, written=(0, 0),
+                        error_code=error.code if error else None, upstream_status=error.upstream_status if error else None,
                     )
-                receipt = orders.record_run(
-                    conn, source, shop_id, operation, window=window, pages=pages, written=written,
-                    error_code=error.code if error else None, upstream_status=error.upstream_status if error else None,
-                )
-        except SQLiteError:
+        except (SQLiteError, orders.IngestionConflict):
             raise HTTPException(503, "订单同步记录保存失败") from None
         if error is None:
             return _response(receipt)

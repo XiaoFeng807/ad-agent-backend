@@ -1,0 +1,55 @@
+{
+  "label": "官方字段夹具 · 合成数据",
+  "question": "帮我看看这款商品的广告搜索词，哪些值得写进标题，哪些需要复核投放？先给我建议和依据。",
+  "rules": {"min_impressions": 100, "min_clicks": 20, "title_min_orders": 2, "title_min_cvr_pct": 10, "title_max_length": 75},
+  "report_header": "Date,Campaign Name,Ad Group Name,Campaign ID,Ad Group ID,Customer Search Term,Impressions,Clicks,Spend,Purchases,Sales,Currency",
+  "report_defaults": {"Date": "2026-11-16", "Impressions": 340, "Clicks": 20, "Spend": "16.00", "Purchases": 4, "Sales": "115.80", "Currency": "USD"},
+  "membership": {"shop": "sp-batch-transfer-holdout", "marketplace": "US", "advertiser": "BT-HOLDOUT-US", "from": "2026-11-16", "to": "2026-11-18", "control_sku": "BTHOLD-CONTROL", "control_asin": "B0BTH00009"},
+  "batches": [
+    {
+      "id": "tool-rinse-basin", "sku": "BTHOLD-BASIN", "asin": "B0BTH00001", "title": "Alder Tool Rinse Basin",
+      "original": ["Product type\tTool Rinse Basin\t-\tWhole\t-", "Width\t152.4\tmm\tWhole\t-",
+        "Compatible models\tVektra VX-30 | Vektra VX-40\t-\tWhole\tComplete list",
+        "Cleaning\tDishwasher safe\t-\tBody\tTop rack only"],
+      "items": [
+        {"id": "basin-width-mixed", "intent": "size", "group": "mixed", "term": "6 inch wide tool rinse basin",
+         "report_changes": {"Impressions": 160, "Clicks": 9, "Spend": "7.20", "Purchases": 2, "Sales": "57.90"},
+         "second_row": {"Date": "2026-11-17", "Impressions": 180, "Clicks": 10, "Spend": "8.00", "Purchases": 2, "Sales": "57.90"}},
+        {"id": "basin-model-conflict", "intent": "compatibility", "group": "verified", "term": "tool rinse basin fits vektra vx-30 pro"},
+        {"id": "basin-width-20", "intent": "size", "group": "verified", "term": "6 inch wide tool rinse basin"},
+        {"id": "basin-seal-missing", "intent": "restriction", "group": "verified", "term": "tool rinse basin seal top rack dishwasher safe"},
+        {"id": "basin-width-19", "intent": "size", "group": "low", "term": "6 inch wide tool rinse basin", "report_changes": {"Clicks": 19}}
+      ]
+    },
+    {
+      "id": "milk-frother-jug", "sku": "BTHOLD-JUG", "asin": "B0BTH00002", "title": "Sedge Milk Frother Jug",
+      "original": ["Product type\tMilk Frother Jug\t-\tWhole\t-", "Width\t152\tmm\tWhole\t-",
+        "Compatible models\tLinwell LW-66 Max\t-\tWhole\t-",
+        "Cleaning\tHand wash only\t-\tLid\t-", "Cleaning\tDishwasher safe\t-\tBody\tTop rack only"],
+      "items": [
+        {"id": "jug-lid-conflict", "intent": "restriction", "group": "verified", "term": "milk frother jug lid top rack dishwasher safe"},
+        {"id": "jug-model-mixed", "intent": "compatibility", "group": "mixed", "term": "milk frother jug for linwell lw-66 max",
+         "report_changes": {"Impressions": 160, "Clicks": 10, "Spend": "8.00", "Purchases": 2, "Sales": "57.90"},
+         "second_row": {"Date": "2026-11-17", "Impressions": 180, "Clicks": 10, "Spend": "8.00", "Purchases": 2, "Sales": "57.90"}},
+        {"id": "jug-model-19", "intent": "compatibility", "group": "low", "term": "milk frother jug for linwell lw-66 max", "report_changes": {"Clicks": 19}},
+        {"id": "jug-depth-missing", "intent": "size", "group": "verified", "term": "10 inch deep milk frother jug"},
+        {"id": "jug-model-20", "intent": "compatibility", "group": "verified", "term": "milk frother jug for linwell lw-66 max"}
+      ]
+    },
+    {
+      "id": "grain-hopper", "sku": "BTHOLD-HOPPER", "asin": "B0BTH00003", "title": "Oriel Grain Storage Hopper",
+      "original": ["Product type\tGrain Storage Hopper\t-\tWhole\t-", "Width\t203.2\tmm\tWhole\t-",
+        "Compatible models\tRenwick RK-15\t-\tWhole\t-", "Cleaning\tHand wash only\t-\tLid\t-",
+        "Cleaning\tDishwasher safe\t-\tBody\tTop rack only"],
+      "items": [
+        {"id": "hopper-lid-20", "intent": "restriction", "group": "verified", "term": "grain storage hopper lid hand wash only"},
+        {"id": "hopper-model-missing", "intent": "compatibility", "group": "verified", "term": "grain storage hopper for renwick rk-15 ultra"},
+        {"id": "hopper-lid-19", "intent": "restriction", "group": "low", "term": "grain storage hopper lid hand wash only", "report_changes": {"Clicks": 19}},
+        {"id": "hopper-width-conflict", "intent": "size", "group": "verified", "term": "7 inch wide grain storage hopper"},
+        {"id": "hopper-lid-mixed", "intent": "restriction", "group": "mixed", "term": "grain storage hopper lid hand wash only",
+         "report_changes": {"Impressions": 160, "Clicks": 11, "Spend": "8.80", "Purchases": 2, "Sales": "57.90"},
+         "second_row": {"Date": "2026-11-17", "Impressions": 180, "Clicks": 10, "Spend": "8.00", "Purchases": 2, "Sales": "57.90"}}
+      ]
+    }
+  ]
+}

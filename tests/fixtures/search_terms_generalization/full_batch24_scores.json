@@ -1,0 +1,1228 @@
+{
+  "rinse-01": {
+    "action": "title",
+    "code": "supported_missing",
+    "reason": "原标题遗漏且有匹配规格和足够样本",
+    "source_rows": [
+      2,
+      3
+    ],
+    "required_references": {
+      "type": [
+        2
+      ],
+      "spec": [
+        3
+      ]
+    },
+    "offered_rows": [
+      2,
+      3
+    ],
+    "demand": {
+      "product_type": "rinse cup",
+      "attribute": "width",
+      "value": "165.1",
+      "unit": "mm",
+      "conditions": {}
+    },
+    "draft_title": "Sable Rinse Cup, 6.5 Inch Wide"
+  },
+  "rinse-02": {
+    "action": "title",
+    "code": "supported_missing",
+    "reason": "原标题遗漏且有匹配规格和足够样本",
+    "source_rows": [
+      2,
+      7
+    ],
+    "required_references": {
+      "type": [
+        2
+      ],
+      "spec": [
+        7
+      ]
+    },
+    "offered_rows": [
+      2,
+      7
+    ],
+    "demand": {
+      "product_type": "rinse cup",
+      "attribute": "model",
+      "value": "lumen lx-32 prime",
+      "unit": "",
+      "conditions": {}
+    },
+    "draft_title": "Sable Rinse Cup, Compatible with LUMEN LX-32 PRIME"
+  },
+  "rinse-03": {
+    "action": "review",
+    "code": "fact_conflict",
+    "reason": "盖子只能手洗，杯身机洗原文不能支撑盖子",
+    "source_rows": [
+      2,
+      9
+    ],
+    "required_references": {
+      "type": [
+        2
+      ],
+      "spec": [
+        9
+      ]
+    },
+    "offered_rows": [
+      2,
+      8,
+      9
+    ],
+    "demand": {
+      "product_type": "rinse cup",
+      "attribute": "cleaning",
+      "value": "dishwasher safe",
+      "unit": "",
+      "conditions": {
+        "part": "lid",
+        "restriction": "top rack only"
+      }
+    }
+  },
+  "rinse-04": {
+    "action": "observe",
+    "code": "unverified",
+    "reason": "缺少对应范围的决定性原文",
+    "source_rows": [],
+    "required_references": {
+      "type": [],
+      "spec": []
+    },
+    "offered_rows": [
+      2
+    ],
+    "demand": {
+      "product_type": "rinse cup",
+      "attribute": "depth",
+      "value": "101.6",
+      "unit": "mm",
+      "conditions": {}
+    }
+  },
+  "rinse-05": {
+    "action": "title",
+    "code": "supported_missing",
+    "reason": "原标题遗漏且有匹配规格和足够样本",
+    "source_rows": [
+      2,
+      8
+    ],
+    "required_references": {
+      "type": [
+        2
+      ],
+      "spec": [
+        8
+      ]
+    },
+    "offered_rows": [
+      2,
+      8,
+      9
+    ],
+    "demand": {
+      "product_type": "rinse cup",
+      "attribute": "cleaning",
+      "value": "dishwasher safe",
+      "unit": "",
+      "conditions": {
+        "part": "body",
+        "restriction": "top rack only"
+      }
+    },
+    "draft_title": "Sable Rinse Cup, Body Top Rack Only Dishwasher Safe"
+  },
+  "rinse-06": {
+    "action": "observe",
+    "code": "sample",
+    "reason": "点击实际 19，门槛 20",
+    "source_rows": [],
+    "required_references": {
+      "type": [],
+      "spec": []
+    },
+    "offered_rows": null,
+    "demand": {
+      "product_type": "rinse cup",
+      "attribute": "width",
+      "value": "165.1",
+      "unit": "mm",
+      "conditions": {}
+    }
+  },
+  "rinse-07": {
+    "action": "observe",
+    "code": "unattributed",
+    "reason": "混合组缺逐行归属，保留组级指标",
+    "source_rows": [],
+    "required_references": {
+      "type": [],
+      "spec": []
+    },
+    "offered_rows": null,
+    "demand": {
+      "product_type": "rinse cup",
+      "attribute": "width",
+      "value": "165.1",
+      "unit": "mm",
+      "conditions": {}
+    }
+  },
+  "rinse-08": {
+    "action": "review",
+    "code": "fact_conflict",
+    "reason": "完整封闭名单明确排除带后缀型号",
+    "source_rows": [
+      2,
+      7
+    ],
+    "required_references": {
+      "type": [
+        2
+      ],
+      "spec": [
+        7
+      ]
+    },
+    "offered_rows": [
+      2,
+      7
+    ],
+    "demand": {
+      "product_type": "rinse cup",
+      "attribute": "model",
+      "value": "lumen lx-32 pro",
+      "unit": "",
+      "conditions": {}
+    }
+  },
+  "rinse-09": {
+    "action": "title",
+    "code": "supported_missing",
+    "reason": "原标题遗漏且有匹配规格和足够样本",
+    "source_rows": [
+      2,
+      9
+    ],
+    "required_references": {
+      "type": [
+        2
+      ],
+      "spec": [
+        9
+      ]
+    },
+    "offered_rows": [
+      2,
+      8,
+      9
+    ],
+    "demand": {
+      "product_type": "rinse cup",
+      "attribute": "cleaning",
+      "value": "hand wash only",
+      "unit": "",
+      "conditions": {
+        "part": "lid",
+        "restriction": ""
+      }
+    },
+    "draft_title": "Sable Rinse Cup, Lid Hand Wash Only"
+  },
+  "rinse-10": {
+    "action": "review",
+    "code": "fact_conflict",
+    "reason": "杯身仅限上层架，不能声称不限机洗范围",
+    "source_rows": [
+      2,
+      8
+    ],
+    "required_references": {
+      "type": [
+        2
+      ],
+      "spec": [
+        8
+      ]
+    },
+    "offered_rows": [
+      2,
+      8,
+      9
+    ],
+    "demand": {
+      "product_type": "rinse cup",
+      "attribute": "cleaning",
+      "value": "dishwasher safe",
+      "unit": "",
+      "conditions": {
+        "part": "body",
+        "restriction": ""
+      }
+    }
+  },
+  "rinse-11": {
+    "action": "title",
+    "code": "supported_missing",
+    "reason": "原标题遗漏且有匹配规格和足够样本",
+    "source_rows": [
+      2,
+      4
+    ],
+    "required_references": {
+      "type": [
+        2
+      ],
+      "spec": [
+        4
+      ]
+    },
+    "offered_rows": [
+      2,
+      4
+    ],
+    "demand": {
+      "product_type": "rinse cup",
+      "attribute": "length",
+      "value": "203.2",
+      "unit": "mm",
+      "conditions": {}
+    },
+    "draft_title": "Sable Rinse Cup, 8 Inch Long"
+  },
+  "rinse-12": {
+    "action": "review",
+    "code": "fact_conflict",
+    "reason": "原文同范围规格明确冲突",
+    "source_rows": [
+      2,
+      5
+    ],
+    "required_references": {
+      "type": [
+        2
+      ],
+      "spec": [
+        5
+      ]
+    },
+    "offered_rows": [
+      2,
+      5
+    ],
+    "demand": {
+      "product_type": "rinse cup",
+      "attribute": "height",
+      "value": "152.4",
+      "unit": "mm",
+      "conditions": {}
+    }
+  },
+  "rinse-13": {
+    "action": "observe",
+    "code": "sample",
+    "reason": "点击 20 达标，成交 1／2 且转化率 5%／10%",
+    "source_rows": [],
+    "required_references": {
+      "type": [],
+      "spec": []
+    },
+    "offered_rows": [
+      2,
+      3
+    ],
+    "demand": {
+      "product_type": "rinse cup",
+      "attribute": "width",
+      "value": "165.1",
+      "unit": "mm",
+      "conditions": {}
+    }
+  },
+  "rinse-14": {
+    "action": "title",
+    "code": "supported_missing",
+    "reason": "原标题遗漏且有匹配规格和足够样本",
+    "source_rows": [
+      2,
+      7
+    ],
+    "required_references": {
+      "type": [
+        2
+      ],
+      "spec": [
+        7
+      ]
+    },
+    "offered_rows": [
+      2,
+      7
+    ],
+    "demand": {
+      "product_type": "rinse cup",
+      "attribute": "model",
+      "value": "lumen lx-32",
+      "unit": "",
+      "conditions": {}
+    },
+    "draft_title": "Sable Rinse Cup, Compatible with LUMEN LX-32"
+  },
+  "rinse-15": {
+    "action": "observe",
+    "code": "sample",
+    "reason": "点击实际 19，门槛 20",
+    "source_rows": [],
+    "required_references": {
+      "type": [],
+      "spec": []
+    },
+    "offered_rows": null,
+    "demand": {
+      "product_type": "rinse cup",
+      "attribute": "length",
+      "value": "203.2",
+      "unit": "mm",
+      "conditions": {}
+    }
+  },
+  "rinse-16": {
+    "action": "observe",
+    "code": "unverified",
+    "reason": "缺少对应范围的决定性原文",
+    "source_rows": [],
+    "required_references": {
+      "type": [],
+      "spec": []
+    },
+    "offered_rows": [
+      2,
+      8,
+      9
+    ],
+    "demand": {
+      "product_type": "rinse cup",
+      "attribute": "cleaning",
+      "value": "dishwasher safe",
+      "unit": "",
+      "conditions": {
+        "part": "handle",
+        "restriction": "top rack only"
+      }
+    }
+  },
+  "rinse-17": {
+    "action": "title",
+    "code": "supported_missing",
+    "reason": "原标题遗漏且有匹配规格和足够样本",
+    "source_rows": [
+      2,
+      6
+    ],
+    "required_references": {
+      "type": [
+        2
+      ],
+      "spec": [
+        6
+      ]
+    },
+    "offered_rows": [
+      2,
+      6
+    ],
+    "demand": {
+      "product_type": "rinse cup",
+      "attribute": "diameter",
+      "value": "88.9",
+      "unit": "mm",
+      "conditions": {}
+    },
+    "draft_title": "Sable Rinse Cup, 3.5 Inch Diameter"
+  },
+  "rinse-18": {
+    "action": "observe",
+    "code": "sample",
+    "reason": "点击实际 19，门槛 20",
+    "source_rows": [],
+    "required_references": {
+      "type": [],
+      "spec": []
+    },
+    "offered_rows": null,
+    "demand": {
+      "product_type": "rinse cup",
+      "attribute": "cleaning",
+      "value": "hand wash only",
+      "unit": "",
+      "conditions": {
+        "part": "lid",
+        "restriction": ""
+      }
+    }
+  },
+  "rinse-19": {
+    "action": "observe",
+    "code": "unattributed",
+    "reason": "混合组缺逐行归属，保留组级指标",
+    "source_rows": [],
+    "required_references": {
+      "type": [],
+      "spec": []
+    },
+    "offered_rows": null,
+    "demand": {
+      "product_type": "rinse cup",
+      "attribute": "cleaning",
+      "value": "hand wash only",
+      "unit": "",
+      "conditions": {
+        "part": "lid",
+        "restriction": ""
+      }
+    }
+  },
+  "rinse-20": {
+    "action": "title",
+    "code": "supported_missing",
+    "reason": "原标题遗漏且有匹配规格和足够样本",
+    "source_rows": [
+      2,
+      5
+    ],
+    "required_references": {
+      "type": [
+        2
+      ],
+      "spec": [
+        5
+      ]
+    },
+    "offered_rows": [
+      2,
+      5
+    ],
+    "demand": {
+      "product_type": "rinse cup",
+      "attribute": "height",
+      "value": "114.3",
+      "unit": "mm",
+      "conditions": {}
+    },
+    "draft_title": "Sable Rinse Cup, 4.5 Inch High"
+  },
+  "rinse-21": {
+    "action": "observe",
+    "code": "unverified",
+    "reason": "缺少对应范围的决定性原文",
+    "source_rows": [],
+    "required_references": {
+      "type": [],
+      "spec": []
+    },
+    "offered_rows": [
+      2
+    ],
+    "demand": {
+      "product_type": "rinse cup",
+      "attribute": "size",
+      "value": "165.1",
+      "unit": "mm",
+      "conditions": {}
+    }
+  },
+  "rinse-22": {
+    "action": "review",
+    "code": "fact_conflict",
+    "reason": "原文限定杯身上层架机洗，未支持只能手洗",
+    "source_rows": [
+      2,
+      8
+    ],
+    "required_references": {
+      "type": [
+        2
+      ],
+      "spec": [
+        8
+      ]
+    },
+    "offered_rows": [
+      2,
+      8,
+      9
+    ],
+    "demand": {
+      "product_type": "rinse cup",
+      "attribute": "cleaning",
+      "value": "hand wash only",
+      "unit": "",
+      "conditions": {
+        "part": "body",
+        "restriction": ""
+      }
+    }
+  },
+  "rinse-23": {
+    "action": "observe",
+    "code": "sample",
+    "reason": "点击实际 19，门槛 20",
+    "source_rows": [],
+    "required_references": {
+      "type": [],
+      "spec": []
+    },
+    "offered_rows": null,
+    "demand": {
+      "product_type": "rinse cup",
+      "attribute": "model",
+      "value": "lumen lx-32 prime",
+      "unit": "",
+      "conditions": {}
+    }
+  },
+  "rinse-24": {
+    "action": "review",
+    "code": "fact_conflict",
+    "reason": "完整封闭名单明确排除带后缀型号",
+    "source_rows": [
+      2,
+      7
+    ],
+    "required_references": {
+      "type": [
+        2
+      ],
+      "spec": [
+        7
+      ]
+    },
+    "offered_rows": [
+      2,
+      7
+    ],
+    "demand": {
+      "product_type": "rinse cup",
+      "attribute": "model",
+      "value": "lumen lx-32 prime plus",
+      "unit": "",
+      "conditions": {}
+    }
+  },
+  "mixing-01": {
+    "action": "title",
+    "code": "supported_missing",
+    "reason": "原标题遗漏且有匹配规格和足够样本",
+    "source_rows": [
+      2,
+      3
+    ],
+    "required_references": {
+      "type": [
+        2
+      ],
+      "spec": [
+        3
+      ]
+    },
+    "offered_rows": [
+      2,
+      3
+    ],
+    "demand": {
+      "product_type": "mixing pitcher",
+      "attribute": "width",
+      "value": "177.8",
+      "unit": "mm",
+      "conditions": {}
+    },
+    "draft_title": "Cairn Mixing Pitcher, 7 Inch Wide"
+  },
+  "mixing-02": {
+    "action": "title",
+    "code": "supported_missing",
+    "reason": "原标题遗漏且有匹配规格和足够样本",
+    "source_rows": [
+      2,
+      7
+    ],
+    "required_references": {
+      "type": [
+        2
+      ],
+      "spec": [
+        7
+      ]
+    },
+    "offered_rows": [
+      2,
+      7
+    ],
+    "demand": {
+      "product_type": "mixing pitcher",
+      "attribute": "model",
+      "value": "novar np-64 max",
+      "unit": "",
+      "conditions": {}
+    },
+    "draft_title": "Cairn Mixing Pitcher, Compatible with NOVAR NP-64 MAX"
+  },
+  "mixing-03": {
+    "action": "review",
+    "code": "fact_conflict",
+    "reason": "盖子只能手洗，杯身机洗原文不能支撑盖子",
+    "source_rows": [
+      2,
+      9
+    ],
+    "required_references": {
+      "type": [
+        2
+      ],
+      "spec": [
+        9
+      ]
+    },
+    "offered_rows": [
+      2,
+      8,
+      9
+    ],
+    "demand": {
+      "product_type": "mixing pitcher",
+      "attribute": "cleaning",
+      "value": "dishwasher safe",
+      "unit": "",
+      "conditions": {
+        "part": "lid",
+        "restriction": "top rack only"
+      }
+    }
+  },
+  "mixing-04": {
+    "action": "observe",
+    "code": "unverified",
+    "reason": "缺少对应范围的决定性原文",
+    "source_rows": [],
+    "required_references": {
+      "type": [],
+      "spec": []
+    },
+    "offered_rows": [
+      2
+    ],
+    "demand": {
+      "product_type": "mixing pitcher",
+      "attribute": "depth",
+      "value": "101.6",
+      "unit": "mm",
+      "conditions": {}
+    }
+  },
+  "mixing-05": {
+    "action": "title",
+    "code": "supported_missing",
+    "reason": "原标题遗漏且有匹配规格和足够样本",
+    "source_rows": [
+      2,
+      8
+    ],
+    "required_references": {
+      "type": [
+        2
+      ],
+      "spec": [
+        8
+      ]
+    },
+    "offered_rows": [
+      2,
+      8,
+      9
+    ],
+    "demand": {
+      "product_type": "mixing pitcher",
+      "attribute": "cleaning",
+      "value": "dishwasher safe",
+      "unit": "",
+      "conditions": {
+        "part": "body",
+        "restriction": "top rack only"
+      }
+    },
+    "draft_title": "Cairn Mixing Pitcher, Body Top Rack Only Dishwasher Safe"
+  },
+  "mixing-06": {
+    "action": "observe",
+    "code": "sample",
+    "reason": "点击实际 19，门槛 20",
+    "source_rows": [],
+    "required_references": {
+      "type": [],
+      "spec": []
+    },
+    "offered_rows": null,
+    "demand": {
+      "product_type": "mixing pitcher",
+      "attribute": "width",
+      "value": "177.8",
+      "unit": "mm",
+      "conditions": {}
+    }
+  },
+  "mixing-07": {
+    "action": "observe",
+    "code": "unattributed",
+    "reason": "混合组缺逐行归属，保留组级指标",
+    "source_rows": [],
+    "required_references": {
+      "type": [],
+      "spec": []
+    },
+    "offered_rows": null,
+    "demand": {
+      "product_type": "mixing pitcher",
+      "attribute": "width",
+      "value": "177.8",
+      "unit": "mm",
+      "conditions": {}
+    }
+  },
+  "mixing-08": {
+    "action": "observe",
+    "code": "unverified",
+    "reason": "开放名单缺带后缀的完整型号",
+    "source_rows": [],
+    "required_references": {
+      "type": [],
+      "spec": []
+    },
+    "offered_rows": [
+      2,
+      7
+    ],
+    "demand": {
+      "product_type": "mixing pitcher",
+      "attribute": "model",
+      "value": "novar np-64 pro",
+      "unit": "",
+      "conditions": {}
+    }
+  },
+  "mixing-09": {
+    "action": "title",
+    "code": "supported_missing",
+    "reason": "原标题遗漏且有匹配规格和足够样本",
+    "source_rows": [
+      2,
+      9
+    ],
+    "required_references": {
+      "type": [
+        2
+      ],
+      "spec": [
+        9
+      ]
+    },
+    "offered_rows": [
+      2,
+      8,
+      9
+    ],
+    "demand": {
+      "product_type": "mixing pitcher",
+      "attribute": "cleaning",
+      "value": "hand wash only",
+      "unit": "",
+      "conditions": {
+        "part": "lid",
+        "restriction": ""
+      }
+    },
+    "draft_title": "Cairn Mixing Pitcher, Lid Hand Wash Only"
+  },
+  "mixing-10": {
+    "action": "review",
+    "code": "fact_conflict",
+    "reason": "杯身仅限上层架，不能声称不限机洗范围",
+    "source_rows": [
+      2,
+      8
+    ],
+    "required_references": {
+      "type": [
+        2
+      ],
+      "spec": [
+        8
+      ]
+    },
+    "offered_rows": [
+      2,
+      8,
+      9
+    ],
+    "demand": {
+      "product_type": "mixing pitcher",
+      "attribute": "cleaning",
+      "value": "dishwasher safe",
+      "unit": "",
+      "conditions": {
+        "part": "body",
+        "restriction": ""
+      }
+    }
+  },
+  "mixing-11": {
+    "action": "title",
+    "code": "supported_missing",
+    "reason": "原标题遗漏且有匹配规格和足够样本",
+    "source_rows": [
+      2,
+      4
+    ],
+    "required_references": {
+      "type": [
+        2
+      ],
+      "spec": [
+        4
+      ]
+    },
+    "offered_rows": [
+      2,
+      4
+    ],
+    "demand": {
+      "product_type": "mixing pitcher",
+      "attribute": "length",
+      "value": "228.6",
+      "unit": "mm",
+      "conditions": {}
+    },
+    "draft_title": "Cairn Mixing Pitcher, 9 Inch Long"
+  },
+  "mixing-12": {
+    "action": "review",
+    "code": "fact_conflict",
+    "reason": "原文同范围规格明确冲突",
+    "source_rows": [
+      2,
+      5
+    ],
+    "required_references": {
+      "type": [
+        2
+      ],
+      "spec": [
+        5
+      ]
+    },
+    "offered_rows": [
+      2,
+      5
+    ],
+    "demand": {
+      "product_type": "mixing pitcher",
+      "attribute": "height",
+      "value": "152.4",
+      "unit": "mm",
+      "conditions": {}
+    }
+  },
+  "mixing-13": {
+    "action": "observe",
+    "code": "sample",
+    "reason": "点击 20 达标，成交 1／2 且转化率 5%／10%",
+    "source_rows": [],
+    "required_references": {
+      "type": [],
+      "spec": []
+    },
+    "offered_rows": [
+      2,
+      3
+    ],
+    "demand": {
+      "product_type": "mixing pitcher",
+      "attribute": "width",
+      "value": "177.8",
+      "unit": "mm",
+      "conditions": {}
+    }
+  },
+  "mixing-14": {
+    "action": "title",
+    "code": "supported_missing",
+    "reason": "原标题遗漏且有匹配规格和足够样本",
+    "source_rows": [
+      2,
+      7
+    ],
+    "required_references": {
+      "type": [
+        2
+      ],
+      "spec": [
+        7
+      ]
+    },
+    "offered_rows": [
+      2,
+      7
+    ],
+    "demand": {
+      "product_type": "mixing pitcher",
+      "attribute": "model",
+      "value": "novar np-64",
+      "unit": "",
+      "conditions": {}
+    },
+    "draft_title": "Cairn Mixing Pitcher, Compatible with NOVAR NP-64"
+  },
+  "mixing-15": {
+    "action": "observe",
+    "code": "sample",
+    "reason": "点击实际 19，门槛 20",
+    "source_rows": [],
+    "required_references": {
+      "type": [],
+      "spec": []
+    },
+    "offered_rows": null,
+    "demand": {
+      "product_type": "mixing pitcher",
+      "attribute": "length",
+      "value": "228.6",
+      "unit": "mm",
+      "conditions": {}
+    }
+  },
+  "mixing-16": {
+    "action": "observe",
+    "code": "unverified",
+    "reason": "缺少对应范围的决定性原文",
+    "source_rows": [],
+    "required_references": {
+      "type": [],
+      "spec": []
+    },
+    "offered_rows": [
+      2,
+      8,
+      9
+    ],
+    "demand": {
+      "product_type": "mixing pitcher",
+      "attribute": "cleaning",
+      "value": "dishwasher safe",
+      "unit": "",
+      "conditions": {
+        "part": "handle",
+        "restriction": "top rack only"
+      }
+    }
+  },
+  "mixing-17": {
+    "action": "title",
+    "code": "supported_missing",
+    "reason": "原标题遗漏且有匹配规格和足够样本",
+    "source_rows": [
+      2,
+      6
+    ],
+    "required_references": {
+      "type": [
+        2
+      ],
+      "spec": [
+        6
+      ]
+    },
+    "offered_rows": [
+      2,
+      6
+    ],
+    "demand": {
+      "product_type": "mixing pitcher",
+      "attribute": "diameter",
+      "value": "101.6",
+      "unit": "mm",
+      "conditions": {}
+    },
+    "draft_title": "Cairn Mixing Pitcher, 4 Inch Diameter"
+  },
+  "mixing-18": {
+    "action": "observe",
+    "code": "sample",
+    "reason": "点击实际 19，门槛 20",
+    "source_rows": [],
+    "required_references": {
+      "type": [],
+      "spec": []
+    },
+    "offered_rows": null,
+    "demand": {
+      "product_type": "mixing pitcher",
+      "attribute": "cleaning",
+      "value": "hand wash only",
+      "unit": "",
+      "conditions": {
+        "part": "lid",
+        "restriction": ""
+      }
+    }
+  },
+  "mixing-19": {
+    "action": "observe",
+    "code": "unattributed",
+    "reason": "混合组缺逐行归属，保留组级指标",
+    "source_rows": [],
+    "required_references": {
+      "type": [],
+      "spec": []
+    },
+    "offered_rows": null,
+    "demand": {
+      "product_type": "mixing pitcher",
+      "attribute": "cleaning",
+      "value": "hand wash only",
+      "unit": "",
+      "conditions": {
+        "part": "lid",
+        "restriction": ""
+      }
+    }
+  },
+  "mixing-20": {
+    "action": "title",
+    "code": "supported_missing",
+    "reason": "原标题遗漏且有匹配规格和足够样本",
+    "source_rows": [
+      2,
+      5
+    ],
+    "required_references": {
+      "type": [
+        2
+      ],
+      "spec": [
+        5
+      ]
+    },
+    "offered_rows": [
+      2,
+      5
+    ],
+    "demand": {
+      "product_type": "mixing pitcher",
+      "attribute": "height",
+      "value": "139.7",
+      "unit": "mm",
+      "conditions": {}
+    },
+    "draft_title": "Cairn Mixing Pitcher, 5.5 Inch High"
+  },
+  "mixing-21": {
+    "action": "observe",
+    "code": "unverified",
+    "reason": "缺少对应范围的决定性原文",
+    "source_rows": [],
+    "required_references": {
+      "type": [],
+      "spec": []
+    },
+    "offered_rows": [
+      2
+    ],
+    "demand": {
+      "product_type": "mixing pitcher",
+      "attribute": "size",
+      "value": "177.8",
+      "unit": "mm",
+      "conditions": {}
+    }
+  },
+  "mixing-22": {
+    "action": "review",
+    "code": "fact_conflict",
+    "reason": "原文限定杯身上层架机洗，未支持只能手洗",
+    "source_rows": [
+      2,
+      8
+    ],
+    "required_references": {
+      "type": [
+        2
+      ],
+      "spec": [
+        8
+      ]
+    },
+    "offered_rows": [
+      2,
+      8,
+      9
+    ],
+    "demand": {
+      "product_type": "mixing pitcher",
+      "attribute": "cleaning",
+      "value": "hand wash only",
+      "unit": "",
+      "conditions": {
+        "part": "body",
+        "restriction": ""
+      }
+    }
+  },
+  "mixing-23": {
+    "action": "observe",
+    "code": "sample",
+    "reason": "点击实际 19，门槛 20",
+    "source_rows": [],
+    "required_references": {
+      "type": [],
+      "spec": []
+    },
+    "offered_rows": null,
+    "demand": {
+      "product_type": "mixing pitcher",
+      "attribute": "model",
+      "value": "novar np-64 max",
+      "unit": "",
+      "conditions": {}
+    }
+  },
+  "mixing-24": {
+    "action": "observe",
+    "code": "unverified",
+    "reason": "开放名单缺带后缀的完整型号",
+    "source_rows": [],
+    "required_references": {
+      "type": [],
+      "spec": []
+    },
+    "offered_rows": [
+      2,
+      7
+    ],
+    "demand": {
+      "product_type": "mixing pitcher",
+      "attribute": "model",
+      "value": "novar np-64 max plus",
+      "unit": "",
+      "conditions": {}
+    }
+  }
+}

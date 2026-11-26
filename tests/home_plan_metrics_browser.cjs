@@ -30,7 +30,8 @@ async function run() {
     });
     browser = await chromium.launch(browserOptions());
     console.log("AD_BROWSER " + browser.version());
-    const page = await browser.newPage({ viewport: { width: 1360, height: 1050 } });
+    const page = await browser.newPage({ viewport: { width: 1440, height: 1000 },
+      permissions: ["clipboard-read", "clipboard-write"] });
     page.setDefaultTimeout(10000);
     report.current_case = "homepage shows public numbers, source, time mapping and exact rule citation in both windows";
     await page.goto(origin);
@@ -41,7 +42,11 @@ async function run() {
     await page.locator("#loginCaptcha").press("Enter");
     await page.locator("#navUsername").getByText("diagnosis-demo", { exact: true }).waitFor();
     await page.locator('[data-page="chat"]').click();
-    await page.getByRole("button", { name: "投放诊断", exact: true }).click();
+    await page.getByRole("button", { name: "广告计划复核", exact: true }).click();
+    await page.getByRole("button", { name: "使用示例" }).click();
+    assert.equal(await page.locator('#diagnosisForm input[name="message"]').evaluate(input =>
+      input.value === input.placeholder && Boolean(input.value)), true);
+    await page.screenshot({ path: path.join(output, "advertising-review-setup.png") });
     await page.locator("#diagnosisMode").click();
     const field = name => page.locator(`#diagnosisForm input[name="${name}"]`);
     await field("plan_id").fill("101");
@@ -71,8 +76,41 @@ async function run() {
       const expected = index === 0 ? [7544, 2835, 9723, 2784] : [3452, 1323, 4821, 1214];
       assert.deepEqual([proposal.metrics.baseline.impressions, proposal.metrics.baseline.clicks,
         proposal.metrics.current.impressions, proposal.metrics.current.clicks], expected);
+      const comparison = round.locator(".diagnosis-comparison");
+      const values = [expected[1] / expected[0] * 100, expected[3] / expected[2] * 100];
+      assert.deepEqual(await comparison.locator(".diagnosis-ctr-pair strong").allTextContents(),
+        values.map(value => value.toFixed(2) + "%"));
+      const normalizedWidths = await comparison.locator(".diagnosis-ctr-track").evaluateAll(tracks =>
+        tracks.map(track => track.firstElementChild.getBoundingClientRect().width / track.getBoundingClientRect().width));
+      const max = Math.max(1, Math.ceil(Math.max(...values)));
+      assert.ok(normalizedWidths.every((width, i) => Math.abs(width - values[i] / max) < 0.01));
+      if (index === 0) {
+        const trigger = round.getByRole("button", { name: "执行记录" });
+        await trigger.click();
+        const execution = page.locator("#diagnosisExecution");
+        assert.deepEqual(await execution.locator("ol li > strong").allTextContents(),
+          ["读取两窗指标", "核对点击率规则", "保存复核结果"]);
+        assert.equal(await execution.locator("#diagnosisExecutionSummary strong").textContent(), "第 1 轮 · 已提交");
+        assert.equal(await execution.locator("#diagnosisExecutionSummary small").textContent(), "计划 #101");
+        assert.deepEqual(await execution.locator("ol li").first().locator("small").allTextContents(),
+          ["基准窗 · 10 月 15–21 日 · 37.58%", "当前窗 · 10 月 22–28 日 · 28.63%"]);
+        assert.equal(await execution.locator("ol li").nth(1).locator("small").textContent(), proposal.rule_id);
+        await page.screenshot({ path: path.join(output, "advertising-review-trace.png") });
+        await execution.getByRole("button", { name: "复制 Trace ID" }).click();
+        await execution.getByText("已复制", { exact: true }).waitFor();
+        assert.equal(await page.evaluate(() => navigator.clipboard.readText()), proposal.source_trace_id);
+        await page.setViewportSize({ width: 390, height: 844 });
+        await page.locator("#diagnosisExecution:modal").waitFor({state: "visible"});
+        await page.keyboard.press("Escape");
+        await execution.waitFor({state: "hidden"});
+        assert.equal(await execution.isVisible(), false);
+        assert.equal(await trigger.evaluate(element => document.activeElement === element), true);
+        await page.setViewportSize({ width: 1440, height: 1000 });
+        report.copied_trace_id = proposal.source_trace_id;
+      }
       assert.match(await round.locator(".diagnosis-review-evidence").textContent(), /CTR 基准/);
       const citation = round.locator(".diagnosis-citations summary").first();
+      await round.getByText("查看依据", { exact: true }).click();
       await citation.click();
       await page.getByText("两个可比窗口各达到 1,000 次计划曝光", { exact: false }).last().waitFor();
       // The original is shown in the inline citation panel; preserve its evidence.
@@ -100,6 +138,10 @@ async function run() {
     const missing = page.locator(".diagnosis-round").nth(2);
     await missing.locator('.diagnosis-status[data-state="done"]').waitFor();
     assert.match(await missing.locator(".diagnosis-gaps").textContent(), /缺窗\/覆盖不全/);
+    assert.equal(await missing.locator(".diagnosis-comparison").isVisible(), false);
+    await missing.getByRole("button", { name: "执行记录" }).click();
+    assert.deepEqual(await page.locator("#diagnosisExecution ol li > strong").allTextContents(), ["保存复核结果"]);
+    await page.keyboard.press("Escape");
     await missing.screenshot({ path: path.join(output, "missing-window.png") });
     report.cases.push("homepage displays missing date coverage explicitly");
     report.current_case = null;

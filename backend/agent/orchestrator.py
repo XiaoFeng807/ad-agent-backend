@@ -145,6 +145,7 @@ class OrchestratorAgent:
                         if not execution.reserve("tool"):
                             step["error_code"] = "budget_exhausted_or_cancelled"
                             return {"success": False, "error_code": step["error_code"]}
+                        execution.require_session(trace_id, "tool_read", role=role, tool_call_id=tool_call_id)
                     result = search_conversation_tool(
                         query, user_id, through_message_id=through_message_id, snapshot=conversation_snapshot,
                         **({"conversation_id": group_run.conversation_id} if group_run else {}),
@@ -152,7 +153,8 @@ class OrchestratorAgent:
                     if execution is not None and not execution.active():
                         raise ExecutionStopped(execution.stop_code())
                     return result
-                except ExecutionStopped:
+                except ExecutionStopped as error:
+                    step["error_code"] = error.code
                     raise
                 except ValueError:
                     step["error_code"] = "invalid_tool_arguments"
@@ -271,6 +273,8 @@ class OrchestratorAgent:
                 return steps
         except ContextBudgetExceeded:
             pass
+        except ExecutionStopped:
+            raise
         except Exception as e:
             print("  [Plan] 规划失败:", e)
         return []
@@ -294,7 +298,7 @@ class OrchestratorAgent:
                 reply = product_evidence_reply.reply(
                     user_msg, user_id, save_receipt=kwargs["product_evidence_sink"],
                     check_session=kwargs["product_evidence_session"], trace_id=trace_id,
-                    cancelled=lambda: execution is not None and not execution.active(),
+                    cancelled=lambda: execution is not None and not execution.active(), budget=budget,
                 )
                 if execution is not None and (code := execution.stop_code()):
                     raise ExecutionStopped(code)
@@ -315,9 +319,13 @@ class OrchestratorAgent:
             return "涉及充值、修改预算等敏感操作，我无法直接执行。建议你前往后台【预算管理】页面手动操作。"
         if detect == "injection":
             return "我是智能投放助手，只能回答广告投放相关的问题。"
-        conditional, goal = parse_detail_condition(user_msg) if group_run else (False, None)
         weekly_review = bool(group_run and weekly_review_requested(user_msg))
-        review, review_goal = parse_review_goal(user_msg) if group_run and goal is None else (False, None)
+        review, review_goal = False, None
+        conditional, goal = False, None
+        if not diagnosis and (execution is not None or scoped_tools) and not weekly_review:
+            conditional, goal = parse_detail_condition(user_msg)
+            if goal is None:
+                review, review_goal = parse_review_goal(user_msg)
         if review and review_goal is None:
             add_trace_step(trace_id, "conditional_detail", "clarification_required", role="orchestrator",
                            error_code="review_ambiguous_request", evidence={"executed": False})
@@ -327,10 +335,12 @@ class OrchestratorAgent:
             add_trace_step(trace_id, "conditional_detail", "clarification_required", role="orchestrator",
                            error_code="conditional_ambiguous_request", evidence={"executed": False})
             return "请明确两条计划的 #编号、同一日期窗和 CTR 比较条件，例如「达到 20%」，以便先核验指标再判断是否读取详情。"
+        if (goal or review_goal or weekly_review) and execution is None:
+            raise ExecutionStopped("execution_budget_required")
         home_react = HomeReAct(user_id, self.client, execution, trace_id, group_run=group_run,
                               detail_goal=goal, review_goal=review_goal,
                               alert_requested_at=(group_run.requested_at or alert_review.now()) if weekly_review else None,
-                              evidence_sink=kwargs.get("group_evidence_sink"),
+                              evidence_sink=kwargs.get("group_evidence_sink") or kwargs.get("home_review_evidence_sink"),
                               request=user_msg) if execution is not None and not diagnosis else None
         json_only = bool(home_react and json_only_requested(user_msg))
         condition = home_react.condition if home_react else None
@@ -487,7 +497,7 @@ class OrchestratorAgent:
                 msg = resp.choices[0].message
                 if msg.tool_calls:
                     calls = [tool_call_fields(tc) for tc in msg.tool_calls]
-                    if home_react and (scoped_tools or followup
+                    if home_react and (condition or scoped_tools or followup
                                        or any(name in HOME_TOOLS for _, name, _ in calls)):
                         used_home_tools = True
                         ids = [call_id for call_id, _, _ in calls]
@@ -625,7 +635,7 @@ class OrchestratorAgent:
                     )
                 return home_react.finish("", json_only=json_only)
 
-            if condition and home_react.stop_reason == "goal_satisfied":
+            if condition:
                 return home_react.finish("", json_only=json_only)
             if home_react and home_react.missing_plans():
                 return home_react.finish_partial_plans(json_only=json_only)
@@ -684,7 +694,7 @@ class OrchestratorAgent:
         except ContextBudgetExceeded:
             if home_react:
                 home_react.trace_decision("stop", "context_budget_exceeded")
-            if independent_review:
+            if condition:
                 return home_react.finish("", json_only=json_only)
             if home_react and home_react.missing_plans() and used_home_tools:
                 return home_react.finish_partial_plans(json_only=json_only)
@@ -698,7 +708,7 @@ class OrchestratorAgent:
                 return ""
             if not trace_id:
                 print(f"  [Orchestrator] 异常: {e}")
-            if used_home_tools or scoped_tools:
+            if condition or used_home_tools or scoped_tools:
                 raise _ReplyFallbackFailed("home_react_reply_failed") from e
             try:
                 return self._data_agent_reply(messages, user_id, trace_id, short_term_context, diagnosis, budget)
@@ -829,9 +839,10 @@ class OrchestratorAgent:
             except Exception:
                 yield json.dumps({"type": "text", "content": "抱歉，系统暂时无法处理您的请求，请稍后再试。"}, ensure_ascii=False)
                 yield json.dumps({"type": "done"})
-    def save_conversation(self, user_id, role, content, priority=1, *, chat_view_id=None, user_message_id=None):
+    def save_conversation(self, user_id, role, content, priority=1, *, chat_view_id=None, user_message_id=None,
+                          validate=None):
         return self.data_agent.save_conversation(user_id, role, content, priority, chat_view_id=chat_view_id,
-                                                 user_message_id=user_message_id)
+                                                 user_message_id=user_message_id, validate=validate)
     def get_history(self, user_id):
         return self.data_agent.get_history(user_id)
 

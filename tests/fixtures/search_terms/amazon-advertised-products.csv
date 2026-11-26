@@ -1,0 +1,4 @@
+Shop ID,Marketplace,Advertiser ID,Campaign ID,Campaign Name,Ad Group ID,Ad Group Name,Start Date,End Date,Advertised SKU,Advertised ASIN
+search-terms-test,US,PROFILE-US,SP-101,Lunch storage,AG-101,Lunch bags,2026-11-09,2026-11-10,SP-LUNCH,B012345678
+search-terms-test,US,PROFILE-US,SP-101,Lunch storage,AG-102,Assorted bags,2026-11-09,2026-11-10,SP-LUNCH,B012345678
+search-terms-test,US,PROFILE-US,SP-101,Lunch storage,AG-102,Assorted bags,2026-11-09,2026-11-10,SP-CONTROL,B087654321

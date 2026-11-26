@@ -11,7 +11,7 @@ from pathlib import Path
 from zipfile import ZipFile
 
 from backend.config.config import settings
-from backend.database import orders
+from backend.database import order_sales, orders
 from backend.database.database import get_db
 
 
@@ -97,9 +97,12 @@ def main():
     parser.add_argument("source", choices=[orders.OLIST, orders.AMAZON])
     parser.add_argument("--username", required=True, help="existing application account to grant shop access")
     parser.add_argument("--source-dir", type=Path, default=SOURCE_DIR)
+    parser.add_argument("--sales-config", type=Path, help="trusted Amazon site mappings and coverage JSON")
     args = parser.parse_args()
     if settings.DIAGNOSIS_MYSQL_ENABLED:
         parser.error("订单功能使用 SQLite 应用库")
+    if args.sales_config and args.source != orders.AMAZON:
+        parser.error("销量发布配置仅适用于 Amazon 订单")
     shop_id = SELLER if args.source == orders.OLIST else settings.AMAZON_ORDERS_SHOP_ID.strip()
     if not shop_id or len(shop_id) > 128 or not shop_id.isascii() or not all(
         char.isalnum() or char in "-_" for char in shop_id
@@ -110,10 +113,23 @@ def main():
         if conn.execute("SELECT 1 FROM sqlite_schema WHERE type='table' AND name='users'").fetchone() is None:
             parser.error("请先启动 FastAPI 初始化应用库和账号")
         orders.init_schema(conn)
-        provision(conn, args.source, shop_id, args.username)
-        result = import_olist(conn, args.source_dir) if args.source == orders.OLIST else {
-            "source": args.source, "shop_id": shop_id, "access_granted": True,
-        }
+        if args.sales_config:
+            config = json.loads(args.sales_config.read_bytes())
+            try:
+                with conn:
+                    conn.execute("BEGIN IMMEDIATE")
+                    user = conn.execute("SELECT id FROM users WHERE username=?", (args.username,)).fetchone()
+                    if user is None:
+                        raise PermissionError("请指定一个已存在的应用账号")
+                    order_sales.register_site(conn, user["id"], args.source, shop_id, **config)
+            except (TypeError, ValueError, KeyError, PermissionError) as error:
+                parser.error(str(error))
+            result = {"source": args.source, "shop_id": shop_id, "marketplace_id": config["marketplace_id"]}
+        else:
+            provision(conn, args.source, shop_id, args.username)
+            result = import_olist(conn, args.source_dir) if args.source == orders.OLIST else {
+                "source": args.source, "shop_id": shop_id, "access_granted": True,
+            }
     print(json.dumps(result))
 
 

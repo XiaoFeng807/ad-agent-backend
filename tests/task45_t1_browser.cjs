@@ -26,7 +26,8 @@ async function run() {
     browser = await chromium.launch(browserOptions());
     db = new DatabaseSync(databasePath, { readOnly: true });
     report.browser = browser.version();
-    page = await browser.newPage({ baseURL: origin, viewport: { width: 1360, height: 1050 }, timezoneId: "Asia/Shanghai" });
+    page = await browser.newPage({ baseURL: origin, viewport: { width: 1360, height: 1050 }, timezoneId: "Asia/Shanghai",
+      ...(scenario.record ? { recordVideo: { dir: folder, size: { width: 1360, height: 1050 } } } : {}) });
     page.setDefaultTimeout(95000);
     page.on("pageerror", error => report.pageErrors.push(error.message));
     await page.addInitScript(() => {
@@ -36,8 +37,16 @@ async function run() {
         const started = performance.now();
         const response = await fetch(url, options);
         if (url === "/api/chat/stream") {
-          const item = {};
+          const item = { progress: [] };
           window.task45Sse.push(item);
+          const observe = new MutationObserver(() => {
+            const visible = Array.from(document.querySelectorAll('[data-listing-stage]')).at(-1);
+            if (visible?.innerText && item.progress.at(-1)?.text !== visible.innerText) {
+              item.progress.push({ text: visible.innerText, ms: performance.now() - started });
+            }
+          });
+          const messages = document.getElementById("chatMessages");
+          if (messages) observe.observe(messages, { childList: true, subtree: true });
           const reader = response.clone().body.getReader();
           const decoder = new TextDecoder();
           const consume = async () => {
@@ -52,15 +61,17 @@ async function run() {
               pending = lines.pop();
               for (const line of lines.filter(line => line.startsWith("data: "))) {
                 const event = JSON.parse(line.slice(6));
+                (item.timeline ||= []).push({ type: event.type, ms: performance.now() - started });
                 if (["done", "error", "stopped", "superseded"].includes(event.type)) {
                   item.terminalMs = performance.now() - started;
                 }
               }
               if (done) break;
             }
+            observe.disconnect();
             item.raw = raw;
           };
-          consume().catch(error => { item.error = error.message; });
+          consume().catch(error => { observe.disconnect(); item.error = error.message; });
         }
         return response;
       };
@@ -83,7 +94,7 @@ async function run() {
     await page.locator('[data-page="chat"]').click();
     const headers = { Authorization: "Bearer " + login.data.token };
     const created = page.waitForResponse(response => matches(response, "POST", groups));
-    await submitGroupCreation(page, "TASK-045-T1 " + scenario.id);
+    await submitGroupCreation(page, scenario.title || "TASK-045-T1 " + scenario.id);
     const conversation = (await (await created).json()).data.conversation_id;
     const groupPath = groups + "/" + conversation;
     assert.ok(conversation);
@@ -124,6 +135,7 @@ async function run() {
       const card = answer.locator('[data-result-kind="listing"]');
       report.listingCards = await card.count();
       await answer.screenshot({ path: path.join(folder, "answer.png") });
+      if (scenario.record) await page.waitForTimeout(1500);
       if (scenario.inspect_evidence) {
         assert.equal(report.listingCards, 0);
         await answer.locator('[data-result-kind="evidence"]').click();
@@ -146,7 +158,18 @@ async function run() {
         if (report.pending.body.data?.state === "pending" && !report.pending.body.data.approval_blocked) {
           await expect(button).toBeVisible();
         }
+        if (scenario.review) {
+          const sources = page.locator('#workbenchDetail .workbench-listing-source');
+          await expect(sources).toHaveCount(5);
+          for (const source of await sources.all()) {
+            await source.locator('summary').click();
+            await expect(source.locator('p')).toBeVisible();
+          }
+          report.preview = await page.locator('#workbenchDetail').innerText();
+          report.reviewBeforeApproval = (await page.request.get(actionPath + "/review", { headers })).status();
+        }
         await page.locator("#workbenchDetail").screenshot({ path: path.join(folder, "pending.png") });
+        if (scenario.record) await page.waitForTimeout(2500);
         report.approveButtons = await button.count();
         report.sqlBeforeApproval = listingSnapshot(db);
         if (scenario.force_confirm) {
@@ -184,6 +207,7 @@ async function run() {
           await expect(section).toHaveAttribute("data-state", "approved");
           report.sqlAfterApproval = listingSnapshot(db);
           await section.screenshot({ path: path.join(folder, "approved.png") });
+          if (scenario.record) await page.waitForTimeout(2000);
           await page.reload();
           const refresh = page.waitForResponse(response => matches(response, "GET", actionPath));
           await card.click();
@@ -193,6 +217,25 @@ async function run() {
           report.refreshedReceipt = await section.innerText();
           report.sqlAfterRefresh = listingSnapshot(db);
           await section.screenshot({ path: path.join(folder, "refresh.png") });
+          if (scenario.record) await page.waitForTimeout(1500);
+          if (scenario.review) {
+            const duplicate = await page.request.post(actionPath + "/confirm", { headers });
+            report.duplicate = { method: "POST", path: actionPath + "/confirm", status: duplicate.status(),
+              body: await duplicate.json() };
+            report.sqlBeforeReview = listingSnapshot(db);
+            const reviewPath = actionPath + "/review";
+            const readReview = page.waitForResponse(response => matches(response, "GET", reviewPath));
+            await section.getByRole("button", { name: "查看复盘", exact: true }).click({ timeout: 4000 });
+            report.review = await packet(await readReview);
+            const review = section.locator('[data-listing-review]');
+            await expect(review).toHaveAttribute("data-listing-review", /complete|incomplete/);
+            report.reviewText = await review.innerText();
+            report.reviewPoints = await review.locator('[data-date]').evaluateAll(nodes =>
+              nodes.map(node => ({ date: node.dataset.date, units: node.dataset.units })));
+            report.sqlAfterReview = listingSnapshot(db);
+            await page.locator('#workbenchDetail').screenshot({ path: path.join(folder, "review.png") });
+            if (scenario.record) await page.waitForTimeout(3000);
+          }
         }
       } else {
         report.approveButtons = await page.getByRole("button", { name: approvalLabel, exact: true }).count();
@@ -204,6 +247,13 @@ async function run() {
     process.exitCode = 1;
   } finally {
     db?.close();
+    if (page && scenario.record) {
+      const video = page.video();
+      await page.context().close();
+      await video.saveAs(path.join(folder, "recording.webm"));
+      await video.delete();
+      report.recording = "recording.webm";
+    }
     await browser?.close();
     await fs.writeFile(path.join(folder, "browser.json"), JSON.stringify(report, null, 2) + "\n");
   }

@@ -1,0 +1,149 @@
+{
+  "profile": {
+    "model": "glm-4.5-air",
+    "options": {
+      "temperature": 0,
+      "max_tokens": 900,
+      "timeout": 30
+    },
+    "sdk_max_retries": 0
+  },
+  "profile_sha256": "cbbf1f8c4ae19ae0c7f9848150cf16f1dd728f70c57f85842d8c843ec020177f",
+  "prompt_sha256": "731b25c1b702502e9e27c0e2bc27b095b327b1a2fb79c83794aa2a24da38e3f6",
+  "readback_sha256": "4771eeea449486e6fafe15afb47f1573ed9d5615979553d7a8be88a421fd6721",
+  "sha256": {
+    "tests/fixtures/product_generation_r4b/plan.json": "ccfa0ab5ca7b4cb795196f876c6b200d055d179550bd14c60b644c0225be2752",
+    "tests/fixtures/product_generation_r4b/rubric.md": "2fcd914de831e76ea34fdbace5ac2c932540b90f6cbf8564757f6cbd16968558",
+    "tests/fixtures/product_generation_r4b/sources/frame-clips.md": "ea4b11c6cd8e4d5ff769aaac25631c89f962f5964ac11db89f5fa7a8a3c2e83b",
+    "tests/fixtures/product_generation_r4b/sources/frame-gap-a.md": "73f7673f485906e203b1d8f6374e23cf4d19eef4adae4ca72a70fa17a83cc782",
+    "tests/fixtures/product_generation_r4b/sources/frame-gap-b.md": "97afb8e90a22b901b6e0f77c307d3785c12cd49cc91cd07c54fc04d2ef1c01d3",
+    "tests/fixtures/product_generation_r4b/sources/frame-neighbor.tsv": "0f0516acaba2b4188049020d8c7960769cdbc148b58dbefc1dd190e49e48043f",
+    "tests/fixtures/product_generation_r4b/sources/frame-obsolete.tsv": "84d189bc09bffca3a5f53d508ce668cc7e01be3189767fb444a0b924db6ef371",
+    "tests/fixtures/product_generation_r4b/sources/frame-spec.tsv": "c238d5fc61bd8bb06cfc9e9ecd0107478b0b8c733388cd90e1c6b3af9570f049",
+    "tests/fixtures/product_generation_r4b/sources/frame-weight.md": "a3e03302e7afa3c99bffd1faf3be2a84ad37ab62dccb88b9660638c65025b8b7",
+    "tests/fixtures/product_generation_r4b/sources/swing-material.md": "87fc4f98ea214a22d2b30b1006435e112781bacc812381bcde1d1a8bafda1102",
+    "tests/fixtures/product_generation_r4b/sources/swing-prep.md": "fd6064adba23811527f1a89de7d1d557a117d0ac6ec2b9c0cfb31f4b19ff4838",
+    "tests/fixtures/product_generation_r4b/sources/swing-spec.tsv": "d40c89a0d0451e967b32eb5b85231422e272defcbf6623d99fb8e889d229f12b",
+    "tests/fixtures/product_generation_r4b/sources/swing-travel-a.md": "2d4a6b15a1ccc5a0f11d3c4751690087cda73800e7094c212289a96a4b167475",
+    "tests/fixtures/product_generation_r4b/sources/swing-travel-b.md": "fd6d0af8ca320f248dad50836ca15550166368cedbced318864609938f7ab97e",
+    "artifacts/TASK-044-T2-RUN/v3/versions.json": "66220f04206dc787d54642fc8266a89422751a7ef0e80fc696a5c6c3ddbbfbc7",
+    "scripts/eval_product_generation_r4b.py": "819fdd1d2aae4d96ce45c4aa3cd7e242b3236e744901e37381d4f89b8f1a70f2",
+    "scripts/eval_product_sealed.py": "da7b8b35c300fe89ffe356c8369c43ef264141c6044c36d368ad78d2660b7769",
+    "backend/agent/llm_provider.py": "fa6ab184ba8a331139cd89f184128e34b802030e023e0fabb3b59022487258c6"
+  },
+  "inputs": {
+    "A01": {
+      "evidence": [
+        {
+          "id": 1,
+          "text": "观察口内宽\t63\tmm\t遮光片完全抽出\t量取开口内沿"
+        }
+      ],
+      "sdk_payload_sha256": "6fdf81543ef288f2366c6c1b67ad61a2cbd0b5c8d820e2f4a6a6999266c15ea1"
+    },
+    "A02": {
+      "evidence": [
+        {
+          "id": 1,
+          "text": "观察口内宽\t63\tmm\t遮光片完全抽出\t量取开口内沿"
+        },
+        {
+          "id": 2,
+          "text": "## 11 | M11 空框称量\n空框质量为 420 g，称量前取下两张底衬。"
+        }
+      ],
+      "sdk_payload_sha256": "5748921d347a026e15e736a085f9d48cd3655f7153e8a5f1f72ae38444a87d8b"
+    },
+    "A03": {
+      "evidence": [
+        {
+          "id": 1,
+          "text": "边夹数量\t3\t枚\t按手册 M27 操作\t固定边缘用"
+        },
+        {
+          "id": 2,
+          "text": "## 27 | M27 边夹安装\n待底衬完全干燥，将比对框平放在无纹台面上，先对齐上沿，再按对角顺序扣紧边夹。"
+        }
+      ],
+      "sdk_payload_sha256": "b0b812198f480b4254a6adb534c0a1fad3e3298281b7175e7ec8d16447e93e39"
+    },
+    "A04": {
+      "evidence": [
+        {
+          "id": 1,
+          "text": "## 31 | M31 遮光片间隙（出厂规程）\n比对框竖直，遮光片扣至第二档时，遮光片与色卡之间的间隙是 6 mm。"
+        },
+        {
+          "id": 2,
+          "text": "## 34 | M34 遮光片间隙（维护手册）\n比对框竖直，遮光片扣至第二档时，遮光片与色卡之间的间隙是 8 mm。"
+        }
+      ],
+      "sdk_payload_sha256": "ba980ee8e61ff7676c80a6258c92a582c9b823795f9e651f52ef6be76b3ad3a1"
+    },
+    "A05": {
+      "evidence": [
+        {
+          "id": 1,
+          "text": "观察口内宽\t63\tmm\t遮光片完全抽出\t量取开口内沿"
+        }
+      ],
+      "sdk_payload_sha256": "1364723f6c134e970e94d62fa0c0a17308c1bfcd955edcb0bda6c13928b656b1"
+    },
+    "B01": {
+      "evidence": [
+        {
+          "id": 1,
+          "text": "## 46 | M46 摆杆准备\n先断开拨杆驱动，再使摆座对准水平刻线。必须让摆杆连续完成两次自由摆动，随后才可开始计时。"
+        },
+        {
+          "id": 2,
+          "text": "摆杆稳定等待时间\t24\ts\t按手册 M46 准备\t最后一次摆动完成后开始计时"
+        }
+      ],
+      "sdk_payload_sha256": "1be98225564608db65bf602893683817cd90ba341635406a4a077b5b13d9d77c"
+    },
+    "B02": {
+      "evidence": [
+        {
+          "id": 1,
+          "text": "## 56 | M56 指针回程（检查手册）\nPS-18 摆幅校验座在自由摆动模式且零位锁解除时，指针回程为 7 mm。"
+        },
+        {
+          "id": 2,
+          "text": "## 51 | M51 指针回程（校验记录）\nPS-18 摆幅校验座在自由摆动模式且零位锁解除时，指针回程为 5 mm。"
+        }
+      ],
+      "sdk_payload_sha256": "0fca416bf950db0fbd63d7809fbb625668d26cbb0238e1a4bd47097623b5bd2f"
+    },
+    "B03": {
+      "evidence": [
+        {
+          "id": 1,
+          "text": "摆杆稳定等待时间\t24\ts\t按手册 M46 准备\t最后一次摆动完成后开始计时"
+        },
+        {
+          "id": 2,
+          "text": "## 46 | M46 摆杆准备\n先断开拨杆驱动，再使摆座对准水平刻线。必须让摆杆连续完成两次自由摆动，随后才可开始计时。"
+        }
+      ],
+      "sdk_payload_sha256": "f4250fc1fed71d6a8d22a81e2797b241f0dd0390ecde8550bcf60cfcfe35768e"
+    },
+    "B04": {
+      "evidence": [],
+      "sdk_payload_sha256": "26852ea1c519a237ec444c83856e60c3fbf2bd0915b44665069533e69116c687"
+    },
+    "B05": {
+      "evidence": [
+        {
+          "id": 1,
+          "text": "校验窗高\t76\tmm\t校验窗打开至止挡\t量取窗口内沿"
+        },
+        {
+          "id": 2,
+          "text": "## 19 | M19 标尺材质\n摆幅校验座的刻度标尺采用磷青铜。"
+        }
+      ],
+      "sdk_payload_sha256": "6374a07efbdd8b12bd760b5caad3c0afde80ad1746ac0827f13602fc0f40c106"
+    }
+  }
+}

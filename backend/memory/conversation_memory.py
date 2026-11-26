@@ -45,16 +45,16 @@ def _document(user_msg, ai_reply):
     return f"用户: {user_msg.strip()[:300]}\nAI: {ai_reply.strip()[:500]}"
 
 
-def _committed_messages(conn, user_id, user_message_id, assistant_message_id):
+def _committed_messages(conn, user_id, user_message_id, assistant_message_id, *, visible_only=False):
     if not (_message_id(user_message_id) and _message_id(assistant_message_id)
             and user_message_id < assistant_message_id):
         return None
-    return chat_storage.committed_turn(conn, user_id, user_message_id, assistant_message_id)
+    return chat_storage.committed_turn(conn, user_id, user_message_id, assistant_message_id, visible_only=visible_only)
 
 
 def _committed_document(user_id, user_message_id, assistant_message_id):
     with closing(chat_storage.connect(read_only=True)) as conn:
-        messages = _committed_messages(conn, user_id, user_message_id, assistant_message_id)
+        messages = _committed_messages(conn, user_id, user_message_id, assistant_message_id, visible_only=True)
     return _document(*messages) if messages else None
 
 
@@ -297,13 +297,14 @@ def search_conversation(query, user_id, top_k=3, *, through_message_id=None, sna
         try:
             if conversation_id is not None:
                 with closing(chat_storage.connect(read_only=True)) as conn:
-                    original = chat_groups.committed_turn(conn, user_id, conversation_id, question_id, answer_id)
+                    original = chat_groups.committed_turn(conn, user_id, conversation_id, question_id, answer_id,
+                                                          visible_only=True)
                 verified = (_document(*original)
                             if original and meta.get("content_sha256") == _content_digest(original) else None)
             elif snapshot is None:
                 verified = _committed_document(user_id, question_id, answer_id)
             else:
-                original = _committed_messages(snapshot.connection, user_id, question_id, answer_id)
+                original = _committed_messages(snapshot.connection, user_id, question_id, answer_id, visible_only=True)
                 verified = (_document(*original)
                             if original and meta.get("content_sha256") == _content_digest(original) else None)
         except Exception:

@@ -9,3 +9,9 @@ CREATE TABLE IF NOT EXISTS conversation_turns (
     FOREIGN KEY (user_message_id) REFERENCES conversations(id),
     FOREIGN KEY (assistant_message_id) REFERENCES conversations(id)
 ) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS conversation_review_receipts (
+    assistant_message_id BIGINT PRIMARY KEY,
+    receipt JSON NOT NULL,
+    FOREIGN KEY (assistant_message_id) REFERENCES conversations(id)
+) ENGINE=InnoDB;

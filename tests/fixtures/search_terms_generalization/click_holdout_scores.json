@@ -1,0 +1,16 @@
+{
+  "cases": {
+    "fold-19-support": {"action": "observe", "code": "sample", "source_rows": [], "demand": {"product_type": "fold down screen mount", "attribute": "vesa", "value": "75x75", "unit": "mm", "conditions": {}}},
+    "fold-19-hidden-conflict": {"action": "observe", "code": "sample", "source_rows": [], "demand": {"product_type": "fold down screen mount", "attribute": "vesa", "value": "75x75", "unit": "mm", "conditions": {}}},
+    "fold-20-support": {"action": "title", "code": "supported_missing", "source_rows": [2, 3], "demand": {"product_type": "fold down screen mount", "attribute": "vesa", "value": "75x75", "unit": "mm", "conditions": {}}},
+    "fold-20-conflict": {"action": "review", "code": "fact_conflict", "source_rows": [2, 3], "demand": {"product_type": "fold down screen mount", "attribute": "vesa", "value": "75x75", "unit": "mm", "conditions": {}}},
+    "fold-20-empty": {"action": "observe", "code": "unverified", "source_rows": [], "demand": {"product_type": "fold down screen mount", "attribute": "vesa", "value": "75x75", "unit": "mm", "conditions": {}}},
+    "fold-20-partial": {"action": "observe", "code": "unverified", "source_rows": [], "demand": {"product_type": "fold down screen mount", "attribute": "vesa", "value": "75x75", "unit": "mm", "conditions": {}}},
+    "edge-19-support": {"action": "observe", "code": "sample", "source_rows": [], "demand": {"product_type": "desktop edge monitor arm", "attribute": "vesa", "value": "100x100", "unit": "mm", "conditions": {}}},
+    "edge-19-hidden-conflict": {"action": "observe", "code": "sample", "source_rows": [], "demand": {"product_type": "desktop edge monitor arm", "attribute": "vesa", "value": "100x100", "unit": "mm", "conditions": {}}},
+    "edge-20-support": {"action": "title", "code": "supported_missing", "source_rows": [2, 3], "demand": {"product_type": "desktop edge monitor arm", "attribute": "vesa", "value": "100x100", "unit": "mm", "conditions": {}}},
+    "edge-20-conflict": {"action": "review", "code": "fact_conflict", "source_rows": [2, 3], "demand": {"product_type": "desktop edge monitor arm", "attribute": "vesa", "value": "100x100", "unit": "mm", "conditions": {}}},
+    "edge-20-empty": {"action": "observe", "code": "unverified", "source_rows": [], "demand": {"product_type": "desktop edge monitor arm", "attribute": "vesa", "value": "100x100", "unit": "mm", "conditions": {}}},
+    "edge-19-mixed": {"action": "observe", "code": "unattributed", "source_rows": [], "demand": {"product_type": "desktop edge monitor arm", "attribute": "vesa", "value": "100x100", "unit": "mm", "conditions": {}}}
+  }
+}

@@ -9,6 +9,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from threading import Event
 from time import monotonic, sleep
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
@@ -16,7 +17,7 @@ from fastapi.testclient import TestClient
 from backend import observability
 from backend.agent import product_evidence_reply
 from backend.database import database
-from backend.rag import product_chat_search
+from backend.rag import product_candidate_admission, product_chat_search
 from backend.rag import product_evidence as rag
 from backend.rag.product_rerank_queue import RerankQueue
 from backend.rag.product_query_expansion import alias_query, catalog_queries, merge_channels, part_queries
@@ -41,6 +42,20 @@ class FixedEmbedding:
 
 
 class QueryExpansionTests(unittest.TestCase):
+    def test_candidate_selection_requires_exclusive_spec_condition_in_the_request(self):
+        quote = "Maximum temperature\t72\t°C\tLaboratory test only\tExample product"
+        source = {"location": "row:2", "quote": quote}
+        proposal = [{"id": 1, "quote": "Maximum temperature"}]
+        self.assertEqual(product_candidate_admission._verified_sources(proposal, {1: source}, "What is the operating limit?"), [])
+        self.assertEqual(product_candidate_admission._verified_sources(
+            proposal, {1: source}, "What is the limit in the laboratory test?"), [source])
+
+    def test_candidate_selection_does_not_confuse_upper_and_lower_spec_limits(self):
+        source = {"location": "row:11", "quote": "Maximum input voltage\t72\tV\tSteady input\tExample product"}
+        proposal = [{"id": 2, "quote": "Maximum input voltage"}]
+        self.assertEqual(product_candidate_admission._verified_sources(proposal, {2: source}, "最低输入电压是多少？"), [])
+        self.assertEqual(product_candidate_admission._verified_sources(proposal, {2: source}, "What is the upper limit?"), [source])
+
     def test_chat_request_keeps_question_after_scope_line(self):
         english = "What is the beam angle at half peak intensity?"
         for separator in ("\n", "  \r\n"):
@@ -303,6 +318,68 @@ class ProductEvidenceTests(unittest.TestCase):
         self.assertEqual(commit["final_citation_ids"], step.get("citation_ids", []))
         answer, = [event["content"] for event in events if event["type"] == "text"]
         return answer, step, trace_id
+
+    def use_unconfigured_release(self):
+        release = {**self.pack["releases"][0], "version": "unconfigured", "evidence_rules": []}
+        with closing(database.get_db()) as conn:
+            rag.import_release(conn, release, FIXTURES / "sources")
+            self.activate(conn, release["version"])
+        self.enterContext(patch.object(product_chat_search.product_candidate_admission, "enabled", return_value=True))
+
+    def test_candidate_selection_preserves_verified_part_and_rejects_invalid_citation(self):
+        self.use_unconfigured_release()
+        missing_question = "能用微波炉加热内胆吗？"
+
+        def select(*args, **payload):
+            submitted = json.loads(payload["messages"][-1]["content"])
+            self.assertEqual(submitted["question"], QUERY + missing_question)
+            if payload["step"] == "product_candidate_verification":
+                self.assertEqual([item["id"] for item in submitted["requests"]], [1])
+                reply = {"verified": [1]}
+            else:
+                source = next(item for item in submitted["sources"] if "The inner liner that touches the drink" in item["text"])
+                reply = {"parts": [
+                    {"clauses": [1], "status": "supported", "sources": [{"id": source["id"], "quote": "304 stainless steel"}]},
+                    {"clauses": [2], "status": "supported", "sources": [{"id": source["id"], "quote": "safe in any microwave"}]},
+                ]}
+            return SimpleNamespace(choices=[SimpleNamespace(finish_reason="stop",
+                                                           message=SimpleNamespace(content=json.dumps(reply)))])
+
+        with patch.object(product_chat_search.product_candidate_admission, "create_completion", side_effect=select) as call:
+            answer, trace, _ = self.chat_trace(CHAT + missing_question)
+            self.assertEqual(call.call_count, 2)
+        self.assertEqual(trace["status"], "partial_support")
+        self.assertEqual([check["status"] for check in trace["fact_checks"]], ["verified", "missing"])
+        self.assertEqual(trace["fact_checks"][1]["reason"], "source_unverified")
+        self.assertLess(answer.index("304 stainless steel"), answer.index("证据不足"))
+        self.assertIn(missing_question.rstrip("？"), answer)
+        self.assertNotIn("safe in any microwave", answer)
+        cite, = trace["citation_ids"]
+        self.assertEqual(self.original(cite, self.owner).status_code, 200)
+        self.assertEqual(self.original(cite, self.other).status_code, 404)
+        history = self.client.get("/api/chat/history", headers=self.owner).json()["data"]
+        self.assertIn(cite, history[-1]["content"])
+        self.assertNotIn("304 stainless steel", history[-1]["content"])
+
+    def test_candidate_selection_rechecks_scope_after_provider_returns(self):
+        self.use_unconfigured_release()
+
+        def switch_version(*args, **payload):
+            submitted = json.loads(payload["messages"][-1]["content"])
+            source = next(item for item in submitted["sources"] if "The inner liner that touches the drink" in item["text"])
+            with closing(database.get_db()) as conn:
+                self.activate(conn, "v2")
+            reply = {"parts": [{"clauses": [1], "status": "supported",
+                                "sources": [{"id": source["id"], "quote": "304 stainless steel"}]}]}
+            return SimpleNamespace(choices=[SimpleNamespace(finish_reason="stop",
+                                                           message=SimpleNamespace(content=json.dumps(reply)))])
+
+        with patch.object(product_chat_search.product_candidate_admission, "create_completion", side_effect=switch_version) as call:
+            answer, trace, _ = self.chat_trace()
+            call.assert_called_once()
+        self.assertEqual(answer, "当前账号无法访问该范围的商品资料，请核对店铺、站点和 SKU。")
+        self.assertEqual(trace["status"], "denied")
+        self.assertFalse(trace.get("citation_ids"))
 
     def use_rerank(self, factory, *, queue_size=1, wait=200, inference=1000):
         self.enterContext(patch.object(database.settings, "PRODUCT_RERANK_ENABLED", True))

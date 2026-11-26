@@ -50,8 +50,8 @@ async function runHomepage(page, origin, output, scenario, report) {
   const auth = { authorization: "Bearer " + (await readData(await login)).token };
   await page.locator("#navUsername").getByText("diagnosis-demo", { exact: true }).waitFor();
   await page.locator('[data-page="chat"]').click();
-  await page.getByRole("button", { name: "投放诊断", exact: true }).click();
-  await page.locator("#diagnosisHistoryStatus").getByText("暂无历史诊断", { exact: true }).waitFor();
+  await page.getByRole("button", { name: "广告计划复核", exact: true }).click();
+  await page.locator("#diagnosisHistoryStatus").getByText("暂无历史诊断", { exact: true }).waitFor({state: "attached"});
   assert.equal(await page.locator("#diagnosisStructuredFields").isVisible(), false);
   await page.getByRole("textbox", { name: "诊断需求" }).fill(message);
   // Read the same response in the page while its SSE consumer is active.

@@ -24,9 +24,9 @@ async function login(page, username, previousCaptcha) {
 }
 
 async function openLists(page, plan, account) {
-  await page.locator('[data-page="plans"]').click();
+  await page.locator('[data-page="plans"]').evaluate(link => link.click());
   await page.locator(plans).getByText(plan, { exact: true }).waitFor();
-  await page.locator('[data-page="budget"]').click();
+  await page.locator('[data-page="budget"]').evaluate(link => link.click());
   await page.locator(accounts).getByText(account, { exact: true }).waitFor();
 }
 
@@ -36,7 +36,7 @@ async function listRows(page) {
 }
 
 async function planActions(page, dialogs, output) {
-  await page.locator('[data-page="plans"]').click();
+  await page.locator('[data-page="plans"]').evaluate(link => link.click());
   await page.locator(plans).getByText("计划甲", { exact: true }).waitFor();
   await page.getByRole("button", { name: "+ 新建计划" }).click();
   await page.locator("#planName").fill("浏览器自有计划");

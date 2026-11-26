@@ -8,7 +8,7 @@
 .\.venv\Scripts\python.exe -m uvicorn fast_server:app --host 127.0.0.1 --port 5010
 ```
 
-首页为 `http://127.0.0.1:5010/`，OpenAPI 为 `/docs`，健康检查为 `/api/health`。初始账号仅用于本机回环实例。远程演示使用独立库和专用账号，并处理初始化生成的默认账号。 [异地演示指南](docs/REMOTE_DEMO.md)
+首页为 `http://127.0.0.1:5010/`，OpenAPI 为 `/docs`。默认 `business` 模式可初始化空 SQLite，新库的业务账号需另外准备。本机示例账号随 README 的 `demo` 命令在独立库中创建。 [异地演示指南](docs/REMOTE_DEMO.md)
 
 ## 环境变量
 
@@ -21,6 +21,8 @@ if (!(Test-Path '.env')) { Copy-Item .env.example .env }
 
 | 配置 | 用途 |
 | --- | --- |
+| `APP_STARTUP_MODE=business` | 默认启动模式，运行原有 SQLite schema 初始化和兼容迁移。MySQL 演练沿用 `DIAGNOSIS_MYSQL_ENABLED` 与既有路由白名单。 |
+| `APP_STARTUP_MODE=demo` | 本地演示启动，需要独立 `DIAGNOSIS_SANDBOX_DB_PATH` 且关闭 MySQL。可使用无业务行的 SQLite，或保留四个原始示例账号 ID、名称和角色的演示库。 |
 | `JWT_SECRET` | 登录使用的签名密钥。更换后需重新登录。 |
 | `LLM_PROVIDER=glm`、`GLM_API_KEY`、`GLM_MODEL` | 智谱 GLM。默认模型为 `glm-4.5-air`。 |
 | `LLM_PROVIDER=deepseek`、`DEEPSEEK_API_KEY`、`MODEL` | DeepSeek。兼容的 `API_KEY` 非空时优先。 |
@@ -30,6 +32,17 @@ if (!(Test-Path '.env')) { Copy-Item .env.example .env }
 | `RAG_DB_PATH` | 知识库 Chroma 目录。默认 `data/rag_db/`，新目录需要导入资料。 |
 | `PLAN_METRICS_DB_PATH` | 计划历史聚合 SQLite 的绝对路径。应用以只读方式打开，经绑定的本地计划才能查询。 |
 | `LISTING_SIGNIFICANT_DECLINE_PCT` | 可选的销量下滑判定阈值，配置或用户指定阈值后才按其判定。 |
+
+`LLM_PROVIDER=mock` 和 `AD_OFFLINE_ACCEPTANCE=1` 独立于演示种子开关。演示库应使用专用路径。启动在一个 SQLite 事务内为示例账号补齐本地日期最近 30 天中缺失的组合，已有日期和用户组合的所有旧行均保留。
+
+## 存活与就绪
+
+| HTTP 探针 | 结果 |
+| --- | --- |
+| `GET /api/health` | 保留原有 200 响应，供存活检查。 |
+| `GET /api/ready` | 启动完成、JWT 通过登录使用的配置检查且所选存储通过基础检查时返回 200 `ready`，否则返回 503 `not_ready` 和固定原因。无效配置类型或初始化存储故障也可能导致服务在监听前退出。 |
+
+SQLite 就绪检查打开现存文件，读取登录、普通会话、广告账号、计划与日报所需列，并在短事务内用零行更新确认会话表可写，关闭连接时回滚。锁繁忙时可暂时返回 503。MySQL 演练使用只读连接复查既有 schema、登录表，以及配置的聊天记忆根路径格式和服务器标识。就绪响应只给出状态，检查全程零模型请求。向量库可用性、模型供应商、后台执行者、提交持久性及完整业务流程需分别验证。
 
 ## BGE 与商品资料
 
@@ -41,6 +54,8 @@ if (!(Test-Path '.env')) { Copy-Item .env.example .env }
 ```
 
 `PRODUCT_R4_CPU_ENABLED` 默认启用。设为 `0` 后重启可回到旧 CPU 召回。GPU 重排默认关闭，只有同时开功能和配置账号名单时才参与。支持从 GPU 超时回到当前启用的 CPU 路径。通过 SSE 的引用、历史和原文接口核对结果。商品资料的合成样例和导入命令见[复跑说明](docs/product-evidence/README.md)。
+
+`PRODUCT_EVIDENCE_MODEL_ADMISSION_ENABLED` 默认启用。对没有预配事实或引用规则的商品资料版本，聊天可用已配置的 Provider 从本轮授权候选逐项选择并复核原文。每轮最多两次请求，只提交当前问题、候选原文及本轮编号，答复仍由服务端原文模板呈现。设为 `0` 后回到只按预配规则引用的模式。Mock 和未配置密钥的实例沿用离线行为。
 
 ## 计划历史数据部署
 
@@ -62,6 +77,14 @@ if (!(Test-Path '.env')) { Copy-Item .env.example .env }
 
 ## Docker 与对外演示
 
-容器配置统一使用端口 5010。Compose 将端口发布到宿主机回环地址，使用独立卷保存业务 SQLite、知识库与记忆。当前发布以 Windows 和 Edge 的验收为准，Docker 与 Linux 仍需单独验证。
+容器配置统一使用端口 5010。根 Compose 固定 `business` 模式，将端口发布到宿主机回环地址，使用独立卷保存业务 SQLite、知识库与记忆。镜像健康检查使用 `/api/ready`，因此应在 `.env` 中配置独立 `JWT_SECRET`。固定 Provider 已在本机 WSL2 的 Linux 容器验收。
+
+完整产品封闭预发使用显式 `DIAGNOSIS_SANDBOX_DB_PATH` 的 SQLite `business` 模式。备份时对业务库、只读聚合、知识库、会话记忆、资料清单和审计文件取同一停写截点。使用 `scripts/sqlite_store_backup.py` 核验和恢复备份。MySQL R2 提供回环诊断演练及有限的数据投影。
 
 异地部署使用专用实例，先在外网完成访问控制、SSE 和审批回执走查，再分享地址。 [异地演示指南](docs/REMOTE_DEMO.md)
+
+### 封闭运行与启动额度
+
+使用 `deploy/storepilot-sealed/compose.yaml` 叠加配置和 `inspections` profile，可在本机启动 Web 及巡检消费者。封闭配置使用固定 Provider，Web 绑定宿主回环。需指定本地镜像和实例专用环境文件。
+
+网关配置 `STOREPILOT_STARTS_PER_SECOND` 后，多个同机 Web 共享业务卷中的启动额度库。部署同一实例的各 Web 时使用相同额度和数据卷。审批、历史查询与工作群在途额度维持各自的接口约定。

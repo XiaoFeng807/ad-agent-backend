@@ -31,6 +31,20 @@ CREATE TABLE IF NOT EXISTS chat_group_entries (
     FOREIGN KEY (run_id) REFERENCES chat_group_runs(run_id)
 ) ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS chat_group_run_requests (
+    user_id BIGINT NOT NULL,
+    conversation_id VARCHAR(32) NOT NULL,
+    action VARCHAR(32) NOT NULL,
+    request_key VARBINARY(128) NOT NULL,
+    fingerprint CHAR(64) NOT NULL,
+    run_id VARCHAR(32) NOT NULL UNIQUE,
+    shop_id VARCHAR(128),
+    marketplace VARCHAR(32),
+    PRIMARY KEY (user_id, conversation_id, action, request_key),
+    FOREIGN KEY (conversation_id) REFERENCES chat_groups(conversation_id),
+    FOREIGN KEY (run_id) REFERENCES chat_group_runs(run_id)
+) ENGINE=InnoDB;
+
 INSERT INTO chat_groups (conversation_id, user_id, title)
 SELECT CONCAT('legacy-', user_id), user_id, '历史聊天'
 FROM conversations WHERE user_id IS NOT NULL GROUP BY user_id

@@ -1,0 +1,58 @@
+{
+  "label": "官方字段夹具 · 合成数据",
+  "question": "帮我看看这款商品的广告搜索词，哪些值得写进标题，哪些需要复核投放？先给我建议和依据。",
+  "rules": {"min_impressions": 100, "min_clicks": 20, "title_min_orders": 2, "title_min_cvr_pct": 10, "title_max_length": 75},
+  "report_header": "Date,Campaign Name,Ad Group Name,Campaign ID,Ad Group ID,Customer Search Term,Impressions,Clicks,Spend,Purchases,Sales,Currency",
+  "report_defaults": {"Date": "2026-11-10", "Impressions": 412, "Clicks": 36, "Spend": "26.28", "Purchases": 5, "Sales": "119.95", "Currency": "USD"},
+  "low_report_changes": {"Clicks": 17},
+  "membership": {"shop": "sp-generalization-holdout", "marketplace": "US", "advertiser": "HOLDOUT-US", "from": "2026-11-09", "to": "2026-11-10", "control_sku": "HOLD-CONTROL", "control_asin": "B0HOLD0009"},
+  "products": [
+    {
+      "id": "sink-mat", "sku": "HOLD-MAT", "asin": "B0HOLD0001", "intent": "size",
+      "title": "Cresset Silicone Sink Mat", "covered_title": "Cresset Silicone Sink Mat 127 mm",
+      "term": "5 inch silicone sink mat",
+      "support": ["Product type\tSilicone Sink Mat\t-\tWhole\t-", "Size\t12.7\tcm\tWhole\t-"],
+      "conflict": ["Product type\tSilicone Sink Mat\t-\tWhole\t-", "Size\t15.24\tcm\tWhole\t-"],
+      "missing": ["Product type\tSilicone Sink Mat\t-\tWhole\t-", "Width\t12.7\tcm\tWhole\t-"]
+    },
+    {
+      "id": "wall-plate", "sku": "HOLD-PLATE", "asin": "B0HOLD0002", "intent": "compatibility",
+      "title": "Preston TV Wall Plate",
+      "term": "tv wall plate vesa 100x100 mm",
+      "support": ["Product type\tTV Wall Plate\t-\tWhole\t-", "VESA\t75x75 | 100x100\tmm\tMount\tComplete list"],
+      "missing": ["Product type\tTV Wall Plate\t-\tWhole\t-", "VESA\t100\tmm\tMount\t-"]
+    },
+    {
+      "id": "purifier", "sku": "HOLD-FILTER", "asin": "B0HOLD0003", "intent": "compatibility",
+      "title": "Merrow Air Purifier Filter",
+      "term": "air purifier filter for zephyr zp-340 pro",
+      "support": ["Product type\tAir Purifier Filter\t-\tWhole\t-", "Compatible models\tZephyr ZP-340 Pro | Zephyr ZP-350\t-\tWhole\tComplete list"],
+      "conflict": ["Product type\tAir Purifier Filter\t-\tWhole\t-", "Compatible models\tZephyr ZP-340 | Zephyr ZP-350\t-\tWhole\tComplete list"],
+      "missing": ["Product type\tAir Purifier Filter\t-\tWhole\t-", "Compatible models\tZephyr ZP-340\t-\tWhole\t-"]
+    },
+    {
+      "id": "container", "sku": "HOLD-CONTAINER", "asin": "B0HOLD0004", "intent": "restriction",
+      "title": "Tern Food Storage Container",
+      "term": "food storage container body top rack dishwasher safe",
+      "support": ["Product type\tFood Storage Container\t-\tWhole\t-", "Cleaning\tDishwasher safe\t-\tBody\tTop rack only", "Cleaning\tHand wash only\t-\tLid\t-"]
+    }
+  ],
+  "cases": [
+    {"id": "sink-mat-support", "product": "sink-mat", "variant": "support"},
+    {"id": "sink-mat-conflict", "product": "sink-mat", "variant": "conflict"},
+    {"id": "sink-mat-missing", "product": "sink-mat", "variant": "missing"},
+    {"id": "sink-mat-covered", "product": "sink-mat", "variant": "covered"},
+    {"id": "sink-mat-low", "product": "sink-mat", "variant": "low"},
+    {"id": "wall-plate-support", "product": "wall-plate", "variant": "support"},
+    {"id": "wall-plate-missing", "product": "wall-plate", "variant": "missing"},
+    {"id": "purifier-model-support", "product": "purifier", "variant": "support"},
+    {"id": "purifier-model-conflict", "product": "purifier", "variant": "conflict"},
+    {"id": "purifier-model-missing", "product": "purifier", "variant": "missing"},
+    {"id": "purifier-mixed", "product": "purifier", "variant": "mixed"},
+    {"id": "container-body", "product": "container", "variant": "support"},
+    {"id": "container-lid", "product": "container", "variant": "support", "term": "food storage container lid hand wash only"},
+    {"id": "container-whole-conflict", "product": "container", "variant": "support", "term": "dishwasher safe food storage container"},
+    {"id": "container-seal-missing", "product": "container", "variant": "support", "term": "food storage container seal top rack dishwasher safe"},
+    {"id": "container-conversion-floor", "product": "container", "variant": "support", "report_changes": {"Purchases": 1}}
+  ]
+}

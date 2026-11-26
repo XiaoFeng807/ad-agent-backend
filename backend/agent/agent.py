@@ -237,7 +237,9 @@ class Agent:
                         if execution is not None:
                             with trace_tool_call(trace_id, getattr(self, "name", "agent"),
                                                  fn_name if func else "unknown_tool", call_id) as step:
-                                result = scoped_read(fn_name, arguments, func, user_id, execution, step)
+                                result = scoped_read(fn_name, arguments, func, user_id, execution, step,
+                                                     trace_id=trace_id, role=getattr(self, "name", "agent"),
+                                                     call_id=call_id)
                             payload.extend([
                                 {"role": "assistant", "content": None, "tool_calls": [tc]},
                                 {"role": "tool", "tool_call_id": call_id, "content": json.dumps(result, ensure_ascii=False)},
@@ -327,11 +329,13 @@ class Agent:
                 return json.loads(msg["content"]) if isinstance(msg["content"], str) else msg["content"]
         return None
 
-    def save_conversation(self, user_id, role, content, priority=1, *, chat_view_id=None, user_message_id=None):
+    def save_conversation(self, user_id, role, content, priority=1, *, chat_view_id=None, user_message_id=None,
+                          validate=None):
         """保存对话并返回提交后的消息 ID（priority: 0=低, 1=普通, 2=重要）"""
         from backend.database.chat_storage import save_message
 
-        return save_message(user_id, role, content, priority, chat_view_id, user_message_id=user_message_id)
+        return save_message(user_id, role, content, priority, chat_view_id, user_message_id=user_message_id,
+                            validate=validate)
 
     def get_history(self, user_id, max_messages=15):
         """获取历史消息(兼容旧接口)，走 context_window 优化"""

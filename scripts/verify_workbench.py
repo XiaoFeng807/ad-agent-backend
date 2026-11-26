@@ -23,7 +23,7 @@ def main():
     from backend import observability
     from backend.agent.llm_provider import ProviderFactory
     from backend.captcha import captcha
-    from backend.database import database, listing_operations as listing
+    from backend.database import database, listing_operations as listing, orders
     from tests.home_diagnosis_server import demo_captcha
     from tests.test_listing_workgroup import ListingModel
 
@@ -34,6 +34,8 @@ def main():
                              ("workbench-qa", database.hash_password(password))).lastrowid
         conn.execute("INSERT INTO users (username,password) VALUES (?,?)",
                      ("workbench-qa-empty", database.hash_password(password)))
+        conn.execute("INSERT INTO order_shops VALUES (?,?)", (orders.AMAZON, "workbench-qa-amazon"))
+        conn.execute("INSERT INTO order_shop_access VALUES (?,?,?)", (orders.AMAZON, "workbench-qa-amazon", owner))
         listing.seed_test_product(conn, owner)
         listing.seed_test_product(conn, owner, sku="WORKBENCH-CONTROL")
         row = conn.execute("SELECT facts FROM listing_test_facts WHERE sku=?", (listing.TEST_SKU,)).fetchone()

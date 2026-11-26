@@ -1,0 +1,89 @@
+# Load after the root docker-compose.yml and explicitly enable the inspections profile.
+x-release: &release
+  image: ${STOREPILOT_SEALED_IMAGE:?set the frozen StorePilot image}
+  pull_policy: never
+  env_file:
+    - ${STOREPILOT_SEALED_ENV_FILE:?set the sealed service env file}
+  init: true
+  restart: unless-stopped
+  cpus: 2
+  mem_limit: 4g
+  pids_limit: 256
+
+x-environment: &environment
+  APP_STARTUP_MODE: business
+  DIAGNOSIS_MYSQL_ENABLED: "0"
+  DIAGNOSIS_SANDBOX_DB_PATH: /app/data/business.sqlite3
+  RAG_DB_PATH: /app/data/knowledge
+  STOREPILOT_BACKGROUND_MODEL: ${STOREPILOT_BACKGROUND_MODEL:?set the shared inspection model}
+  PYTHON_DOTENV_DISABLED: "1"
+  LLM_PROVIDER: mock
+  AMAZON_LWA_CLIENT_ID: ""
+  AMAZON_LWA_CLIENT_SECRET: ""
+  AMAZON_LWA_REFRESH_TOKEN: ""
+  HF_HUB_OFFLINE: "1"
+  TRANSFORMERS_OFFLINE: "1"
+  ANONYMIZED_TELEMETRY: "False"
+  HF_HOME: /app/model-cache
+  TZ: Asia/Shanghai
+
+services:
+  web:
+    <<: *release
+    build: !reset null
+    env_file: !override
+      - ${STOREPILOT_SEALED_ENV_FILE:?set the sealed service env file}
+    environment: *environment
+    command: ["python", "-m", "uvicorn", "fast_server:app", "--host", "0.0.0.0", "--port", "5010"]
+    ports: !override
+      - "127.0.0.1:${STOREPILOT_SEALED_PORT:-5010}:5010"
+    networks: [sealed]
+    volumes:
+      - type: volume
+        source: storepilot-data
+        target: /app/data
+        volume:
+          nocopy: true
+      - storepilot-web-logs:/app/logs
+    healthcheck:
+      test: ["CMD", "python", "-c", "from http.client import HTTPConnection; c = HTTPConnection('127.0.0.1', 5010, timeout=3); c.request('GET', '/api/ready'); raise SystemExit(c.getresponse().status != 200)"]
+      interval: 2s
+      timeout: 4s
+      start_period: 30s
+      retries: 3
+
+  inspection-worker:
+    <<: *release
+    profiles: [inspections]
+    command: ["python", "-m", "backend.agent.inspection_worker_health"]
+    environment: *environment
+    network_mode: none
+    depends_on:
+      web:
+        condition: service_healthy
+    volumes:
+      - type: volume
+        source: storepilot-data
+        target: /app/data
+        volume:
+          nocopy: true
+      - storepilot-model-cache:/app/model-cache
+      - storepilot-worker-logs:/app/logs
+    tmpfs:
+      - /run/storepilot-inspection
+    healthcheck:
+      test: ["CMD", "python", "-m", "backend.agent.inspection_worker_health", "--check"]
+      interval: 5s
+      timeout: 3s
+      start_period: 30s
+      retries: 2
+
+networks:
+  sealed:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: "false"
+
+volumes:
+  storepilot-web-logs:
+  storepilot-worker-logs:

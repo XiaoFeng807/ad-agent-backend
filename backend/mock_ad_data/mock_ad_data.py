@@ -1,6 +1,6 @@
 """模拟数据生成模块：生成示例广告数据用于演示"""
-import random, math
-from datetime import datetime, timedelta
+import random
+from datetime import date, timedelta
 
 
 def generate_mock_plans(c):
@@ -60,9 +60,8 @@ def generate_mock_alerts(c):
 
 
 def generate_mock_daily_reports(c):
-    """生成最近30天的每日数据报告"""
-    import random
-    from datetime import datetime, timedelta
+    """Fill missing demo user and date pairs without rewriting existing reports."""
+    today = date.today()
 
     for user_id in range(1, 5):
         base_cost = random.randint(500, 2000)
@@ -71,7 +70,7 @@ def generate_mock_daily_reports(c):
         base_sales = random.randint(1000, 5000)
 
         for day_offset in range(30):
-            date = (datetime.now() - timedelta(days=29 - day_offset)).strftime("%Y-%m-%d")
+            report_date = (today - timedelta(days=29 - day_offset)).isoformat()
             # 加入随机波动，模拟真实数据
             cost = base_cost + random.randint(-200, 200)
             imp = base_imp + random.randint(-2000, 2000)
@@ -79,7 +78,8 @@ def generate_mock_daily_reports(c):
             sales = base_sales + random.randint(-500, 500)
 
             c.execute(
-                "INSERT OR IGNORE INTO daily_reports (report_date, cost, impressions, clicks, sales, user_id) "
-                "VALUES (?,?,?,?,?,?)",
-                (date, max(0, cost), max(0, imp), max(0, clicks), max(0, sales), user_id)
+                "INSERT INTO daily_reports (report_date, cost, impressions, clicks, sales, user_id) "
+                "SELECT ?, ?, ?, ?, ?, ? WHERE NOT EXISTS "
+                "(SELECT 1 FROM daily_reports WHERE user_id=? AND report_date=?)",
+                (report_date, max(0, cost), max(0, imp), max(0, clicks), max(0, sales), user_id, user_id, report_date),
             )

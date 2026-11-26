@@ -6,6 +6,7 @@ services:
     env_file:
       - .env
     environment:
+      APP_STARTUP_MODE: business
       TZ: Asia/Shanghai
       HF_HOME: /app/model-cache
     volumes:

@@ -3,6 +3,7 @@
 import os, json, datetime, time
 from dotenv import load_dotenv
 from contextlib import asynccontextmanager, closing, contextmanager
+from dataclasses import replace
 from sqlite3 import Error as SQLiteError
 from threading import Lock
 from typing import Annotated
@@ -12,7 +13,7 @@ from uuid import UUID
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
 from anyio import CancelScope, create_task_group, sleep
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Depends, Path, Query, Request
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Depends, Path, Query, Request, Response
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.requests import HTTPConnection
@@ -24,12 +25,12 @@ import uvicorn
 from backend.config.config import settings
 from backend.agent.diagnosis import DIAGNOSIS_REQUEST, NaturalDiagnosis, NaturalDiagnosisRequest
 from backend.agent.group_date_change import Clarification, InvalidDateChange, InvalidPlanChange, understand_dates
-from backend.agent.request_budget import ContextBudgetExceeded, ExecutionStopped, RequestBudget
+from backend.agent.request_budget import ChatSessionInvalid, ContextBudgetExceeded, ExecutionStopped, RequestBudget
 from backend.agent.start_rate import AccountStartRate
 from backend.agent.team_tools import TeamBudget
 from backend.agent.multi_window_review import parse_review_goal
 from backend.agent.product_evidence_reply import requested as product_evidence_requested
-from backend.database.database import get_db, init_db, seed_data
+from backend.database.database import DB_PATH, get_db, init_db, sandbox_db_path, seed_data
 from backend.database.diagnosis_pauses import PauseRejected, confirm_pause, group_pause_request, pause_enabled, read_pause
 from backend.database.diagnosis_reviews import confirm_review, read_review
 from backend.database import chat_groups, chat_storage, listing_operations, mysql_diagnosis
@@ -37,12 +38,13 @@ from backend.database.ctr_alerts import CheckRejected, check_ctr_alert
 from backend.database.diagnosis_tasks import (
     CandidateRevisionChanged, InvalidNaturalSource, accept_diagnosis, list_diagnosis_tasks, read_diagnosis_task, save_diagnosis_reply,
 )
-from backend.auth.auth import Auth, JWTConfigurationError, set_auth_instance
+from backend.auth.auth import Auth, JWTConfigurationError, _signing_key, set_auth_instance
 from backend.agent.multi_agent import OrchestratorAgent, PipelineCoordinator, AgentPool
 from backend.di import ConfigProvider, DatabaseProvider, create_tool_registry
-from backend.routes.shared import init as init_shared
+from backend.routes.shared import init as init_shared, optional_idempotency_key
 from backend.routes.order_routes import order_router
 from backend.routes.product_evidence import product_evidence_router
+from backend.routes.search_terms import search_term_router
 from backend.observability import add_trace_step, end_trace, new_trace_id, record_request, get_system_status, start_trace
 
 # ===== 初始化 =====
@@ -60,34 +62,41 @@ agent = agent_pool.acquire()  # 给旧接口留一个默认 agent
 init_shared(db_provider, auth_instance, agent, captcha_store, app_start_time)
 
 
+def validate_login_tables(conn):
+    conn.execute("SELECT id, username, password, role FROM users LIMIT 0")
+    conn.execute("SELECT user_id, token, created_at FROM sessions LIMIT 0")
+
+
+def validate_mysql_startup_storage():
+    with closing(mysql_diagnosis.connect(read_only=True)) as conn:
+        mysql_diagnosis.validate_schema_connection(conn, mysql_diagnosis.schema_name())
+        validate_login_tables(conn)
+        if settings.MYSQL_CHAT_MEMORY_ROOT:
+            mysql_diagnosis.chat_memory_root(conn)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """应用生命周期：启动时初始化数据库"""
+    """初始化当前启动模式的存储。"""
+    app.state.startup_complete = False
+    demo = settings.APP_STARTUP_MODE == "demo"
+    if demo and (settings.DIAGNOSIS_MYSQL_ENABLED or not settings.DIAGNOSIS_SANDBOX_DB_PATH.strip()):
+        raise ValueError("Demo startup requires an independent SQLite DIAGNOSIS_SANDBOX_DB_PATH")
     if settings.DIAGNOSIS_MYSQL_ENABLED:
-        await run_in_threadpool(mysql_diagnosis.validate_schema)
-        if settings.MYSQL_CHAT_MEMORY_ROOT:
-            def validate_memory_root():
-                with closing(chat_storage.connect(read_only=True)) as conn:
-                    mysql_diagnosis.chat_memory_root(conn)
-
-            await run_in_threadpool(validate_memory_root)
+        await run_in_threadpool(validate_mysql_startup_storage)
+    else:
+        await run_in_threadpool(init_db)
+        if demo:
+            await run_in_threadpool(seed_data, require_sandbox=True)
+    app.state.startup_complete = True
+    try:
         yield
-        return
-    init_db()
-    seed_data()
-
-    from backend.mock_ad_data.mock_ad_data import generate_mock_daily_reports as gdr
-    _conn=db_provider.get_connection()
-    gdr(_conn.cursor())
-    _conn.commit()
-    db_provider.close(_conn)
-    print(" [data] daily reports updated")
-    print("FastAPI server started with WebSocket support")
-    yield
+    finally:
+        app.state.startup_complete = False
 
 
 MYSQL_DIAGNOSIS_ROUTES = {
-    "/api/captcha", "/api/login", "/api/health", "/api/chat/stream",
+    "/api/captcha", "/api/login", "/api/health", "/api/ready", "/api/chat/stream",
     "/_gateway/rate/api/chat/stream",
     "/api/diagnosis/tasks", "/api/diagnosis/tasks/{task_id}",
     "/api/diagnosis/review-proposals/{action_id}/confirm", "/api/diagnosis/reviews/{review_id}",
@@ -185,24 +194,33 @@ def authenticated_user_id(request: Request):
 
 
 _start_rate_value = os.getenv("STOREPILOT_STARTS_PER_SECOND")
-_start_rate = AccountStartRate(int(_start_rate_value)) if _start_rate_value is not None else None
+_start_rate = (AccountStartRate(int(_start_rate_value), sandbox_db_path() or DB_PATH)
+               if _start_rate_value is not None else None)
 
 
-def _start_rejected(request, code, *, source):
+def _start_rejected(request, code, *, source, status_code=429):
     trace_id = start_trace(source=source, request_id=gateway_request_id(request))
     add_trace_step(trace_id, "admission", "rejected", status="error", error_code=code)
     end_trace(trace_id, "rejected")
-    return JSONResponse({"detail": code, "trace_id": trace_id}, status_code=429,
-                        headers={"Retry-After": "1"} if source == "gateway_start_rate" else None)
+    return JSONResponse({"detail": code, "trace_id": trace_id}, status_code=status_code,
+                        headers={"Retry-After": "1"} if code == "account_rate_exceeded" else None)
 
 
 @app.post("/_gateway/rate/api/chat/stream", include_in_schema=False)
 def gateway_start_rate(request: Request):
     if _start_rate is None:
         raise HTTPException(404)
-    if not _start_rate.allow(authenticated_user_id(request)):
-        return _start_rejected(request, "account_rate_exceeded", source="gateway_start_rate")
-    return JSONResponse(None, status_code=200)
+    user_id = authenticated_user_id(request)
+    try:
+        allowed, second = _start_rate.acquire(user_id)
+    except (SQLiteError, OSError):
+        return _start_rejected(request, "start_rate_storage_unavailable", source="gateway_start_rate", status_code=503)
+    if allowed:
+        response = JSONResponse(None, status_code=200)
+    else:
+        response = _start_rejected(request, "account_rate_exceeded", source="gateway_start_rate")
+    response.headers["x-storepilot-rate-window"] = str(second)
+    return response
 
 
 def request_auth():
@@ -220,6 +238,7 @@ def session_user(request, conn):
 
 app.include_router(order_router(session_user))
 app.include_router(product_evidence_router(session_user))
+app.include_router(search_term_router(session_user))
 
 
 @app.exception_handler(mysql_diagnosis.MySQLStorageError)
@@ -649,13 +668,14 @@ def timeline(user_id: int = Depends(authenticated_user_id)):
     return {"code": 200, "data": data}
 
 @app.get("/api/chat/history")
-def chat_history(request: Request, exclude_chat_view_id: str | None = None):
+def chat_history(request: Request, response: Response, exclude_chat_view_id: str | None = None):
     """获取聊天历史记录"""
     token = get_token_from_request(request)
     payload = verify_token(token)
     history, _ = agent.get_optimized_context(
         payload.get("user_id", 0), exclude_chat_view_id=exclude_chat_view_id,
     )
+    response.headers["Cache-Control"] = "no-store"
     return {"code": 200, "data": history}
 
 
@@ -724,7 +744,7 @@ def group_request():
     try:
         yield
     except (chat_groups.GroupNotFound, chat_groups.GroupStorageUnavailable):
-        raise HTTPException(status_code=404, detail="工作群不存在") from None
+        raise HTTPException(status_code=404, detail="工作群不存在", headers={"Cache-Control": "no-store"}) from None
     except chat_groups.GroupConflict as error:
         raise HTTPException(status_code=409, detail=str(error)) from None
     except (InvalidDateChange, InvalidPlanChange) as error:
@@ -747,9 +767,11 @@ def create_chat_group(req: CreateChatGroup, user_id: int = Depends(authenticated
 
 
 @app.get("/api/chat/conversations/{conversation_id}/history")
-def chat_group_history(conversation_id: str, user_id: int = Depends(authenticated_user_id)):
+def chat_group_history(conversation_id: str, response: Response, user_id: int = Depends(authenticated_user_id)):
     with group_request():
-        return {"code": 200, "data": chat_groups.history(user_id, conversation_id)}
+        history = chat_groups.history(user_id, conversation_id)
+    response.headers["Cache-Control"] = "no-store"
+    return {"code": 200, "data": history}
 
 
 @app.post("/api/chat/conversations/{conversation_id}/stop")
@@ -760,13 +782,88 @@ def stop_chat_group_run(conversation_id: str, req: StopChatGroupRun,
 
 
 @app.get("/api/chat/conversations/{conversation_id}/runs/{run_id}/evidence")
-def chat_group_reply_evidence(conversation_id: str, run_id: str, user_id: int = Depends(authenticated_user_id)):
+def chat_group_reply_evidence(conversation_id: str, run_id: str, response: Response,
+                              user_id: int = Depends(authenticated_user_id)):
     with group_request():
-        return {"code": 200, "data": chat_groups.reply_evidence(user_id, conversation_id, run_id)}
+        evidence = chat_groups.reply_evidence(user_id, conversation_id, run_id)
+    response.headers["Cache-Control"] = "no-store"
+    return {"code": 200, "data": evidence}
 
 
 class BackgroundInspectionRequest(BaseModel, extra="forbid"):
     message: str = Field(min_length=1, max_length=2000)
+
+
+class PublishedInspectionRequest(BaseModel, extra="forbid"):
+    publication_id: str = Field(min_length=1, max_length=128)
+    windows: tuple[datetime.date, datetime.date, datetime.date, datetime.date]
+    recheck: bool = False
+
+
+class InspectionSubscriptionRequest(BaseModel, extra="forbid"):
+    source: str = Field(min_length=1, max_length=64)
+    shop_id: str = Field(min_length=1, max_length=128)
+    marketplace_id: str = Field(min_length=1, max_length=128)
+    sku: str = Field(min_length=1, max_length=128)
+    windows: tuple[datetime.date, datetime.date, datetime.date, datetime.date]
+    allow_listing_proposal: bool = Field(strict=True)
+
+
+@app.post("/api/chat/conversations/{conversation_id}/background-inspections/subscriptions", status_code=201)
+def register_inspection_subscription(conversation_id: str, body: InspectionSubscriptionRequest,
+                                     user_id: int = Depends(authenticated_user_id)):
+    from backend.database import background_inspections, inspection_subscriptions
+
+    if background_inspections.configured_model() is None:
+        raise HTTPException(404, "发布巡检未启用")
+    target = listing_operations._scope(body.shop_id, body.marketplace_id, body.sku)
+    try:
+        with group_request():
+            subscription_id = inspection_subscriptions.register(
+                user_id, conversation_id, body.source, target, [day.isoformat() for day in body.windows],
+                body.allow_listing_proposal)
+    except listing_operations.ListingInvalid as error:
+        raise HTTPException(422, str(error)) from None
+    except listing_operations.ListingNotFound:
+        raise HTTPException(404, "商品范围不存在") from None
+    return {"code": 201, "data": {"subscription_id": subscription_id}}
+
+
+@app.post("/api/chat/conversations/{conversation_id}/background-inspections/publications")
+def consume_listing_publication(conversation_id: str, body: PublishedInspectionRequest, request: Request,
+                                user_id: int = Depends(authenticated_user_id)):
+    from importlib.util import find_spec
+    from backend.database import background_inspections
+
+    model = background_inspections.configured_model()
+    reader = getattr(request.app.state, "listing_publication_reader", None)
+    if reader is None and model is not None and find_spec("backend.database.order_sales") is not None:
+        from backend.database.order_sales import read_publication
+
+        reader = read_publication
+    if model is None or reader is None:
+        raise HTTPException(404, "发布巡检未启用")
+    request_id = gateway_request_id(request)
+    trace_id = start_trace(user_id=user_id, source="listing_publication", request_id=request_id)
+    trace_status = "rejected"
+    try:
+        with group_request():
+            run_id, created = background_inspections.accept_publication(
+                user_id, conversation_id, body.publication_id, [day.isoformat() for day in body.windows],
+                body.recheck, model, reader, trace_id, request_id)
+        trace_status = "accepted" if created else "replayed"
+        add_trace_step(trace_id, "publication", trace_status,
+                       evidence={"run_id": run_id, "publication_id": body.publication_id})
+    except listing_operations.ListingInvalid as error:
+        raise HTTPException(422, str(error)) from None
+    except listing_operations.ListingNotFound:
+        raise HTTPException(404, "销量发布不存在") from None
+    except chat_groups.GroupCapacityExceeded as error:
+        return _start_rejected(request, str(error), source="background_inspection")
+    finally:
+        end_trace(trace_id, trace_status)
+    return JSONResponse({"code": 0, "data": {"run_id": run_id}}, status_code=202 if created else 200,
+                        headers={"Cache-Control": "no-store"})
 
 
 @app.post("/api/chat/conversations/{conversation_id}/background-inspections")
@@ -849,6 +946,11 @@ def read_chat_group_pause(conversation_id: str, run_id: str, action_id: str, req
     return _diagnosis_pause_request(action_id, request, confirm=False, group_scope=(conversation_id, run_id))
 
 
+def _listing_sales_change_message(reason):
+    return (f"本提案按当前窗 {reason['previous_units']} 件生成，"
+            f"订单更正后为 {reason['current_units']} 件，请重新巡检")
+
+
 @app.get("/api/chat/conversations/{conversation_id}/runs/{run_id}/listing-actions/{action_id}")
 def read_chat_group_listing(conversation_id: str, run_id: str, action_id: str, request: Request, review: bool = False):
     try:
@@ -861,12 +963,29 @@ def read_chat_group_listing(conversation_id: str, run_id: str, action_id: str, r
         raise HTTPException(404, "商品提案不存在") from None
     except listing_operations.ListingConflict:
         raise HTTPException(409, "商品提案与原轮依据不一致") from None
+    if reason := result.get("approval_block_reason"):
+        reason["message"] = result["approval_blocked"] = _listing_sales_change_message(reason)
     if request_id := gateway_request_id(request):
         trace_id = start_trace(source="listing_readback", request_id=request_id)
         receipt = result.get("receipt") or {}
         add_trace_step(trace_id, "listing_action", "read", evidence={"run_id": run_id, "action_id": action_id,
                        "receipt_id": receipt.get("receipt_id"), "execution_trace_id": receipt.get("execution_trace_id")})
         end_trace(trace_id)
+    return JSONResponse({"code": 200, "data": result}, headers={"Cache-Control": "no-store"})
+
+
+@app.get("/api/chat/conversations/{conversation_id}/runs/{run_id}/listing-actions/{action_id}/review")
+def review_chat_group_listing(conversation_id: str, run_id: str, action_id: str, request: Request):
+    try:
+        with closing(get_db(read_only=True)) as conn:
+            conn.execute("BEGIN")
+            result = listing_operations.read_cycle_review(
+                conn, session_user(request, conn), conversation_id, run_id, action_id,
+            )
+    except listing_operations.ListingNotFound:
+        raise HTTPException(404, "商品执行回执不存在") from None
+    except listing_operations.ListingConflict:
+        raise HTTPException(409, "执行回执与原轮依据不一致") from None
     return JSONResponse({"code": 200, "data": result}, headers={"Cache-Control": "no-store"})
 
 
@@ -890,7 +1009,13 @@ def confirm_chat_group_listing(conversation_id: str, run_id: str, action_id: str
     except listing_operations.ListingConflict as error:
         add_trace_step(trace_id, "listing_action", "blocked", error_code=str(error),
                        evidence={"run_id": run_id, "action_id": action_id})
-        raise HTTPException(409, "商品、证据或工作群状态已变化，请重新生成提案") from None
+        detail = "商品、证据或工作群状态已变化，请重新生成提案"
+        if isinstance(error, listing_operations.ListingSalesChanged):
+            reason = {"code": error.code, "previous_units": error.previous_units, "current_units": error.current_units}
+            reason["message"] = _listing_sales_change_message(reason)
+            return JSONResponse({"detail": detail, "approval_block_reason": reason}, status_code=409,
+                                headers={"Cache-Control": "no-store"})
+        raise HTTPException(409, detail) from None
     except SQLiteError:
         add_trace_step(trace_id, "listing_action", "rolled_back", status="error", error_code="listing_storage_error",
                        evidence={"run_id": run_id, "action_id": action_id})
@@ -951,6 +1076,39 @@ def _preview_group_change(conversation_id, req, user_id, *, allow_plans):
 async def health():
     """健康检查接口"""
     return {"code": 200, "data": {"status": "ok", "uptime": "fastapi", "version": "3.0.0"}}
+
+
+def validate_sqlite_startup_storage():
+    with closing(get_db(must_exist=True, timeout=0.25)) as conn:
+        # A read-only SQLite file can accept BEGIN IMMEDIATE. Exercise write permission without touching any rows.
+        conn.execute("BEGIN IMMEDIATE")
+        validate_login_tables(conn)
+        conn.execute("UPDATE sessions SET token=token WHERE 0")
+        conn.execute("SELECT id, user_id, role, content, created_at, priority, chat_view_id FROM conversations LIMIT 0")
+        conn.execute("SELECT id, user_id, account_name, platform, balance, daily_budget, status FROM ad_accounts LIMIT 0")
+        conn.execute("SELECT id, user_id, account_id, plan_name, status, impressions, clicks, cost, sales FROM ad_plans LIMIT 0")
+        conn.execute("SELECT user_id, report_date, cost, impressions, clicks, sales FROM daily_reports LIMIT 0")
+
+
+@app.get("/api/ready")
+async def readiness(request: Request):
+    """检查基础业务就绪状态。"""
+    if not getattr(request.app.state, "startup_complete", False):
+        reason = "startup_incomplete"
+    else:
+        try:
+            _signing_key()
+            validate = (validate_mysql_startup_storage if settings.DIAGNOSIS_MYSQL_ENABLED
+                        else validate_sqlite_startup_storage)
+            await run_in_threadpool(validate)
+        except JWTConfigurationError:
+            reason = "jwt_unavailable"
+        except (SQLiteError, mysql_diagnosis.MySQLStorageError, OSError, ValueError):
+            reason = "storage_or_schema_unavailable"
+        else:
+            return JSONResponse({"code": 200, "data": {"status": "ready"}}, headers={"Cache-Control": "no-store"})
+    return JSONResponse({"code": 503, "data": {"status": "not_ready", "reason": reason}},
+                        status_code=503, headers={"Cache-Control": "no-store"})
 
 
 # ===== WebSocket 聊天端点（核心亮点） =====
@@ -1125,6 +1283,16 @@ async def chat_stream_sse(request: Request):
     chat_view_id = body.get("chat_view_id")
     conversation_id = body.get("conversation_id")
     user_id = payload["user_id"]
+    auth = request_auth()
+
+    def current_session(conn=None, *, for_write=False):
+        lock = for_write and mysql_diagnosis.is_mysql(conn)
+        current = auth.validate_token(token, connection=conn, **({"lock_session": True} if lock else {}))
+        return current is not None and current["user_id"] == user_id
+
+    def write_session(conn):
+        return current_session(conn, for_write=True)
+
     diagnosis = None
     diagnosis_trace_id = None
     confirmation = None
@@ -1189,9 +1357,26 @@ async def chat_stream_sse(request: Request):
         try:
             with group_request():
                 if confirmation is None:
+                    key = optional_idempotency_key(request)
+                    identity = None
+                    if key is not None:
+                        identity = chat_groups.RunRequest.from_payload("group_chat", key, {
+                            "message": message, "listing_operations": body.get("listing_operations"),
+                        })
                     group_run, group_context = await run_in_threadpool(
                         chat_groups.accept, user_id, conversation_id, new_trace_id(), message, msg_priority,
+                        **({"identity": identity, "authorize": lambda conn: session_user(request, conn)}
+                           if identity is not None else {}),
                     )
+                    if group_run is None:
+                        async def replay_run():
+                            yield "data: " + json.dumps({
+                                "type": "done", "conversation_id": conversation_id, "replayed": True,
+                                "history_url": f"/api/chat/conversations/{conversation_id}/history", **group_context,
+                            }) + "\n\n"
+
+                        return StreamingResponse(replay_run(), media_type="text/event-stream",
+                                                 headers={"Cache-Control": "no-store"})
                 else:
                     group_run, group_context, change = await run_in_threadpool(
                         _confirm_group_change, user_id, conversation_id, confirmation, dates_only=change_field == "date_change",
@@ -1207,6 +1392,8 @@ async def chat_stream_sse(request: Request):
         except chat_groups.GroupCapacityExceeded as error:
             return _start_rejected(request, str(error), source="chat_sse")
 
+    if group_run is not None:
+        group_run = replace(group_run, check_progress_session=write_session)
     tracked = group_run is not None and group_run.slot_acquired_ns is not None
     if tracked:
         start_trace(source="chat_sse", trace_id=group_run.trace_id, request_id=gateway_request_id(request))
@@ -1224,7 +1411,8 @@ async def chat_stream_sse(request: Request):
             review_goal = parse_review_goal(message)[1] if group_run else None
             # Five evidence workers can each need a tool-call and a summary turn.
             # Keep room for the alert, dispatch, append and independent reviewer.
-            execution = TeamBudget(model_limit=16) if review_goal and review_goal.independent else TeamBudget()
+            model_limit = 16 if review_goal and review_goal.independent else 12
+            execution = TeamBudget(model_limit=model_limit, check_session=write_session)
     except BaseException:
         if tracked:
             with CancelScope(shield=True):
@@ -1233,13 +1421,6 @@ async def chat_stream_sse(request: Request):
 
     product_evidence_mode = (diagnosis is None and not listing_mode and not change
                              and not settings.DIAGNOSIS_MYSQL_ENABLED and product_evidence_requested(message))
-    if product_evidence_mode and execution is None:
-        execution = TeamBudget()
-
-    def product_evidence_session(conn):
-        current = auth_instance.validate_token(token, connection=conn)
-        return current is not None and current["user_id"] == user_id
-
     async def gen():
         trace_id = group_run.trace_id if tracked else start_trace(
             source="chat_sse", trace_id=group_run.trace_id if group_run else diagnosis_trace_id,
@@ -1263,6 +1444,7 @@ async def chat_stream_sse(request: Request):
         full_reply = ""
         evidence = {}
         group_evidence = None
+        home_review_evidence = {}
         deferred_reply = None
         product_evidence_receipts = []
         proposals = {}
@@ -1271,6 +1453,14 @@ async def chat_stream_sse(request: Request):
         operation = "acquire_agent"
         save_started = None
         pool = agent_pool
+
+        async def publish(event):
+            frame = "data: " + json.dumps(event, ensure_ascii=False) + "\n\n"
+            if execution is not None:
+                await run_in_threadpool(execution.require_session, trace_id, "sse_publish",
+                                        evidence={"frame_type": event["type"]})
+            return frame
+
         try:
             if group_run and not settings.DIAGNOSIS_MYSQL_ENABLED:
                 await run_in_threadpool(_register_group_execution, group_run, execution)
@@ -1300,7 +1490,7 @@ async def chat_stream_sse(request: Request):
                     )
             # 末条是当前用户消息，短期上下文只取此前的消息。
             short_term_context = short_term_from_history(history[:-1])
-            yield "data: " + json.dumps({"type": "thinking", "content": "🤔 思考中...", **ids}) + "\n\n"
+            yield await publish({"type": "thinking", "content": "🤔 思考中...", **ids})
             operation = "generate_reply"
             with closing(sess_agent.chat_stream(
                 [{"role": "user", "content": message}] if product_evidence_mode else history,
@@ -1309,9 +1499,11 @@ async def chat_stream_sse(request: Request):
                 through_message_id=message_id if diagnosis is None else None, budget=budget,
                 **({"conversation_snapshot": conversation_snapshot} if conversation_snapshot is not None else {}),
                 **({"group_run": group_run} if group_run is not None else {}),
+                **({"home_review_evidence_sink": home_review_evidence.update}
+                   if group_run is None and diagnosis is None else {}),
                 **({"listing_operations": True} if listing_mode else {}),
                 **({"product_evidence_sink": product_evidence_receipts.append,
-                    "product_evidence_session": product_evidence_session} if product_evidence_mode else {}),
+                    "product_evidence_session": current_session} if product_evidence_mode else {}),
             )) as stream:
                 async for chunk in iterate_in_threadpool(stream):
                     try:
@@ -1338,7 +1530,7 @@ async def chat_stream_sse(request: Request):
                                 evidence["candidate_revision"] = event.pop("candidate_revision")
                             deferred_reply = event
                             continue
-                    yield "data: " + json.dumps({**event, **(ids if group_run else {})}, ensure_ascii=False) + "\n\n"
+                    yield await publish({**event, **(ids if group_run else {})})
             operation = "save_reply"
             save_started = time.perf_counter()
             if diagnosis:
@@ -1358,35 +1550,44 @@ async def chat_stream_sse(request: Request):
                     if (group_run or product_evidence_mode) and (code := execution.stop_code()):
                         raise ExecutionStopped(code)
                     reply = full_reply
-                    validation = {}
                     citation_ids = []
+                    validate_evidence = None
                     if product_evidence_receipts:
-                        reply, validate, citation_ids = product_evidence_receipts[0]
-                        validation = {"validate": validate}
+                        reply, validate_evidence, citation_ids = product_evidence_receipts[0]
+
+                    def validate(conn):
+                        if validate_evidence is not None:
+                            validate_evidence(conn)
+                        execution.require_session(trace_id, "reply_commit", connection=conn)
+
                     if group_run:
                         assistant_message_id, reply = group_run.save_reply(
-                            reply, reply_priority, evidence=group_evidence, **validation,
+                            reply, reply_priority, evidence=group_evidence, validate=validate,
                         )
-                    elif validation:
+                    elif validate_evidence is not None or home_review_evidence:
                         assistant_message_id = chat_storage.save_message(
                             user_id, "assistant", reply, reply_priority, chat_view_id,
-                            user_message_id=message_id, **validation,
+                            user_message_id=message_id, validate=validate,
+                            **({"review_receipt": home_review_evidence} if home_review_evidence else {}),
                         )
                     else:
                         assistant_message_id = sess_agent.save_conversation(
                             user_id, "assistant", reply, priority=reply_priority, chat_view_id=chat_view_id,
-                            user_message_id=message_id,
+                            user_message_id=message_id, validate=validate,
                         )
                     add_trace_step(trace_id, "persistence", operation, duration=time.perf_counter() - save_started,
                                    evidence={"final_citation_ids": citation_ids} if product_evidence_mode else None)
                     if product_evidence_mode:
                         return full_reply
                     try:
+                        execution.require_session(trace_id, "conversation_index")
                         store_conversation(
                             user_id, message, reply,
                             user_message_id=message_id, assistant_message_id=assistant_message_id,
                             **({"conversation_id": group_run.conversation_id} if group_run else {}),
                         )
+                    except ChatSessionInvalid:
+                        pass  # The SQL reply already committed. The transport checks the session separately.
                     except Exception:
                         add_trace_step(trace_id, "memory", "store_conversation", status="error",
                                        error_code="conversation_memory_write_failed")
@@ -1397,15 +1598,22 @@ async def chat_stream_sse(request: Request):
                 if group_run or product_evidence_mode:
                     deferred_reply = {"type": "text", "content": full_reply}
                 if deferred_reply is not None:
-                    yield "data: " + json.dumps({**deferred_reply, **(ids if group_run else {})}, ensure_ascii=False) + "\n\n"
+                    yield await publish({**deferred_reply, **(ids if group_run else {})})
             terminal_status = "completed"
-            terminal_event = {"type": "done", **ids, **proposals}
             if diagnosis is None and group_run is None and not product_evidence_mode:
                 try:
-                    await run_in_threadpool(store_conversation_summary, user_id, message, full_reply)
+                    def save_summary():
+                        execution.require_session(trace_id, "conversation_summary")
+                        store_conversation_summary(user_id, message, full_reply)
+
+                    await run_in_threadpool(save_summary)
+                except ChatSessionInvalid:
+                    raise
                 except Exception:
                     add_trace_step(trace_id, "memory", "store_conversation_summary", status="error",
                                    error_code="conversation_summary_write_failed")
+            terminal_event = {"type": "done", **ids, **proposals}
+            terminal_frame = await publish(terminal_event)
         except CandidateRevisionChanged as error:
             terminal_status = "error"
             add_trace_step(trace_id, "persistence", operation, duration=time.perf_counter() - save_started,
@@ -1421,6 +1629,10 @@ async def chat_stream_sse(request: Request):
             if error.code in {"run_superseded", "run_stopped"}:
                 terminal_status = error.code.removeprefix("run_")
                 terminal_event = {"type": terminal_status, **ids}
+            elif isinstance(error, ChatSessionInvalid):
+                terminal_status = "error"
+                terminal_event = {"type": "error", "error_code": error.code,
+                                  "content": "登录会话已失效，请重新登录", **ids}
             elif error.code == "product_evidence_scope_changed":
                 terminal_status = "error"
                 add_trace_step(trace_id, "persistence", operation, status="error", error_code=error.code,
@@ -1463,7 +1675,7 @@ async def chat_stream_sse(request: Request):
                         terminal_event = {"type": persisted, **ids}
                 if not tracked:
                     await run_in_threadpool(end_trace, trace_id, terminal_status)
-        yield "data: " + json.dumps(terminal_event) + "\n\n"
+        yield terminal_frame if terminal_status == "completed" else "data: " + json.dumps(terminal_event) + "\n\n"
 
     return ChatStreamingResponse(gen(), execution=execution, group_run=group_run, media_type="text/event-stream",
                                  headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
@@ -1499,6 +1711,7 @@ if __name__ == "__main__":
     print(f"FastAPI server starting on http://{host}:{port}")
     if not settings.DIAGNOSIS_MYSQL_ENABLED:
         print(f"WebSocket chat endpoint: ws://127.0.0.1:{port}/ws/chat")
+    if settings.APP_STARTUP_MODE == "demo":
         print("Login accounts: boss/admin123 | admin/admin123 | zhangsan/user123 | lisi/user123")
     print(f"API docs (Swagger): http://127.0.0.1:{port}/docs")
     uvicorn.run(app, host=host, port=port)

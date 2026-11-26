@@ -186,7 +186,7 @@ async function run() {
     await select(a);
     await openProgress("receipt");
     await archive.click();
-    await page.waitForFunction(() => document.querySelector("#chatGroupArchive").textContent === "归档当前群");
+    await page.waitForFunction(() => document.querySelector("#chatGroupArchive").textContent === "归档会话");
     await events(await send("A_RESUME"));
     await bubbles.getByText("A_RESUME_ANSWER", { exact: true }).waitFor();
     await events(await send("A_FAIL"));

@@ -37,7 +37,7 @@ async function run(browser, root, artifact, name, message) {
     await page.locator('#loginCaptcha').press('Enter');
     await page.locator('#navUsername').getByText('diagnosis-demo', { exact: true }).waitFor();
     await page.locator('[data-page="chat"]').click();
-    await page.getByRole('button', { name: '投放诊断', exact: true }).click();
+    await page.getByRole('button', { name: '广告计划复核', exact: true }).click();
     await page.getByRole('textbox', { name: '诊断需求' }).fill(message);
     await page.evaluate(() => {
       const original = window.fetch.bind(window);

@@ -34,7 +34,10 @@ COMPARE_EXPLICIT = re.compile(r"比较|对比|\bcompare\b", re.I)
 NAMED_PRODUCT_LIST = re.compile(r"^\s*(?:请(?:帮我)?\s*)?(?P<names>[^。！？\n]+?、[^。！？\n]+?)\s*这[几三]款")
 NUMBERS = {**dict(zip("一二两三四五六七八九十", (1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10))),
            **dict(zip("one two three four five six seven eight nine".split(), range(1, 10)))}
-DRAFT_REQUEST = re.compile(r"五[点條条]|bullet\s*points?|five\s+bullets?", re.I)
+DRAFT_REQUEST = re.compile(r"五[点條条]|英文卖点|bullet\s*points?|five\s+bullets?", re.I)
+OPERATIONS_INSPECTION = re.compile(r"巡检|运营检查")
+PRIORITY_INSPECTION = re.compile(r"(?:哪些|哪几款|哪款|什么)\s*(?:商品|产品).{0,18}(?:优先处理|优先跟进|值得处理)")
+THREE_PRODUCTS = re.compile(r"(?:巡检|运营检查)\s*这三款(?:商品|产品)")
 EDIT = re.compile(r"重写|改写|修改|更新|优化|润色|生成|拟写|撰写|调整|编写|写|改|"
                   r"\b(?:rewrite|revise|edit|update|draft|generate|write|improve)\b", re.I)
 NEGATED_EDIT = re.compile(r"不要|不用|无需|不必|不需要|不再|先不|别|禁止|不$|"
@@ -76,7 +79,7 @@ STRICT_THRESHOLD = re.compile(r"超过|大于|more than|over", re.I)
 
 
 def requested(message, user_id=None, product_context=None):
-    if _inspection_requested(message):
+    if _operations_requested(message) or _inspection_requested(message) or PRIORITY_INSPECTION.search(message):
         return True
     if SELECT_PRODUCT.search(message):
         return True
@@ -113,6 +116,10 @@ def _wants_draft(message):
         if DRAFT_REQUEST.search(clause) and (edit := EDIT.search(clause)) and not NEGATED_EDIT.search(clause[:edit.start()]):
             return True
     return False
+
+
+def _operations_requested(message):
+    return bool(OPERATIONS_INSPECTION.search(message) and _wants_draft(message))
 
 
 def _windows(message, today, *, comparison=False, sales_only=False):
@@ -321,15 +328,22 @@ def run_listing(message, user_id, group_run, provider, model, budget, trace_id, 
     followup = context.get("decline_request") and (CONFIRM_REWRITE.fullmatch(message) or SET_THRESHOLD.fullmatch(message))
     timezone = ZoneInfo(listings.SALES_TIMEZONE)
     today = group_run.requested_at.astimezone(timezone).date() if group_run.requested_at else datetime.now(timezone).date()
+    operations = _operations_requested(message)
+    inspection = not operations and _inspection_requested(message)
+    if not operations and not inspection and PRIORITY_INSPECTION.search(message):
+        from backend.agent.operations_inspection import inspect
+
+        return inspect(message, user_id, group_run, provider, model, budget, trace_id, evidence_sink,
+                       today=today, allow_delegation=allow_delegation)
     catalog = _catalog(user_id)
-    inspection = _inspection_requested(message)
-    if inspection and _wants_draft(message):
-        return "请分别提交商品巡检和五点改写请求。"
     named = NAMED_PRODUCT_LIST.match(message) if inspection else None
-    comparison = inspection or _comparison_requested(message, catalog)
-    candidates = (_inspection_targets(catalog, message, named["names"] if named else None) if inspection
+    comparison = operations or inspection or _comparison_requested(message, catalog)
+    candidates = (_inspection_targets(catalog, message, named["names"] if named else None) if inspection or operations
                   else _target(catalog, message, context, comparison=comparison))
-    if inspection and (len(candidates) != 3 or len({row["sku"].casefold() for row in candidates}) != 3
+    if (operations and not candidates and len(catalog) == 3 and THREE_PRODUCTS.search(message)
+            and not any(_identifier_mentions(label, message) for label in (SKU_LABEL, SHOP_LABEL, MARKET_LABEL))):
+        candidates = catalog
+    if (inspection or operations) and (len(candidates) != 3 or len({row["sku"].casefold() for row in candidates}) != 3
                        or len({(row["shop_id"], row["marketplace_id"]) for row in candidates}) != 1):
         add_trace_step(trace_id, "listing_target", "inspection_scope_rejected")
         return "请提供同一授权店铺、同一站点内三款可唯一识别的商品名称或 SKU。"
@@ -342,7 +356,7 @@ def run_listing(message, user_id, group_run, provider, model, budget, trace_id, 
         if comparison:
             return "请核对比较名单中的每款商品，并提供本账号可访问的商品名或 SKU。"
         return "请提供一个有权访问的测试 SKU。若同一 SKU 有多个店铺或站点，请指定店铺编号和站点。"
-    selection = bool(followup) or not (SALES_REQUEST.search(message) or DRAFT_REQUEST.search(message))
+    selection = not operations and (bool(followup) or not (SALES_REQUEST.search(message) or DRAFT_REQUEST.search(message)))
     request = (context.get("decline_request") if followup else context.get("request")) if selection else message
     request = request or message
     if selection and request != message and context.get("statistics_date"):
@@ -368,12 +382,15 @@ def run_listing(message, user_id, group_run, provider, model, budget, trace_id, 
         evidence_sink({"kind": listings.KIND, "target": target, "proposal": None, "gaps": [], "artifacts": {}})
         return f"当前商品已设为 {candidates[0]['title']}（店铺 {target['shop_id']} · 站点 {target['marketplace_id']} · SKU {target['sku']}）。"
     wants_draft = _wants_draft(request)
-    windows = _windows(request, today, comparison=comparison,
+    windows = _windows("" if operations else request, today, comparison=comparison,
                        sales_only=not comparison and not wants_draft and bool(SALES_REQUEST.search(request)))
     if windows is None:
         return "请指定最近 2–62 天内的偶数天数、连续可平分的日期范围，或两个等长且不重叠的比较窗口。"
     execution = budget.execution
     condition = _threshold(request) if wants_draft else None
+    operations_threshold = settings.LISTING_SIGNIFICANT_DECLINE_PCT if operations else None
+    if operations:
+        condition = {"threshold_pct": operations_threshold, "operator": "gte", "threshold_source": "configuration"}
     if followup:
         if match := SET_THRESHOLD.fullmatch(message):
             value = float(match[1])
@@ -398,11 +415,16 @@ def run_listing(message, user_id, group_run, provider, model, budget, trace_id, 
     ranking = "incomplete" if comparison else None
     ranked_rows = []
     candidate_by_sku = {row["sku"]: row for row in targets}
+    eligible = set()
+    product_receipts = {}
+    assessments = {}
 
     def effective_args(name, args):
         if name == SALES:
             return {**candidate_by_sku[args["sku"]], **window_args}
-        return candidate_by_sku.get(args.get("sku"), {}) if inspection else target or {}
+        if inspection or operations:
+            return candidate_by_sku.get(args.get("sku"), {}) if inspection or args.get("sku") in eligible else {}
+        return target or {}
 
     def validate_scope(name, args):
         if name == SALES and args.get("sku") not in candidate_by_sku:
@@ -542,11 +564,13 @@ def run_listing(message, user_id, group_run, provider, model, budget, trace_id, 
     def basis(check):
         nonlocal invalidated
         sales_rows.clear()
+        product_receipts.clear()
         receipts = {}
         for row in run.tool_receipts(*LISTING_READS):
             name = row["source"]
             sku = (row.get("arguments") or {}).get("sku")
-            if name == SALES and sku in sales_rows or name != SALES and name in receipts:
+            if (name == SALES and sku in sales_rows or name != SALES and
+                    (name in product_receipts.get(sku, {}) if operations else name in receipts)):
                 continue
             if row["status"] != "succeeded":
                 continue
@@ -555,10 +579,13 @@ def run_listing(message, user_id, group_run, provider, model, budget, trace_id, 
             else:
                 if name == SALES:
                     sales_rows[sku] = row
+                elif operations:
+                    product_receipts.setdefault(sku, {})[name] = row
                 else:
                     receipts[name] = row
         if target and target["sku"] in sales_rows:
             receipts[SALES] = sales_rows[target["sku"]]
+            receipts.update(product_receipts.get(target["sku"], {}))
         return receipts
 
     def fresh_basis():
@@ -591,6 +618,8 @@ def run_listing(message, user_id, group_run, provider, model, budget, trace_id, 
                             ranking_status=ranking, candidate_titles={row["sku"]: row["title"] for row in candidates})
             if ranking != "selected":
                 evidence["gaps"] = ["incomplete_listing_sales"] if ranking == "incomplete" else []
+        if operations:
+            evidence["operations_inspection"] = {"threshold_pct": operations_threshold, "products": assessments}
         if wants_draft and FACTS in receipts and len(evidence["facts"]["facts"]) < 5:
             evidence["gaps"].append("insufficient_listing_facts")
         if fields := fact_fields(receipts):
@@ -619,6 +648,12 @@ def run_listing(message, user_id, group_run, provider, model, budget, trace_id, 
         )
         inputs = {"target": target, "facts": receipts[FACTS]["result"],
                   "required_wording": [WORDING_ALIASES.get(term, term) for term in wording]}
+        inspection_basis = None
+        if operations:
+            omissions = assessments[target["sku"]]["omissions"]
+            instructions += " Include at least one fact ID from omitted_fact_ids."
+            inputs["omitted_fact_ids"] = omissions
+            inspection_basis = {"threshold_pct": operations_threshold, "omitted_fact_ids": omissions}
         if not comparison:
             inputs["request"] = request
         args = None
@@ -653,6 +688,7 @@ def run_listing(message, user_id, group_run, provider, model, budget, trace_id, 
                 artifact_refs={key: receipts[name]["artifact_id"]
                                for key, name in (("listing", CURRENT), ("facts", FACTS), ("sales", SALES))},
                 comparison=ranked_rows if comparison else None,
+                inspection=inspection_basis,
             )
             if any(not any(_has_wording(term, text) for text in proposal["after_bullets"]) for term in wording):
                 add_trace_step(trace_id, "listing_proposal", "rejected", error_code="listing_required_wording_omitted")
@@ -681,6 +717,10 @@ def run_listing(message, user_id, group_run, provider, model, budget, trace_id, 
                    "SKU. Either call get_listing_current and get_listing_facts directly or delegate those reads. "
                    "The server selects the SKU, verifies upstream tool receipts and attaches them to Worker inputs. "
                    "Use fresh task IDs in each batch and omit direct_refs.")
+    if operations:
+        prompt += (" In product evidence collection, pending_product_reads replaces the selected-SKU restriction. "
+                   "Collect each listed tool/SKU pair directly or by delegation. Only those product SKUs met the threshold.")
+        group_run.progress("listing_stage", "正在查询三款商品销量")
     messages = [{"role": "system", "content": prompt}, {"role": "user", "content": message}]
     if request != message:
         messages.append({"role": "user", "content": "Original request awaiting this product selection: " +
@@ -693,6 +733,12 @@ def run_listing(message, user_id, group_run, provider, model, budget, trace_id, 
         if comparison and len(sales_rows) == len(targets) and target is None:
             ranked_rows = [sales_rows[row["sku"]] for row in targets]
             ranking, target = listings.rank_sales([row["result"] for row in ranked_rows])
+            if operations and ranking in {"selected", "no_decline", "tied"}:
+                for sku, row in sales_rows.items():
+                    met = _decline_status(condition, {SALES: row}) == "met"
+                    assessments[sku] = {"eligible": met}
+                    if met:
+                        eligible.add(sku)
             scope["target"] = target
             add_trace_step(trace_id, "listing_ranking", ranking, evidence={"target": target, "receipts": [
                 {"target": row["result"]["target"], "artifact_id": row["artifact_id"],
@@ -715,20 +761,43 @@ def run_listing(message, user_id, group_run, provider, model, budget, trace_id, 
             break
         if comparison and target and not wants_draft and condition is None:
             break
-        if wants_draft and (_sales_incomplete(prior) or unverified_wording(prior) or fact_fields(prior)):
+        if wants_draft and not operations and (_sales_incomplete(prior) or unverified_wording(prior) or fact_fields(prior)):
             break
         if condition is not None and SALES in prior and _decline_status(condition, prior) != "met":
             break
         if not execution.remaining()["model"]:
             break
         missing = {SALES} if collecting_sales else required - prior.keys()
+        pending_product_reads = []
+        if operations and target:
+            pending_product_reads = [{"tool": name, "sku": sku} for sku in candidate_by_sku if sku in eligible
+                                     for name in (CURRENT, FACTS) if name not in product_receipts.get(sku, {})]
+            missing = {row["tool"] for row in pending_product_reads}
         if sales_first and SALES in missing:
             missing = {SALES}
         options = [tool for tool in READ_TOOLS if tool["function"]["name"] in missing]
-        if allow_delegation and (len(missing) > 1 or collecting_sales) and run.tasks_left():
+        if allow_delegation and (len(missing) > 1 or collecting_sales or len(pending_product_reads) > 1) and run.tasks_left():
             options.append(DELEGATE)
-        if wants_draft and REQUIRED_FOR_DRAFT <= prior.keys():
+        if operations and target and not pending_product_reads:
+            from backend.agent.listing_inspection import check_fact_coverage
+
+            group_run.progress("listing_stage", "正在核对达到阈值商品的原 Listing 和事实")
+            omissions = check_fact_coverage(product_receipts, provider, model, budget, trace_id)
+            with checkpoint("inspection") as check:
+                observed = [*ranked_rows, *(row for rows in product_receipts.values() for row in rows.values())]
+                invalidated = next((code for row in observed if (code := recheck(row, check, "fact_coverage"))), None)
+            if invalidated:
+                break
+            for sku in eligible:
+                facts = product_receipts[sku][FACTS]["result"]
+                assessments[sku].update(omissions=omissions.get(sku), missing_fields=listings.missing_fact_fields(facts),
+                                        fact_count=len(facts["facts"]))
+            if not omissions.get(target["sku"]) or unverified_wording(prior):
+                break
+        if wants_draft and REQUIRED_FOR_DRAFT <= prior.keys() and not pending_product_reads:
             if len(prior[FACTS]["result"]["facts"]) >= 5:
+                if operations:
+                    group_run.progress("listing_stage", "正在为入选商品起草待审批五点")
                 if proposal := draft(prior):
                     evidence = snapshot(prior, proposal)
                     evidence_sink(evidence)
@@ -745,9 +814,11 @@ def run_listing(message, user_id, group_run, provider, model, budget, trace_id, 
         decision_scope = {**scope, "draft_requested": wants_draft}
         if comparison:
             decision_scope.update(pending_sales_skus=pending_skus)
+        if operations:
+            decision_scope["pending_product_reads"] = pending_product_reads
         decision_messages = [{**messages[0], "content": prompt + "\n" + json.dumps(decision_scope, ensure_ascii=False)},
                              *messages[1:]]
-        if sales_first and missing == {CURRENT, FACTS}:
+        if sales_first and not operations and missing == {CURRENT, FACTS}:
             decision_messages[0]["content"] += (
                 "\nThe server verified complete sales in both windows. For a direct read, return two separate "
                 "tool calls in this single response: get_listing_current and get_listing_facts, both with "
@@ -841,7 +912,8 @@ def run_listing(message, user_id, group_run, provider, model, budget, trace_id, 
         if delegated_batch:
             execute_batch()
             receipts = fresh_basis()
-        if receipts.keys() == prior.keys() and all(sku not in sales_rows for sku in pending_skus):
+        if (receipts.keys() == prior.keys() and all(sku not in sales_rows for sku in pending_skus)
+                and all(row["tool"] not in product_receipts.get(row["sku"], {}) for row in pending_product_reads)):
             stalled += 1
             if stalled >= 3:
                 break
@@ -883,13 +955,33 @@ def _summary(evidence):
                 change = metric["units_change_pct"]
                 movement = ("基准为零，相对降幅无定义" if change is None else
                             f"{'下降' if change < 0 else '上升'} {abs(change):.2f}%" if change else "持平")
-                lines.append(f"{label} {before['units']} → {after['units']} 件，{movement}，当前窗覆盖 {after['covered_days']}/{len(after['days'])} 天。")
+                lines.append(f"{label} {before['units']} → {after['units']} 件，{movement}，基准窗覆盖 "
+                             f"{before['covered_days']}/{len(before['days'])} 天，当前窗覆盖 {after['covered_days']}/{len(after['days'])} 天。")
         status = evidence["ranking_status"]
         if target:
             lines.append(f"相对降幅最大，入选 {titles[target['sku']]}（{target['sku']}）。")
         else:
             lines.append({"incomplete": "销量证据不齐，暂缓排名。", "baseline_zero": "有商品基准销量为零，暂缓按相对降幅排名。",
                           "tied": "最大相对降幅并列，未选出唯一商品。", "no_decline": "候选销量均未下降，未选出商品。"}[status])
+        if assessment := evidence.get("operations_inspection"):
+            threshold = assessment["threshold_pct"]
+            if threshold is None:
+                lines.append("尚未配置巡检下滑阈值，暂缓核对和起草。")
+            if threshold is not None and status != "incomplete":
+                for sku, item in assessment["products"].items():
+                    if not item["eligible"]:
+                        outcome = f"未达到 {threshold:g}% 下滑阈值，无需处理。"
+                    elif item.get("missing_fields"):
+                        outcome = "缺少" + "、".join(item["missing_fields"].values()) + "依据，暂缓起草英文五点。"
+                    elif item.get("omissions") is None:
+                        outcome = "现有五点的事实覆盖尚待核验。"
+                    elif not item["omissions"]:
+                        outcome = "现有五点已覆盖核验的商品事实，无需处理。"
+                    elif target and sku == target["sku"]:
+                        outcome = f"达到 {threshold:g}% 下滑阈值，现有五点遗漏 {len(item['omissions'])} 项有原文支持的商品事实。"
+                    else:
+                        outcome = f"现有五点遗漏 {len(item['omissions'])} 项有原文支持的商品事实，留待后续处理。"
+                    lines.append(f"{titles[sku]}（{sku}）{outcome}")
     elif metrics := evidence.get("metrics"):
         after = metrics["current"]
         if "baseline" not in metrics:
@@ -909,7 +1001,7 @@ def _summary(evidence):
             lines.append("基准销量为 0 件，相对变化率无定义。")
         else:
             lines.append("窗口记录不完整，销量变化量和变化率未知。")
-    if condition := evidence.get("decline_condition"):
+    if (condition := evidence.get("decline_condition")) and "operations_inspection" not in evidence:
         status = condition["status"]
         if status == "threshold_unknown":
             lines.append("尚未设定明显下滑的百分比阈值。请提供阈值，或确认是否直接根据商品资料改写。")

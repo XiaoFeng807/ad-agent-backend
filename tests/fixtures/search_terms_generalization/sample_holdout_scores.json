@@ -1,0 +1,21 @@
+{
+  "cases": {
+    "impressions-99": {"action": "observe", "code": "sample", "source_rows": [], "demand": {"product_type": "silverware organizer", "attribute": "depth", "value": "76.2", "unit": "mm", "conditions": {}}},
+    "impressions-100": {"action": "title", "code": "supported_missing", "source_rows": [2, 3], "demand": {"product_type": "silverware organizer", "attribute": "depth", "value": "76.2", "unit": "mm", "conditions": {}}},
+    "impressions-101": {"action": "title", "code": "supported_missing", "source_rows": [2, 3], "demand": {"product_type": "silverware organizer", "attribute": "depth", "value": "76.2", "unit": "mm", "conditions": {}}},
+    "clicks-19": {"action": "observe", "code": "sample", "source_rows": [], "demand": {"product_type": "ceiling monitor mount", "attribute": "vesa", "value": "75x75", "unit": "mm", "conditions": {}}},
+    "clicks-20": {"action": "title", "code": "supported_missing", "source_rows": [2, 3], "demand": {"product_type": "ceiling monitor mount", "attribute": "vesa", "value": "75x75", "unit": "mm", "conditions": {}}},
+    "clicks-21": {"action": "title", "code": "supported_missing", "source_rows": [2, 3], "demand": {"product_type": "ceiling monitor mount", "attribute": "vesa", "value": "75x75", "unit": "mm", "conditions": {}}},
+    "orders-1": {"action": "observe", "code": "sample", "source_rows": [], "demand": {"product_type": "coffee filter", "attribute": "model", "value": "selwyn cf-28 elite", "unit": "", "conditions": {}}},
+    "orders-2": {"action": "title", "code": "supported_missing", "source_rows": [2, 3], "demand": {"product_type": "coffee filter", "attribute": "model", "value": "selwyn cf-28 elite", "unit": "", "conditions": {}}},
+    "orders-3": {"action": "title", "code": "supported_missing", "source_rows": [2, 3], "demand": {"product_type": "coffee filter", "attribute": "model", "value": "selwyn cf-28 elite", "unit": "", "conditions": {}}},
+    "cvr-below-6-of-61": {"action": "observe", "code": "sample", "source_rows": [], "demand": {"product_type": "soap dispenser", "attribute": "cleaning", "value": "hand wash only", "unit": "", "conditions": {"part": "tray", "restriction": ""}}},
+    "cvr-at-6-of-60": {"action": "title", "code": "supported_missing", "source_rows": [2, 3], "demand": {"product_type": "soap dispenser", "attribute": "cleaning", "value": "hand wash only", "unit": "", "conditions": {"part": "tray", "restriction": ""}}},
+    "cvr-above-6-of-59": {"action": "title", "code": "supported_missing", "source_rows": [2, 3], "demand": {"product_type": "soap dispenser", "attribute": "cleaning", "value": "hand wash only", "unit": "", "conditions": {"part": "tray", "restriction": ""}}},
+    "control-title": {"action": "title", "code": "supported_missing", "source_rows": [2, 3], "demand": {"product_type": "silverware organizer", "attribute": "depth", "value": "76.2", "unit": "mm", "conditions": {}}},
+    "control-conflict": {"action": "review", "code": "fact_conflict", "source_rows": [2, 3], "demand": {"product_type": "ceiling monitor mount", "attribute": "vesa", "value": "75x75", "unit": "mm", "conditions": {}}},
+    "control-conflict-low-cvr": {"action": "review", "code": "fact_conflict", "source_rows": [2, 3], "demand": {"product_type": "ceiling monitor mount", "attribute": "vesa", "value": "75x75", "unit": "mm", "conditions": {}}},
+    "control-conflict-low-clicks": {"action": "observe", "code": "sample", "source_rows": [], "demand": {"product_type": "ceiling monitor mount", "attribute": "vesa", "value": "75x75", "unit": "mm", "conditions": {}}},
+    "control-mixed-low-sample": {"action": "observe", "code": "unattributed", "source_rows": [], "demand": {"product_type": "coffee filter", "attribute": "model", "value": "selwyn cf-28 elite", "unit": "", "conditions": {}}}
+  }
+}

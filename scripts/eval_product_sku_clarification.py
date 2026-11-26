@@ -24,7 +24,7 @@ CLARIFICATIONS = ("S03", "S06", "S09", "S12")
 TITLE = "ArcTrail 折叠工作灯"
 ARC_OPTIONS = [{"title": TITLE, "sku": sku} for sku in ("ARC-220", "ARC-480")]
 CATALOG_OPTIONS = [*ARC_OPTIONS, {"title": "DriftPod 旅行冲洗泵", "sku": "DRIFT-P12"}]
-EMPTY = "当前范围没有可选商品，请检查店铺和站点。"
+EMPTY = "当前账号无法访问该范围的商品资料，请核对店铺、站点和 SKU。"
 
 
 class FixedEmbedding:

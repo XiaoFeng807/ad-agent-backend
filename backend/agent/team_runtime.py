@@ -14,10 +14,10 @@ from backend.agent.alert_review import AlertReview
 from backend.agent.conditional_detail import ConditionalDetail, DETAIL
 from backend.agent.llm_provider import ProviderFactory, create_completion
 from backend.agent.multi_window_review import RULE, MultiWindowReview
-from backend.agent.request_budget import ContextBudgetExceeded, RequestBudget, tool_call_fields
+from backend.agent.request_budget import ChatSessionInvalid, ContextBudgetExceeded, RequestBudget, tool_call_fields
 from backend.agent.team_contracts import Identifier, ReceiptBoard
 from backend.agent.team_tools import (
-    DELEGATION_SCHEMAS, LISTING_READS, GuardedTools, RunReadCache, TeamBudget, plan_scope_error, read_key,
+    DELEGATION_SCHEMAS, LISTING_READS, OPERATIONS_READS, GuardedTools, RunReadCache, TeamBudget, plan_scope_error, read_key,
     readonly_functions, tool_arguments,
 )
 from backend.observability import add_trace_step, end_trace, start_trace
@@ -68,7 +68,7 @@ class DelegationRun:
                  run_id=None, progress=None, detail_goal=None, review_goal=None,
                  conversation_id=None, alert_requested_at=None, notice=None, input_scope_error=None,
                  read_scope=None, tool_scope_error=None, effective_tool_args=None, read_cache=None,
-                 verified_inputs=None, input_batch_error=None):
+                 verified_inputs=None, input_batch_error=None, track_worker_ids=False):
         if type(user_id) is not int or user_id <= 0:
             raise ValueError("authenticated_user_required")
         if any(type(limit) is not int or limit <= 0 for limit in (task_limit, concurrency)):
@@ -96,6 +96,7 @@ class DelegationRun:
         self._tool_scope_error = tool_scope_error
         self._effective_tool_args = effective_tool_args
         self._verified_inputs = verified_inputs
+        self._track_worker_ids = track_worker_ids
         self._dispatches = {}
         self._task_scopes = {}
         self.independent_review = bool(alert_requested_at or (review_goal and review_goal.independent))
@@ -183,7 +184,7 @@ class DelegationRun:
 
     def _progress_scope(self, source, args):
         scope = {key: value for key, value in (args or {}).items()
-                 if key in {"plan_id", "start_date", "end_date"}}
+                 if key in {"plan_id", "start_date", "end_date", "sku"}}
         if source == "get_plan_metrics_by_date" and isinstance(self.condition, MultiWindowReview):
             for name in ("baseline", "current"):
                 window = getattr(self.condition.goal, name)
@@ -211,7 +212,7 @@ class DelegationRun:
         with self._state_lock:
             accepted = self._active() and self._budget.admit(lambda: self._board.accept(
                 run_id=self._board.run_id, task_id=task_id, attempt=attempt,
-                worker_id=worker_id if self.independent_review else None, **receipt,
+                worker_id=worker_id if self.independent_review or self._track_worker_ids else None, **receipt,
             ))
         add_trace_step(trace_id, "receipt", "accepted" if accepted else "rejected", detail=task_id,
                        parent_call_id=worker_id, runtime_call_id=receipt["tool_call_id"],
@@ -325,6 +326,8 @@ class DelegationRun:
                                capabilities=task.capabilities, **identity)
             try:
                 reply, error = self._work(task, inputs, direct_inputs, attempt, trace_id, worker_id)
+            except ChatSessionInvalid:
+                raise
             except Exception:
                 reply, error = None, "worker_exception"
             artifact_id = uuid4().hex
@@ -416,7 +419,7 @@ class DelegationRun:
                              read_cache=self.read_cache, condition=self.condition,
                              on_read=on_read if self._progress else None, on_reuse=self._notice,
                              scope_error=self._tool_scope_error, effective_args=self._effective_tool_args)
-        descriptions = {**(HOME_TOOL_DESCRIPTIONS if self._project else TOOL_DESCRIPTIONS), **LISTING_READS}
+        descriptions = {**(HOME_TOOL_DESCRIPTIONS if self._project else TOOL_DESCRIPTIONS), **LISTING_READS, **OPERATIONS_READS}
         schemas = [{"type": "function", "function": {"name": name, "description": descriptions[name],
                     "parameters": DELEGATION_SCHEMAS[name].model_json_schema()}} for name in task.capabilities]
         if self._project and not reviewing:
@@ -492,9 +495,17 @@ class DelegationRun:
                     return None, "expired_receipt"
                 response = create_completion(
                     self._provider, None, role="team_worker", step="delegate_tasks", sdk_max_retries=0,
+                    authorize_dispatch=lambda: self._budget.require_session(
+                        trace_id, "sdk_dispatch", role="team_worker", runtime_call_id=model_call_id,
+                        parent_call_id=worker_id,
+                    ),
                     timeout=max(0.001, min(30, self._budget.seconds_left())), **payload,
                 )
                 message = response.choices[0].message
+            except ChatSessionInvalid as error:
+                add_trace_step(trace_id, "model_result", "team_worker", status="error", detail=task.task_id,
+                               parent_call_id=worker_id, runtime_call_id=model_call_id, error_code=error.code)
+                raise
             except Exception:
                 add_trace_step(trace_id, "model_result", "team_worker", status="error", detail=task.task_id,
                                parent_call_id=worker_id, runtime_call_id=model_call_id, error_code="model_failure")

@@ -14,6 +14,7 @@ from backend.agent.conditional_detail import CONDITIONAL_READS
 from backend.agent.diagnosis import DateString, DiagnosisWindows, calculate_ctr, verified_ctr_policy
 from backend.agent.alert_review import WEEKLY_ALERTS, AlertReview
 from backend.agent.multi_window_review import ALERTS, MultiWindowReview
+from backend.agent.request_budget import ChatSessionInvalid
 from backend.agent.review_task_sheet import ReviewTaskSheet
 from backend.agent.team_contracts import TeamPlan
 from backend.agent.team_runtime import HOME_TOOL_DESCRIPTIONS, DelegationRun, delegate_tasks
@@ -416,7 +417,7 @@ def project_extra_read(name, result):
 
 
 def scoped_read(name, arguments, func, user_id, budget, step, *, legacy=False, accept=None,
-                duplicate=None, executing=None):
+                duplicate=None, executing=None, trace_id=None, role=None, call_id=None):
     """Keep legacy results compatible while admitting reads under the homepage budget."""
     def reject(code):
         step["error_code"] = code
@@ -446,10 +447,15 @@ def scoped_read(name, arguments, func, user_id, budget, step, *, legacy=False, a
     if not budget.reserve("tool"):
         return reject("budget_exhausted_or_cancelled")
     try:
+        budget.require_session(trace_id, "tool_read", role=role, tool_call_id=call_id)
         if executing:
             executing(args)
         scoped = args if name == "search_knowledge" else {**args, "user_id": user_id}
         result = func(**scoped)
+        budget.require_session(trace_id, "tool_receipt", role=role, tool_call_id=call_id)
+    except ChatSessionInvalid as error:
+        step["error_code"] = error.code
+        raise
     except Exception:
         if not budget.active():
             return reject("expired_receipt")
@@ -992,7 +998,8 @@ class HomeReAct:
                                    evidence={"run_id": self._run.read_cache.run_id})
 
                 result = scoped_read(name, raw, function_map.get(name), self._user_id, self._budget, step,
-                                     accept=accept, duplicate=duplicate, executing=executing)
+                                     accept=accept, duplicate=duplicate, executing=executing,
+                                     trace_id=self._trace_id, role="orchestrator", call_id=call_id)
             if name == ALERTS and isinstance(self.condition, MultiWindowReview):
                 self.condition.record_alerts(result)
             return project_extra_read(name, result)

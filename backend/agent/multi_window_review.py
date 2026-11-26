@@ -1,7 +1,8 @@
-"""Freeze the explicit two-plan review requested in this work-group turn."""
+"""Freeze the requested review and admit details from verified turn evidence."""
 
 import json
 import re
+import sqlite3
 from dataclasses import dataclass
 from datetime import date
 
@@ -9,9 +10,10 @@ from pydantic import ValidationError
 
 from backend.agent.conditional_detail import CONDITIONAL_READS, DETAIL, METRICS, DetailAdmission
 from backend.agent.diagnosis import DateWindow, calculate_ctr, verified_ctr_policy
-from backend.agent.team_tools import MetricsArgs, PERMANENT_READ_GAPS
+from backend.agent.team_tools import MetricsArgs, PERMANENT_READ_GAPS, current_metric_bindings
 from backend.observability import add_trace_step
 from backend.rag.rule_reference import canonical_rule_query, parse_rule_reference, rule_query_scope
+from backend.tools.plan_metrics import metric_source_version
 
 
 RULE = "search_knowledge"
@@ -21,9 +23,11 @@ _DATE = r"[0-9]{4}-[0-9]{2}-[0-9]{2}"
 _RANGE = rf"(?:为|是|[:：])?\s*({_DATE})\s*(?:至|到|~|～|—|–)\s*({_DATE})"
 _VERSION = r"v[0-9]+(?:\.[0-9]+)*"
 _DETAIL_GATE = (
-    r"(?:清单确定|确定清单|取证完成|核验完成|完成核验|"
-    r"证据齐全且确认达到复核条件|(?:入选)?(?:名单|清单)(?:确认|确定))"
-    r"(?:之|以)?后[，,\s]*(?:才|仅|只|再)[^。；\n]*入选[^。；\n]*(?:详情|明细)"
+    r"(?:(?:清单确定|确定清单|取证完成|核验完成|完成核验|核实完毕|"
+    r"(?:证据|依据)(?:齐全|齐备|完整)(?:且确认达到复核条件)?|(?:入选)?(?:名单|清单)(?:确认|确定))"
+    r"(?:之|以)?后[，,\s]*(?:才|仅|只|再|方可)|"
+    r"(?:只有|仅在|如果|若)[^。；\n]*(?:齐全|齐备|完整|均已核验|均已核实)[^。；\n]*(?:才|方可))"
+    r"[^。；\n]*(?:入选|达标|符合条件)[^。；\n]*(?:详情|明细)"
 )
 _METRIC_KEYS = ("source_id", "data_version", "source_plan_id", "impressions", "clicks")
 _FIELDS = {"plan_name": "名称", "status": "当前状态", "daily_budget": "日预算"}
@@ -35,6 +39,9 @@ _GAPS = {
     "review_rule_missing": "本轮缺少指定版本的可核验条文",
     "review_rule_conflict": "指定规则回执冲突",
     "review_alert_not_confirmed": "尚未核实未读严重 CTR 告警",
+    "review_no_unique_target": "按指定条文无法选出唯一入选计划",
+    "read_scope_changed": "当前账号已无法读取该计划",
+    "read_scope_unverified": "无法核验当前账号的计划读取权限",
     "plan_history_not_mapped": "未绑定历史来源",
     "plan_history_missing_dates": "历史数据缺报",
     "source_version_mismatch": "历史来源版本不匹配",
@@ -49,6 +56,7 @@ class ReviewGoal:
     rule: str
     needs_alert: bool
     independent: bool = False
+    unique_required: bool = False
 
     @property
     def windows(self):
@@ -57,24 +65,27 @@ class ReviewGoal:
     def trace_fields(self):
         return {"plan_ids": self.plan_ids, "baseline": self.baseline.model_dump(),
                 "current": self.current.model_dump(), "rule": self.rule, "needs_alert": self.needs_alert,
-                **({"independent_review": True} if self.independent else {})}
+                **({"independent_review": True} if self.independent else {}),
+                **({"unique_required": True} if self.unique_required else {})}
 
 
 def parse_review_goal(request):
     """Recognize the gated list intent before validating its explicit parameters."""
-    if not (re.search(r"\bCTR\b|点击率", request, re.I) and re.search(r"复核|入选", request)
-            and re.search(r"清单|入选", request) and re.search(r"详情|明细|名称|状态|预算", request)):
+    gate = re.search(_DETAIL_GATE, request)
+    if not (re.search(r"\bCTR\b|点击率", request, re.I | re.ASCII)
+            and re.search(r"详情|明细|名称|状态|预算", request)
+            and (gate or (re.search(r"复核|入选", request) and re.search(r"清单|入选", request)))):
         return False, None
     plans = list(dict.fromkeys(re.findall(r"#([0-9]+)", request)))
-    base = re.findall(rf"基准(?:窗口|窗)\s*{_RANGE}", request)
-    current = re.findall(rf"当前(?:窗口|窗)\s*{_RANGE}", request)
+    base = re.findall(rf"(?:基准|基线)(?:窗口|窗|期)\s*{_RANGE}", request)
+    current = re.findall(rf"(?:当前|近期)(?:窗口|窗|期)\s*{_RANGE}", request)
     versions = set(re.findall(rf"(?<![\w.])({_VERSION})(?![\w.])", request.lower(), re.ASCII))
     rules = set(re.findall(rf"(?:《?点击率下降复核》?\s*({_VERSION})|ctr-review-({_VERSION})#low-ctr)",
                            request.lower()))
     rule_versions = {title or reference for title, reference in rules}
     if (len(plans) != 2 or any(len(plan) > 19 for plan in plans) or len(base) != 1 or len(current) != 1
             or len(re.findall(_DATE, request)) != 4 or versions != rule_versions or len(rule_versions) != 1
-            or not re.search(_DETAIL_GATE, request)):
+            or not gate):
         return True, None
     version, = rule_versions
     ids = tuple(map(int, plans))
@@ -94,7 +105,9 @@ def parse_review_goal(request):
         for clause in re.split(r"[。；;\n]", request)
     )
     return True, ReviewGoal(ids, baseline, recent, f"ctr-review-{version}#low-ctr",
-                            bool(re.search(r"(?:若|如果).{0,20}严重\s*(?:CTR|点击率)", request, re.I)), independent)
+                            needs_alert=bool(re.search(r"(?:若|如果).{0,20}严重\s*(?:CTR|点击率)", request, re.I)),
+                            independent=independent,
+                            unique_required=bool(re.search(r"唯一|恰好一|仅选一|只选一", request)))
 
 
 class MultiWindowReview(DetailAdmission):
@@ -107,6 +120,7 @@ class MultiWindowReview(DetailAdmission):
         if not goal or not goal.needs_alert:
             self.tool_names = self.tool_names - {ALERTS}
         self._critical_alerts = None
+        self._alert_plan_ids = []
         self._conversation_id = conversation_id
         self._admissions = {}
 
@@ -199,12 +213,12 @@ class MultiWindowReview(DetailAdmission):
     def record_alerts(self, rows):
         if isinstance(rows, list):
             with self._lock:
-                self._critical_alerts = sum(
-                    row.get("user_id") == self._user_id and row.get("is_read") == 0
+                matching = [row for row in rows
+                    if row.get("user_id") == self._user_id and row.get("is_read") == 0
                     and row.get("level") == "critical"
-                    and (row.get("type") == "ctr_review" or re.search(r"\bCTR\b|点击率", row.get("message") or "", re.I))
-                    for row in rows
-                )
+                    and (row.get("type") == "ctr_review" or re.search(r"\bCTR\b|点击率", row.get("message") or "", re.I))]
+                self._critical_alerts = len(matching)
+                self._alert_plan_ids = list(dict.fromkeys(row.get("plan_id") for row in matching))
 
     def metric_error(self, args, result):
         if (args["plan_id"] not in self.goal.plan_ids or not any(
@@ -244,7 +258,7 @@ class MultiWindowReview(DetailAdmission):
                                   "artifact_id": rule_artifact},
             }
 
-    def _window(self, receipts, plan_id, window):
+    def _window(self, receipts, plan_id, window, bindings, source_version):
         args = {"plan_id": plan_id, **window.model_dump()}
         matches = [row for row in receipts if row["source"] == METRICS and row.get("arguments") == args]
         valid = [row for row in matches if row["status"] == "succeeded"]
@@ -252,9 +266,17 @@ class MultiWindowReview(DetailAdmission):
                        PERMANENT_READ_GAPS | {"invalid_metrics_receipt"}), None)
         row = failed or next(iter(valid or matches), None)
         facts = {**args, "artifact_ids": [item["artifact_id"] for item in matches]}
+        if bindings is None:
+            return {**facts, "gap": "read_scope_unverified"}, None
+        binding = bindings[plan_id]
+        if binding is None:
+            return {**facts, "gap": "read_scope_changed"}, None
         if not row:
             return {**facts, "gap": "review_metrics_pending"}, None
         result = row["result"] or {}
+        if result and (any(result[key] != binding[key] for key in _METRIC_KEYS[:3])
+                       or (result["source_id"], result["data_version"]) != source_version):
+            return {**facts, "gap": "review_source_mismatch"}, None
         if row["status"] == "failed":
             return {**facts, "gap": row["error_code"], "coverage": result.get("coverage")}, None
         if any(any(item["result"][key] != result[key] for key in _METRIC_KEYS) for item in valid[1:]):
@@ -298,10 +320,16 @@ class MultiWindowReview(DetailAdmission):
             receipts = self._board.tool_receipts(METRICS, RULE)
         policy, rule_artifact, rule_artifacts, conflict = self._rule(receipts)
         rule_gap = "review_rule_conflict" if conflict else None if policy else "review_rule_missing"
+        try:
+            bindings = current_metric_bindings(self.goal.plan_ids, self._user_id)
+        except sqlite3.Error:
+            bindings = None
+        has_metrics = any(row["source"] == METRICS and row["result"] for row in receipts)
+        source_version = metric_source_version() if has_metrics else None
         rows, targets, metric_artifacts = [], [], []
         for plan_id in self.goal.plan_ids:
             (base, base_artifact), (current, current_artifact) = (
-                self._window(receipts, plan_id, window) for window in self.goal.windows)
+                self._window(receipts, plan_id, window, bindings, source_version) for window in self.goal.windows)
             metric_artifacts.extend((base_artifact, current_artifact))
             gap = base["gap"] or current["gap"]
             comparison = None
@@ -323,6 +351,8 @@ class MultiWindowReview(DetailAdmission):
             gap = "review_source_mismatch"
         if not gap and self.goal.needs_alert and not self._critical_alerts:
             gap = "review_alert_not_confirmed"
+        if not gap and self.goal.unique_required and len(targets) != 1:
+            gap = "review_no_unique_target"
         decision = {**self.goal.trace_fields(), "rows": rows, "target_plan_ids": [] if gap else targets,
                     "error_code": gap, "rule_gap": rule_gap, "policy": None if conflict else policy,
                     "critical_ctr_alerts": self._critical_alerts,
@@ -347,7 +377,7 @@ class MultiWindowReview(DetailAdmission):
             pending |= facts["independent_review_status"] != "completed"
         add_trace_step(trace_id, "conditional_detail", "reply", role="orchestrator",
                        evidence={**facts, "detail_artifact_ids": [row["artifact_id"] for row in detail_receipts],
-                                 "attempted_plan_ids": sorted(self._attempted)})
+                                 "attempted_plan_ids": sorted(self._attempted), "list_pending": pending})
         if evidence_sink:
             rule_receipt = next((row for row in receipts if row["artifact_id"] == rule_id), None)
             evidence_sink(self._reply_evidence(facts, metric_ids, rule_receipt, details, detail_receipts))
@@ -371,6 +401,7 @@ class MultiWindowReview(DetailAdmission):
                              "runtime_call_id": receipt["tool_call_id"], "review_input": proof})
         missing_details = sorted(set(facts["target_plan_ids"]) - {row["id"] for row in details})
         return {"scope": self.goal.trace_fields(), "metrics": metrics, "rule": rule, "details": admitted,
+                **({"alert_plan_ids": self._alert_plan_ids} if self.goal.needs_alert else {}),
                 "gap": facts["error_code"], "gap_text": _GAPS.get(facts["error_code"]),
                 "rule_gap": facts["rule_gap"], "rule_gap_text": _GAPS.get(facts["rule_gap"]),
                 "missing_detail_plan_ids": missing_details, "failed_detail_plan_ids": facts.get("detail_failed_plan_ids", []),
@@ -403,8 +434,11 @@ class MultiWindowReview(DetailAdmission):
             lines.append(f"\n指定规则 {facts['rule']}，{_GAPS[facts['rule_gap']]}。")
         if pending:
             reason = _GAPS.get(facts["error_code"], "本轮尚未取得完整的入选计划详情")
+            missing = set(facts["target_plan_ids"]) - {detail["id"] for detail in details}
+            if missing:
+                reason += "（" + "、".join(f"#{plan}" for plan in sorted(missing)) + "）"
             if facts.get("detail_failed_plan_ids"):
-                reason = "入选计划详情读取失败，本轮尚未取得完整详情"
+                reason += "，详情读取失败"
             lines.append(f"\n{reason}，暂缓出具复核清单。")
         elif not details:
             lines.append("\n本轮候选均未达到复核门槛，复核清单为空。")

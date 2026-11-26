@@ -1,0 +1,17 @@
+{
+  "question": "帮我看看这款午餐包的广告搜索词，哪些值得写进标题，哪些需要复核投放？先给我建议和依据。",
+  "title": "Trailbox Reusable Soft-Sided Insulated Lunch Bag Zippered Cooler Tote",
+  "capacity_12": "Verified product label: Trailbox insulated lunch bag. Capacity: 12 L.",
+  "capacity_8": "Verified product label: Trailbox insulated lunch bag. Capacity: 8 L.",
+  "brand": "Verified product label: Trailbox.",
+  "product_type": "Verified product description: reusable soft-sided insulated lunch bag, zippered cooler tote.",
+  "valid_edit": "Trailbox Reusable Soft-Sided Insulated Lunch Bag 12 L, Zippered Cooler Tote",
+  "over_limit": "Trailbox Reusable Soft-Sided Insulated Lunch Bag, 12 L, Zippered Cooler Tote",
+  "rules": {"version": "amazon-us-non-media-2026-07-27", "min_impressions": 100, "min_clicks": 20, "title_min_orders": 2, "title_min_cvr_pct": 10, "title_max_length": 75},
+  "expected": {
+    "supported": {"action": "title", "code": "supported_missing", "drafts": 1, "reviews": 0},
+    "changed": {"action": "review", "code": "fact_conflict", "drafts": 0, "reviews": 1},
+    "low": {"action": "observe", "code": "sample", "drafts": 0, "reviews": 0},
+    "mixed": {"action": "observe", "code": "unattributed", "drafts": 0, "reviews": 0}
+  }
+}

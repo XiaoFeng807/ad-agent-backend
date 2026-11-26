@@ -53,7 +53,7 @@ async function run() {
     if (fixture.ctr_plan_id != null) {
       const pathName = `/api/plans/${fixture.ctr_plan_id}/ctr-alert-check`;
       assert.deepEqual(query(db, alertSql), []);
-      await page.locator('[data-page="plans"]').click();
+      await page.locator('[data-page="plans"]').evaluate(link => link.click());
       const check = page.locator(`button[data-ctr-plan="${fixture.ctr_plan_id}"]`);
       const pending = post(pathName);
       await check.click();

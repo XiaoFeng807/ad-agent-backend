@@ -69,9 +69,9 @@ class _NonThinkingChat:
 
 
 def create_completion(provider, budget, *, role, step, without_memory=None,
-                      optional=False, preflight=False, sdk_max_retries=None, **payload):
-    """Apply provider defaults, then guard the last payload before the SDK call."""
-    from backend.agent.request_budget import ExecutionStopped
+                      optional=False, preflight=False, sdk_max_retries=None, authorize_dispatch=None, **payload):
+    """Prepare the request, then let the caller authorize its handoff to the SDK."""
+    from backend.agent.request_budget import ChatSessionInvalid, ExecutionStopped
 
     execution = budget.execution if budget is not None else None
     if execution is not None:
@@ -86,9 +86,10 @@ def create_completion(provider, budget, *, role, step, without_memory=None,
     if budget is not None:
         payload = budget.prepare(payload, role=role, step=step, without_memory=without_memory,
                                  optional=optional, preflight=preflight)
-    if not preflight:
-        if execution is None:
-            return completions.create(**payload)
+    if preflight:
+        return None
+    sdk_create = completions.create
+    if execution is not None:
         if not execution.reserve("model", keep=int(role != "orchestrator")):
             raise ExecutionStopped(execution.stop_code() or "model_budget_exhausted")
         payload["timeout"] = max(0.001, min(payload.get("timeout", TIMEOUT_CONFIG["llm_call"]),
@@ -96,15 +97,31 @@ def create_completion(provider, budget, *, role, step, without_memory=None,
         call_id = uuid4().hex
         link = {"role": role, "runtime_call_id": call_id}
         add_trace_step(budget.trace_id, "model_call", step, **link)
+    if authorize_dispatch is not None:
         try:
-            response = completions.create(**payload)
+            authorize_dispatch()
         except Exception:
+            if execution is not None:
+                add_trace_step(budget.trace_id, "model_result", step, status="error",
+                               error_code="dispatch_rejected", **link)
+            raise
+    try:
+        if execution is not None:
+            execution.require_session(budget.trace_id, "sdk_dispatch", **link)
+        response = sdk_create(**payload)
+    except ChatSessionInvalid as error:
+        if execution is not None:
+            add_trace_step(budget.trace_id, "model_result", step, status="error", error_code=error.code, **link)
+        raise
+    except Exception:
+        if execution is not None:
             code = execution.stop_code()
             add_trace_step(budget.trace_id, "model_result", step, status="error",
                            error_code=code or "model_failure", **link)
             if code:
                 raise ExecutionStopped(code) from None
-            raise
+        raise
+    if execution is not None:
         if code := execution.stop_code():
             if payload.get("stream") and hasattr(response, "close"):
                 response.close()
@@ -112,7 +129,7 @@ def create_completion(provider, budget, *, role, step, without_memory=None,
                            error_code="expired_receipt", **link)
             raise ExecutionStopped(code)
         add_trace_step(budget.trace_id, "model_result", step, **link)
-        return response
+    return response
 
 
 class _OpenAICompatibleProvider(LLMProvider):

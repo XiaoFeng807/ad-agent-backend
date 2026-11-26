@@ -1,0 +1,23 @@
+{
+  "cases": {
+    "cable-tray-support": {"action": "title", "code": "supported_missing", "source_rows": [2, 3], "demand": {"product_type": "under desk cable tray", "attribute": "depth", "value": "101.6", "unit": "mm", "conditions": {}}},
+    "cable-tray-conflict": {"action": "review", "code": "fact_conflict", "source_rows": [2, 3], "demand": {"product_type": "under desk cable tray", "attribute": "depth", "value": "101.6", "unit": "mm", "conditions": {}}},
+    "cable-tray-missing-axis": {"action": "observe", "code": "unverified", "source_rows": [], "demand": {"product_type": "under desk cable tray", "attribute": "depth", "value": "101.6", "unit": "mm", "conditions": {}}},
+    "cable-tray-missing-type": {"action": "observe", "code": "unverified", "source_rows": [], "demand": {"product_type": "under desk cable tray", "attribute": "depth", "value": "101.6", "unit": "mm", "conditions": {}}},
+    "cable-tray-covered": {"action": "observe", "code": "already_in_title", "source_rows": [2, 3], "demand": {"product_type": "under desk cable tray", "attribute": "depth", "value": "101.6", "unit": "mm", "conditions": {}}},
+    "adapter-support": {"action": "title", "code": "supported_missing", "source_rows": [2, 3], "demand": {"product_type": "display adapter", "attribute": "vesa", "value": "100x100", "unit": "mm", "conditions": {}}},
+    "adapter-low-clicks": {"action": "observe", "code": "sample", "source_rows": [], "demand": {"product_type": "display adapter", "attribute": "vesa", "value": "100x100", "unit": "mm", "conditions": {}}},
+    "adapter-one-axis": {"action": "observe", "code": "unverified", "source_rows": [], "demand": {"product_type": "display adapter", "attribute": "vesa", "value": "100x100", "unit": "mm", "conditions": {}}},
+    "cartridge-support": {"action": "title", "code": "supported_missing", "source_rows": [2, 3], "demand": {"product_type": "water cartridge", "attribute": "model", "value": "velin v-62 plus", "unit": "", "conditions": {}}},
+    "cartridge-complete-list-conflict": {"action": "review", "code": "fact_conflict", "source_rows": [2, 3], "demand": {"product_type": "water cartridge", "attribute": "model", "value": "velin v-62 plus", "unit": "", "conditions": {}}},
+    "cartridge-open-list": {"action": "observe", "code": "unverified", "source_rows": [], "demand": {"product_type": "water cartridge", "attribute": "model", "value": "velin v-62 plus", "unit": "", "conditions": {}}},
+    "cartridge-group-only": {"action": "observe", "code": "unattributed", "source_rows": [], "demand": {"product_type": "water cartridge", "attribute": "model", "value": "velin v-62 plus", "unit": "", "conditions": {}}},
+    "bowl-support": {"action": "title", "code": "supported_missing", "source_rows": [2, 3], "demand": {"product_type": "pet feeding bowl", "attribute": "cleaning", "value": "dishwasher safe", "unit": "", "conditions": {"part": "insert", "restriction": "top rack only"}}},
+    "bowl-low-cvr": {"action": "observe", "code": "sample", "source_rows": [], "demand": {"product_type": "pet feeding bowl", "attribute": "cleaning", "value": "dishwasher safe", "unit": "", "conditions": {"part": "insert", "restriction": "top rack only"}}},
+    "bowl-covered": {"action": "observe", "code": "already_in_title", "source_rows": [2, 3], "demand": {"product_type": "pet feeding bowl", "attribute": "cleaning", "value": "dishwasher safe", "unit": "", "conditions": {"part": "insert", "restriction": "top rack only"}}},
+    "bowl-group-only": {"action": "observe", "code": "unattributed", "source_rows": [], "demand": {"product_type": "pet feeding bowl", "attribute": "cleaning", "value": "dishwasher safe", "unit": "", "conditions": {"part": "insert", "restriction": "top rack only"}}},
+    "bowl-missing-seal": {"action": "observe", "code": "unverified", "source_rows": [], "demand": {"product_type": "pet feeding bowl", "attribute": "cleaning", "value": "dishwasher safe", "unit": "", "conditions": {"part": "seal", "restriction": "top rack only"}}},
+    "bowl-unclear-condition": {"action": "observe", "code": "unverified", "source_rows": [], "demand": {"product_type": "pet feeding bowl", "attribute": "cleaning", "value": "dishwasher safe", "unit": "", "conditions": {"part": "insert", "restriction": "top rack only"}}},
+    "bowl-conflicting-sources": {"action": "observe", "code": "unverified", "source_rows": [], "demand": {"product_type": "pet feeding bowl", "attribute": "cleaning", "value": "dishwasher safe", "unit": "", "conditions": {"part": "insert", "restriction": "top rack only"}}}
+  }
+}

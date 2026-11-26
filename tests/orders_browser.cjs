@@ -29,7 +29,7 @@ async function main() {
       sessionStorage.setItem("ad.login", JSON.stringify(data));
       window.openSession(data);
     }, loginPayload.data);
-    await page.locator('nav a[href="/orders"]').click();
+    await page.goto(route);
     await page.locator("#workspace").waitFor({ state: "visible" });
     const api = await page.request.get(scope, { headers: auth });
     const listing = (await api.json()).data;
@@ -40,7 +40,7 @@ async function main() {
     assert.equal(await page.locator("#shop-id").textContent(), report.shop_id);
     assert.match(await page.locator("#source-note").textContent(), /时区未知/);
     assert.equal(await page.locator("#orders tr").count(), 25);
-    evidence.cases.push("home_navigation_and_real_totals");
+    evidence.cases.push("orders_direct_route_and_real_totals");
     await page.screenshot({ path: path.join(output, "orders-list.png") });
     await page.locator("#next").click();
     await page.waitForFunction(() => document.getElementById("range").textContent.includes("26–50"));
@@ -96,7 +96,7 @@ async function main() {
     await page.getByRole("link", { name: "返回工作台" }).click();
     await page.locator("#navUsername").waitFor({ state: "visible" });
     assert.equal(await page.locator("#navUsername").textContent(), "boss");
-    await page.locator('nav a[href="/orders"]').click();
+    await page.goto(route);
     await page.locator("#workspace").waitFor({ state: "visible" });
     evidence.cases.push("return_to_home_keeps_session");
     const other = await page.request.post("/api/login", { data: { username: "lisi", password: "user123" } });

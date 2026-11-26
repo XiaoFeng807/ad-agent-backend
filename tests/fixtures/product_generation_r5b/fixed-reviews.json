@@ -1,0 +1,130 @@
+{
+  "A01": {
+    "input_gaps": [],
+    "issues": []
+  },
+  "A02": {
+    "input_gaps": [],
+    "issues": [
+      {
+        "code": "citation_attribution",
+        "source_ids": [
+          2
+        ],
+        "detail": "空框 420 g 与称重条件在独立句内缺标，后面的观察口句无法承载称重引文。"
+      }
+    ]
+  },
+  "A03": {
+    "input_gaps": [],
+    "issues": [
+      {
+        "code": "citation_attribution",
+        "source_ids": [
+          1
+        ],
+        "detail": "3 枚边夹所在的独立句缺 [1]，引文只挂在后面的安装条件句。"
+      }
+    ]
+  },
+  "A04": {
+    "input_gaps": [],
+    "issues": [
+      {
+        "code": "conflict_side_missing",
+        "source_ids": [
+          1,
+          2
+        ],
+        "detail": "固定审阅误称草稿没有复述双方数值。"
+      }
+    ]
+  },
+  "A05": {
+    "input_gaps": [],
+    "issues": []
+  },
+  "B01": {
+    "input_gaps": [],
+    "issues": [
+      {
+        "code": "citation_attribution",
+        "source_ids": [
+          2
+        ],
+        "detail": "24 秒所在的独立句没有 [2]；后文的标记只挂在计时起点。"
+      },
+      {
+        "code": "omitted_condition",
+        "source_ids": [
+          1
+        ],
+        "source_span": "必须让摆杆连续完成两次自由摆动",
+        "detail": "固定审阅误称草稿未写两次自由摆动。"
+      }
+    ]
+  },
+  "B02": {
+    "input_gaps": [],
+    "issues": [
+      {
+        "code": "conflict_side_missing",
+        "source_ids": [
+          1,
+          2
+        ],
+        "detail": "固定审阅误称草稿没有复述双方数值。"
+      }
+    ]
+  },
+  "B03": {
+    "input_gaps": [
+      "侧壳表面硬度"
+    ],
+    "issues": [
+      {
+        "code": "omitted_condition",
+        "source_ids": [
+          2
+        ],
+        "source_span": "先断开拨杆驱动",
+        "detail": "草稿未交代先断开拨杆驱动。"
+      },
+      {
+        "code": "omitted_condition",
+        "source_ids": [
+          2
+        ],
+        "source_span": "使摆座对准水平刻线",
+        "detail": "草稿未交代使摆座对准水平刻线。"
+      },
+      {
+        "code": "omitted_condition",
+        "source_ids": [
+          2
+        ],
+        "source_span": "必须让摆杆连续完成两次自由摆动",
+        "detail": "草稿未交代必须让摆杆连续完成两次自由摆动。"
+      },
+      {
+        "code": "omitted_condition",
+        "source_ids": [
+          1
+        ],
+        "source_span": "最后一次摆动完成后开始计时",
+        "detail": "草稿未交代最后一次摆动完成后开始计时。"
+      }
+    ]
+  },
+  "B04": {
+    "input_gaps": [
+      "侧壳表面硬度",
+      "运行噪声"
+    ],
+    "issues": []
+  },
+  "B05": {
+    "input_gaps": [],
+    "issues": []
+  }
+}

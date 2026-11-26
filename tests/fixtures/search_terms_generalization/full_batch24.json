@@ -1,0 +1,422 @@
+{
+  "label": "24 项留出 · Amazon US Sponsored Products 官方字段合成报表",
+  "question": "帮我看看这款商品的广告搜索词，哪些值得写进标题，哪些需要复核投放？先给我建议和依据。",
+  "rules": {
+    "min_impressions": 100,
+    "min_clicks": 20,
+    "title_min_orders": 2,
+    "title_min_cvr_pct": 10,
+    "title_max_length": 75
+  },
+  "report_header": "Date,Campaign Name,Ad Group Name,Campaign ID,Ad Group ID,Customer Search Term,Impressions,Clicks,Spend,Purchases,Sales,Currency",
+  "report_defaults": {
+    "Date": "2026-11-16",
+    "Impressions": 360,
+    "Clicks": 20,
+    "Spend": "18.00",
+    "Purchases": 4,
+    "Sales": "108.80",
+    "Currency": "USD"
+  },
+  "membership": {
+    "shop": "sp-full-batch24",
+    "marketplace": "US",
+    "advertiser": "SYN-FULL24-US",
+    "from": "2026-11-16",
+    "to": "2026-11-18",
+    "control_sku": "FULL24-CONTROL",
+    "control_asin": "B0FULL2409"
+  },
+  "batches": [
+    {
+      "id": "rinse-24",
+      "sku": "FULL24-RINSE",
+      "asin": "B0FULL2401",
+      "title": "Sable Rinse Cup",
+      "original": [
+        "Product type\tRinse Cup\t-\tWhole\t-",
+        "Width\t165.1\tmm\tWhole\t-",
+        "Length\t203.2\tmm\tWhole\t-",
+        "Height\t114.3\tmm\tWhole\t-",
+        "Diameter\t88.9\tmm\tWhole\t-",
+        "Compatible models\tLUMEN LX-32 | LUMEN LX-32 PRIME\t-\tWhole\tComplete list",
+        "Cleaning\tDishwasher safe\t-\tBody\tTop rack only",
+        "Cleaning\tHand wash only\t-\tLid\t-"
+      ],
+      "items": [
+        {
+          "id": "rinse-01",
+          "intent": "size",
+          "group": "verified",
+          "term": "6.5 inch wide rinse cup",
+          "report_changes": {
+            "Purchases": 2
+          }
+        },
+        {
+          "id": "rinse-02",
+          "intent": "compatibility",
+          "group": "verified",
+          "term": "rinse cup for lumen lx-32 prime"
+        },
+        {
+          "id": "rinse-03",
+          "intent": "restriction",
+          "group": "verified",
+          "term": "rinse cup lid top rack dishwasher safe"
+        },
+        {
+          "id": "rinse-04",
+          "intent": "size",
+          "group": "verified",
+          "term": "4 inch deep rinse cup"
+        },
+        {
+          "id": "rinse-05",
+          "intent": "restriction",
+          "group": "verified",
+          "term": "rinse cup body top rack dishwasher safe"
+        },
+        {
+          "id": "rinse-06",
+          "intent": "size",
+          "group": "low",
+          "term": "6.5 inch wide rinse cup",
+          "report_changes": {
+            "Clicks": 19
+          }
+        },
+        {
+          "id": "rinse-07",
+          "intent": "size",
+          "group": "mixed",
+          "term": "6.5 inch wide rinse cup",
+          "report_changes": {
+            "Clicks": 10,
+            "Impressions": 170,
+            "Spend": "9.00",
+            "Purchases": 2,
+            "Sales": "54.40"
+          },
+          "second_row": {
+            "Date": "2026-11-17",
+            "Clicks": 11,
+            "Impressions": 190,
+            "Spend": "9.00",
+            "Purchases": 2,
+            "Sales": "54.40"
+          }
+        },
+        {
+          "id": "rinse-08",
+          "intent": "compatibility",
+          "group": "verified",
+          "term": "rinse cup for lumen lx-32 pro"
+        },
+        {
+          "id": "rinse-09",
+          "intent": "restriction",
+          "group": "verified",
+          "term": "rinse cup lid hand wash only"
+        },
+        {
+          "id": "rinse-10",
+          "intent": "restriction",
+          "group": "verified",
+          "term": "rinse cup body dishwasher safe"
+        },
+        {
+          "id": "rinse-11",
+          "intent": "size",
+          "group": "verified",
+          "term": "8 inch long rinse cup"
+        },
+        {
+          "id": "rinse-12",
+          "intent": "size",
+          "group": "verified",
+          "term": "6 inch high rinse cup"
+        },
+        {
+          "id": "rinse-13",
+          "intent": "size",
+          "group": "conversion",
+          "term": "6.5 inch wide rinse cup",
+          "report_changes": {
+            "Purchases": 1
+          }
+        },
+        {
+          "id": "rinse-14",
+          "intent": "compatibility",
+          "group": "verified",
+          "term": "rinse cup for lumen lx-32"
+        },
+        {
+          "id": "rinse-15",
+          "intent": "size",
+          "group": "low",
+          "term": "8 inch long rinse cup",
+          "report_changes": {
+            "Clicks": 19
+          }
+        },
+        {
+          "id": "rinse-16",
+          "intent": "restriction",
+          "group": "verified",
+          "term": "rinse cup handle top rack dishwasher safe"
+        },
+        {
+          "id": "rinse-17",
+          "intent": "size",
+          "group": "verified",
+          "term": "3.5 inch diameter rinse cup"
+        },
+        {
+          "id": "rinse-18",
+          "intent": "restriction",
+          "group": "low",
+          "term": "rinse cup lid hand wash only",
+          "report_changes": {
+            "Clicks": 19
+          }
+        },
+        {
+          "id": "rinse-19",
+          "intent": "restriction",
+          "group": "mixed",
+          "term": "rinse cup lid hand wash only"
+        },
+        {
+          "id": "rinse-20",
+          "intent": "size",
+          "group": "verified",
+          "term": "4.5 inch high rinse cup"
+        },
+        {
+          "id": "rinse-21",
+          "intent": "size",
+          "group": "verified",
+          "term": "6.5 inch rinse cup"
+        },
+        {
+          "id": "rinse-22",
+          "intent": "restriction",
+          "group": "verified",
+          "term": "rinse cup body hand wash only"
+        },
+        {
+          "id": "rinse-23",
+          "intent": "compatibility",
+          "group": "low",
+          "term": "rinse cup for lumen lx-32 prime",
+          "report_changes": {
+            "Clicks": 19
+          }
+        },
+        {
+          "id": "rinse-24",
+          "intent": "compatibility",
+          "group": "verified",
+          "term": "rinse cup for lumen lx-32 prime plus"
+        }
+      ]
+    },
+    {
+      "id": "mixing-24",
+      "sku": "FULL24-MIXING",
+      "asin": "B0FULL2402",
+      "title": "Cairn Mixing Pitcher",
+      "original": [
+        "Product type\tMixing Pitcher\t-\tWhole\t-",
+        "Width\t177.8\tmm\tWhole\t-",
+        "Length\t228.6\tmm\tWhole\t-",
+        "Height\t139.7\tmm\tWhole\t-",
+        "Diameter\t101.6\tmm\tWhole\t-",
+        "Compatible models\tNOVAR NP-64 | NOVAR NP-64 MAX\t-\tWhole\t-",
+        "Cleaning\tDishwasher safe\t-\tBody\tTop rack only",
+        "Cleaning\tHand wash only\t-\tLid\t-"
+      ],
+      "items": [
+        {
+          "id": "mixing-01",
+          "intent": "size",
+          "group": "verified",
+          "term": "7 inch wide mixing pitcher",
+          "report_changes": {
+            "Purchases": 2
+          }
+        },
+        {
+          "id": "mixing-02",
+          "intent": "compatibility",
+          "group": "verified",
+          "term": "mixing pitcher for novar np-64 max"
+        },
+        {
+          "id": "mixing-03",
+          "intent": "restriction",
+          "group": "verified",
+          "term": "mixing pitcher lid top rack dishwasher safe"
+        },
+        {
+          "id": "mixing-04",
+          "intent": "size",
+          "group": "verified",
+          "term": "4 inch deep mixing pitcher"
+        },
+        {
+          "id": "mixing-05",
+          "intent": "restriction",
+          "group": "verified",
+          "term": "mixing pitcher body top rack dishwasher safe"
+        },
+        {
+          "id": "mixing-06",
+          "intent": "size",
+          "group": "low",
+          "term": "7 inch wide mixing pitcher",
+          "report_changes": {
+            "Clicks": 19
+          }
+        },
+        {
+          "id": "mixing-07",
+          "intent": "size",
+          "group": "mixed",
+          "term": "7 inch wide mixing pitcher",
+          "report_changes": {
+            "Clicks": 10,
+            "Impressions": 170,
+            "Spend": "9.00",
+            "Purchases": 2,
+            "Sales": "54.40"
+          },
+          "second_row": {
+            "Date": "2026-11-17",
+            "Clicks": 11,
+            "Impressions": 190,
+            "Spend": "9.00",
+            "Purchases": 2,
+            "Sales": "54.40"
+          }
+        },
+        {
+          "id": "mixing-08",
+          "intent": "compatibility",
+          "group": "verified",
+          "term": "mixing pitcher for novar np-64 pro"
+        },
+        {
+          "id": "mixing-09",
+          "intent": "restriction",
+          "group": "verified",
+          "term": "mixing pitcher lid hand wash only"
+        },
+        {
+          "id": "mixing-10",
+          "intent": "restriction",
+          "group": "verified",
+          "term": "mixing pitcher body dishwasher safe"
+        },
+        {
+          "id": "mixing-11",
+          "intent": "size",
+          "group": "verified",
+          "term": "9 inch long mixing pitcher"
+        },
+        {
+          "id": "mixing-12",
+          "intent": "size",
+          "group": "verified",
+          "term": "6 inch high mixing pitcher"
+        },
+        {
+          "id": "mixing-13",
+          "intent": "size",
+          "group": "conversion",
+          "term": "7 inch wide mixing pitcher",
+          "report_changes": {
+            "Purchases": 1
+          }
+        },
+        {
+          "id": "mixing-14",
+          "intent": "compatibility",
+          "group": "verified",
+          "term": "mixing pitcher for novar np-64"
+        },
+        {
+          "id": "mixing-15",
+          "intent": "size",
+          "group": "low",
+          "term": "9 inch long mixing pitcher",
+          "report_changes": {
+            "Clicks": 19
+          }
+        },
+        {
+          "id": "mixing-16",
+          "intent": "restriction",
+          "group": "verified",
+          "term": "mixing pitcher handle top rack dishwasher safe"
+        },
+        {
+          "id": "mixing-17",
+          "intent": "size",
+          "group": "verified",
+          "term": "4 inch diameter mixing pitcher"
+        },
+        {
+          "id": "mixing-18",
+          "intent": "restriction",
+          "group": "low",
+          "term": "mixing pitcher lid hand wash only",
+          "report_changes": {
+            "Clicks": 19
+          }
+        },
+        {
+          "id": "mixing-19",
+          "intent": "restriction",
+          "group": "mixed",
+          "term": "mixing pitcher lid hand wash only"
+        },
+        {
+          "id": "mixing-20",
+          "intent": "size",
+          "group": "verified",
+          "term": "5.5 inch high mixing pitcher"
+        },
+        {
+          "id": "mixing-21",
+          "intent": "size",
+          "group": "verified",
+          "term": "7 inch mixing pitcher"
+        },
+        {
+          "id": "mixing-22",
+          "intent": "restriction",
+          "group": "verified",
+          "term": "mixing pitcher body hand wash only"
+        },
+        {
+          "id": "mixing-23",
+          "intent": "compatibility",
+          "group": "low",
+          "term": "mixing pitcher for novar np-64 max",
+          "report_changes": {
+            "Clicks": 19
+          }
+        },
+        {
+          "id": "mixing-24",
+          "intent": "compatibility",
+          "group": "verified",
+          "term": "mixing pitcher for novar np-64 max plus"
+        }
+      ]
+    }
+  ]
+}

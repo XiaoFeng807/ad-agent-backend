@@ -375,7 +375,8 @@ def score(row, checks, groups, *, conflict=None):
     elif qstatus == "supported":
         behavior_ok = complete and row["reply"] == answer_body(row, checks)
     elif qstatus == "denied":
-        behavior_ok = row["reply"] == "商品不存在。" and not (cites or pool or row["encoding_calls"] or row["retrieval_calls"])
+        behavior_ok = (row["reply"] == "当前账号无法访问该范围的商品资料，请核对店铺、站点和 SKU。"
+                       and not (cites or pool or row["encoding_calls"] or row["retrieval_calls"]))
     elif qstatus == "clarify":
         behavior_ok = bool(re.search(r"(?:选择|指定).*SKU", row["reply"])) and not (cites or pool or row["encoding_calls"])
     else:

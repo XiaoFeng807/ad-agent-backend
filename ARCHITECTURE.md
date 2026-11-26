@@ -1,4 +1,4 @@
-﻿# 项目架构
+# 项目架构
 
 StorePilot 通过 FastAPI/Uvicorn 提供工作台、REST、SSE 和兼容 WebSocket。工作台的普通聊天和业务任务由独立的 Agent 委派运行时处理。 [API 契约](API.md) · [浏览器实拍](docs/SHOWCASE.md)
 
@@ -34,6 +34,7 @@ StorePilot 通过 FastAPI/Uvicorn 提供工作台、REST、SSE 和兼容 WebSock
 1. **会话与商品识别。** `POST /api/chat/stream` 在 SQLite 工作群中识别商品需求并选择业务路径。请求轮次带有认证用户、会话 ID、运行 ID 和统计日期。服务端从授权目录解析商品，或沿用本会话已选的商品。匹配不明确时要求用户补全店铺、站点或 SKU。 [商品入口与取证](backend/agent/listing_run.py)
 2. **销量与巡检。** 已选商品的单窗销量请求直接读取。多商品使用相同日期窗，区分已覆盖日期的零销量和缺日报。只读巡检对同店同站的三个 SKU 查询销量、现行 Listing 与生效事实，按商品形成证据与规格冲突清单。需要委派时，运行时只向 Worker 开放本轮授权工具和读取范围；产物交接重查 SKU、参数、来源和运行 ID。固定回放验证了商品巡检的 Worker 交接，实测 GLM 巡检样本均选择直查。 [巡检实现](backend/agent/listing_inspection.py) · [巡检实拍](docs/SHOWCASE.md)
 3. **草案与审批。** 改写请求只从生效事实的措辞选项中生成英文五点。服务端校验来源及版本，缺项时只给分析或澄清。证据完整的草案绑定源会话、轮次、目标 SKU 和当前版本。批准在写事务内核对所有权、来源和版本，只修改本地测试 Listing 五点并同时保存回执。页面另发 GET，按同一动作 ID 读回实际版本与历史回执。 [工作群证据存储](backend/database/chat_groups.py) · [Listing 写入与回执](backend/database/listing_operations.py)
+4. **运营巡检与下一周期复盘。** 同一工作群轮次统一查询三款的完整七日窗，用配置阈值确定需要核对 Listing 与商品事实的候选。销量排序由服务端复算，主 Agent 可以直查或委派取证。唯一优先项的草案保存遗漏事实 ID 和基准窗。用户从已执行回执打开复盘时，服务端在只读事务内核对会话、动作和回执，再查询审批日之后的七个完整日。
 
 ## 知识检索
 
@@ -46,7 +47,7 @@ StorePilot 通过 FastAPI/Uvicorn 提供工作台、REST、SSE 和兼容 WebSock
 | 数据或依赖 | 当前实现 |
 | --- | --- |
 | 业务 SQLite | 默认使用根目录 `ad_agent.db`。含用户与会话、对话、账号、计划、日报、告警、素材及日志等表。启动时为旧对话表补齐 `priority` 与 `chat_view_id`。演示进程可用 `DIAGNOSIS_SANDBOX_DB_PATH` 选用独立业务文件。 |
-| 商品与 Listing | 按店铺、站点和 SKU 组织商品及版本。销量、事实、草案、批准和独立读回通过当前会话鉴权。商品巡检不写入 Listing 或动作表，巡检结论和证据随工作群回复保存。 |
+| 商品与 Listing | 按店铺、站点和 SKU 组织商品及版本。销量、事实、草案、批准、独立读回和复盘通过当前会话鉴权。纯巡检将结论和证据随工作群回复保存。有待审批改动时同事务保存提案，批准后写入五点、版本和回执。 |
 | 计划历史与映射 | `plan_metric_bindings` 将本人本地计划映射到来源 ID、精确数据版本和来源计划。查询先验证 `ad_plans.user_id`；独立 SQLite 由服务端 `PLAN_METRICS_DB_PATH` 选择，以 `mode=ro` 及 `query_only=ON` 打开。模型不接受身份、来源计划或路径。公开数据导入器只保留计划每日曝光与点击；原始文件不加入 Git。 |
 | 诊断任务 SQLite | `diagnosis_tasks` 按属主和任务 ID 保存计划、规则及最新接受的日期窗。`diagnosis_turns.snapshot` 在接受轮次时记录原日期窗和源 Trace，证据和回复同事务提交。启动迁移保留旧轮，读取时可用原轮复核提案快照补齐。 |
 | 本地复核 SQLite | `diagnosis_review_proposals` 与本人计划的诊断回复同事务提交，绑定原轮及证据快照。首次确认以 `BEGIN IMMEDIATE` 核验归属并写入 `diagnosis_reviews`，以唯一 `action_id` 复用回执。按认证用户及 `review_id` 读回保存的快照。 |

@@ -59,7 +59,8 @@ async function inlineProgress(page, run, finished = false) {
   await expect(section).toHaveCount(1);
   await expect(section).toBeVisible();
   await expect(page.locator(`#chatMessages > .msg[data-run-id="${run}"] [data-result-kind="progress"]`)).toHaveCount(0);
-  await expect(section.locator("code")).toHaveCount(0);
+  await expect(section.locator(".workbench-delegation-row[open]")).toHaveCount(0);
+  await expect(section.locator("code:visible")).toHaveCount(0);
   await expect(section).not.toContainText(run);
   const relation = await section.evaluate((element, id) => {
     const siblings = Array.from(element.parentElement.children);
@@ -71,7 +72,8 @@ async function inlineProgress(page, run, finished = false) {
   }, run);
   assert.deepEqual(relation, { afterQuestion: true, beforeAnswer: finished ? true : null });
   const rows = await section.locator("[data-task-label][data-state]").evaluateAll(elements => elements.map(element => ({
-    label: element.dataset.taskLabel, state: element.dataset.state, text: element.innerText,
+    label: element.dataset.taskLabel, state: element.dataset.state,
+    dispatched: element.hasAttribute("data-dispatched"), text: element.querySelector("summary").innerText,
   })));
   assert.equal(new Set(rows.map(row => row.label)).size, rows.length);
   assert.ok(rows.every(row => !/[a-f0-9]{24,}/i.test(row.text)), "Default progress exposed a technical ID");
@@ -166,19 +168,25 @@ async function run() {
     result.before_read = await progress(page, aRun.run_id);
     assert.ok(result.before_read.tasks.every(task => !task.open));
     assert.ok(!result.before_read.entries.some(row => row.task_label === label && row.kind === "tool_started"));
-    const waitRows = aInline.locator('[data-state="waiting"] .workbench-delegation-wait > li');
-    const metricAgent = await aInline.locator(`[data-task-label="${label}"] .workbench-delegation-name`).textContent();
-    assert.match(metricAgent, /^Agent \d+ · 投放指标取证$/);
+    const inlineMetric = aInline.locator(`.workbench-delegation-row[data-task-label="${label}"]`);
+    const inlineReview = aInline.locator('[data-state="waiting"]');
+    const waitRows = inlineReview.locator(".workbench-delegation-wait > li");
+    const metricAgent = await inlineMetric.locator(".workbench-delegation-name").textContent();
+    assert.equal(metricAgent, "#101 · 投放指标取证");
     const expectedWait = `等待 ${metricAgent} 交回 #101 基准窗（10 月 17–23 日）、当前窗（10 月 24–30 日）的曝光、点击和 CTR`;
-    await expect(waitRows).toHaveText([expectedWait]);
-    result.waiting_before_read = await waitRows.allTextContents();
+    const beforeRead = await inlineProgress(page, aRun.run_id);
+    assert.equal(beforeRead.rows.filter(row => row.dispatched).length, 3);
+    assert.equal(beforeRead.rows.find(row => row.state === "waiting").dispatched, false);
     await aPanel.screenshot({ path: screenshot("before-read") });
     await expand(metricTask);
-    const accordion = aInline.locator(".workbench-delegation-toggle");
-    await expect(accordion).toHaveAttribute("aria-expanded", "true");
-    await accordion.click();
-    await expect(accordion).toHaveAttribute("aria-expanded", "false");
     await expect(waitRows).not.toBeVisible();
+    await expand(inlineReview);
+    await expect(waitRows).toBeVisible();
+    await expect(waitRows).toHaveText([expectedWait]);
+    result.waiting_before_read = await waitRows.allTextContents();
+    await expect(inlineMetric).not.toHaveAttribute("open", "");
+    const inlineReviewSummary = inlineReview.locator(":scope > summary");
+    await expect(inlineReviewSummary).toBeFocused();
     assert.equal((await page.request.post("/__task28/stage/before-read")).status(), 200);
     assert.equal((await page.request.get("/__task28/wait", { timeout: 55000 })).status(), 200);
     await metricTask.locator(":scope > summary").filter({ hasText: "正在查 #101" }).waitFor();
@@ -201,6 +209,8 @@ async function run() {
       await page.evaluate(() => readChatGroupHistory());
       assert.deepEqual(await uniqueEntries(page), waitingIds);
       assert.equal(await metricTask.getAttribute("open"), "");
+      await expect(inlineReview).toHaveAttribute("open", "");
+      await expect(inlineReviewSummary).toBeFocused();
     }
     await page.unroute(historyPattern, duplicate);
     verifyProgress(result.waiting, await history(page, a), aRun.run_id);
@@ -210,14 +220,16 @@ async function run() {
     await aPanel.screenshot({ path: screenshot("waiting-expanded") });
     await page.keyboard.press("Escape");
     await expect(progressButton(page, aRun.run_id)).toHaveAttribute("aria-expanded", "false");
-    await expect(accordion).toHaveAttribute("aria-expanded", "false");
-    await expect(waitRows).not.toBeVisible();
-    await accordion.click();
-    await expect(accordion).toHaveAttribute("aria-expanded", "true");
-    await expect(aInline.locator('[data-task-label][data-state="running"]').filter({ hasText: /正在查 #101/ })).toBeVisible();
     await expect(waitRows).toBeVisible();
     await expect(waitRows).toHaveText([expectedWait]);
+    await aInline.screenshot({ path: screenshot("waiting-inline-expanded") });
+    await inlineReviewSummary.click();
+    await expect(waitRows).not.toBeVisible();
+    await expect(inlineMetric.locator(":scope > summary")).toContainText("正在查 #101");
     result.waiting_inline = await inlineProgress(page, aRun.run_id);
+    const dispatched = (await history(page, a)).entries.filter(row => row.event?.kind === "dispatched")
+      .map(row => row.event.task_label);
+    assert.deepEqual(result.waiting_inline.rows.filter(row => row.dispatched).map(row => row.label), [...new Set(dispatched)]);
     await aInline.screenshot({ path: screenshot("waiting-inline") });
     await page.screenshot({ path: screenshot("waiting-thread") });
 
@@ -294,7 +306,16 @@ async function run() {
     await select(a);
     await expect(delegation(page, aRun.run_id).locator('[data-task-label][data-state="succeeded"]').filter({ hasText: "独立复核" })).toBeVisible();
     result.completed_inline = await inlineProgress(page, aRun.run_id, true);
-    assert.ok(result.completed_inline.rows.every(row => row.state === "succeeded"));
+    assert.ok(result.completed_inline.rows.every(row => row.state === "succeeded" && row.dispatched && row.text.includes("已交回")));
+    const completedMetric = delegation(page, aRun.run_id).locator(`.workbench-delegation-row[data-task-label="${label}"]`);
+    await expand(completedMetric);
+    const receiptIds = (await history(page, a)).entries.filter(row => row.event?.task_label === label && row.event.kind === "receipt")
+      .map(row => row.event.artifact_id);
+    const shownReceipts = completedMetric.locator('[data-event="receipt"] [data-artifact-id]');
+    await shownReceipts.first().waitFor();
+    assert.deepEqual(await shownReceipts.evaluateAll(nodes => nodes.map(node => node.dataset.artifactId)),
+      [...new Set(receiptIds)]);
+    await completedMetric.locator(":scope > summary").click();
     await delegation(page, aRun.run_id).screenshot({ path: screenshot("completed-inline") });
     await page.screenshot({ path: screenshot("completed-thread") });
     result.a_progress = await progress(page, aRun.run_id);

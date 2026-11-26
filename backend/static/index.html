@@ -136,6 +136,10 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
 </style>
 <link rel="stylesheet" href="/static/product-shell.css">
 <link rel="stylesheet" href="/static/workbench.css">
+<link rel="stylesheet" href="/static/workbench-shell.css">
+<link rel="stylesheet" href="/static/listing-review.css">
+<link rel="stylesheet" href="/static/search-terms.css">
+<link rel="stylesheet" href="/static/workbench-sources.css">
 </head>
 <body>
 
@@ -152,12 +156,12 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
   </div>
 </div>
 
-<div class="app-layout" id="appLayout">
+<div class="app-layout" id="appLayout" data-workbench="standalone">
 <aside class="sidebar product-sidebar" id="sidebar">
 <div class="product-brand"><span aria-hidden="true">✦</span><strong>StorePilot Agent</strong></div>
 <button class="product-nav-close" type="button" aria-label="关闭全局导航" onclick="toggleProductNav(false, true)">×</button>
 <nav id="sidebarNav" aria-label="全局导航">
-<a href="#" data-page="chat" class="active" aria-current="page" onclick="showPage('chat',this)"><span aria-hidden="true">✧</span>AI 工作台</a>
+<a href="#" data-page="chat" id="workbenchHome" class="active" aria-current="page" aria-label="AI 工作台" onclick="toggleDiagnosis(false);showPage('chat',this);return false"><span aria-hidden="true">✦</span><strong>StorePilot Agent</strong><span class="workbench-home-label">AI 工作台</span></a>
 <a href="#" data-page="dashboard" onclick="showPage('dashboard',this)"><span aria-hidden="true">▥</span>仪表盘</a>
 <a href="#" data-page="plans" onclick="showPage('plans',this)"><span aria-hidden="true">◎</span>投放计划</a>
 <a href="/orders"><span aria-hidden="true">◇</span>店铺订单</a>
@@ -172,17 +176,19 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
 <div class="user-info" id="userInfo" style="display:none">
 <div><span class="un" id="navUsername"></span><span class="role-tag" id="navRole" style="background:var(--blue);padding:2px 8px;border-radius:10px;font-size:11px;color:#fff;margin-left:6px"></span></div>
 </div>
-<button class="logout-btn" onclick="doLogout()">退出登录</button>
+<button type="button" class="logout-btn" id="workbenchLogout" onclick="doLogout()">退出登录</button>
 </aside>
 
 <div class="main-area">
 <header class="main-header">
 <div style="display:flex;align-items:center;gap:12px">
 <button class="menu-toggle" type="button" aria-label="全局导航" aria-controls="sidebar" aria-expanded="false" onclick="toggleProductNav()">☰</button>
+<div id="workbenchHeaderHome"></div>
 <h1 id="pageTitle">AI 工作台</h1>
 </div>
-<div class="product-header-actions">
-  <button type="button" id="diagnosisToggle" class="btn btn-outline btn-sm" aria-controls="diagnosisView" aria-expanded="false" onclick="toggleDiagnosis(byId('diagnosisView').hidden)">投放诊断</button>
+<div class="product-header-actions" id="productHeaderActions">
+  <span id="workbenchFallbackAccount"></span>
+  <button type="button" id="diagnosisToggle" class="btn btn-outline btn-sm" aria-controls="diagnosisView" aria-expanded="false" onclick="toggleDiagnosis(byId('diagnosisView').hidden)">广告计划复核</button>
   <button type="button" class="chat-clear-btn" id="chatClear" aria-label="清空聊天" onclick="if(confirm('确定清空?')){byId('chatMessages').replaceChildren();}" hidden>清空聊天</button>
 </div>
 </header>
@@ -230,23 +236,27 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
 <div class="page active" id="page-chat">
 <div class="chat-container">
 <div class="chat-view" id="ordinaryChatView">
-<aside id="chatGroupControls" aria-label="工作群" hidden>
+<aside id="chatGroupControls" aria-label="会话" hidden>
   <div class="workbench-rail-heading">
-    <button type="button" class="btn btn-outline btn-sm" id="chatGroupNew" aria-label="新建工作群" aria-haspopup="dialog" onclick="openChatGroupCreate()">＋ 新建</button>
+    <div id="workbenchRailHome"></div>
+    <button type="button" class="btn btn-outline btn-sm" id="chatGroupNew" aria-haspopup="dialog" onclick="openChatGroupCreate()">＋ 新建会话</button>
   </div>
   <div id="chatGroupList"></div>
   <div class="workbench-rail-footer">
-    <button type="button" class="btn btn-outline btn-sm" id="chatGroupArchive" onclick="changeChatGroupArchive()">归档当前群</button>
+    <button type="button" class="btn btn-outline btn-sm" id="chatGroupArchive" onclick="changeChatGroupArchive()">归档会话</button>
     <span id="chatGroupStatus" role="status"></span>
+    <button type="button" class="btn btn-outline btn-sm" id="workbenchSourcesTrigger" aria-haspopup="dialog" onclick="openWorkbenchSources()">数据来源</button>
+    <div id="workbenchAccount"></div>
   </div>
 </aside>
 <section class="workbench-conversation" aria-labelledby="chatGroupTitle">
 <div class="workbench-thread-heading" id="chatGroupHeading" hidden>
-  <button type="button" class="btn btn-outline btn-sm" id="chatGroupToggle" aria-controls="chatGroupControls" aria-expanded="false" onclick="toggleGroupList()">工作群</button>
-  <h2 id="chatGroupTitle">工作群</h2>
-  <button type="button" class="btn btn-outline btn-sm" id="chatGroupListing" aria-pressed="false" onclick="setGroupListingMode(this.getAttribute('aria-pressed')==='false')" hidden>商品运营</button>
-  <button class="btn btn-outline btn-sm" id="chatGroupChangeDates" onclick="openGroupDateChange()" hidden>修改要求</button>
-  <button type="button" class="btn btn-outline btn-sm" id="chatGroupDetailsButton" aria-label="群详情" title="群详情" aria-haspopup="dialog" onclick="openChatGroupDetails()" hidden>···</button>
+  <button type="button" class="btn btn-outline btn-sm" id="chatGroupToggle" aria-controls="chatGroupControls" aria-expanded="false" onclick="toggleGroupList()">会话</button>
+  <h2 id="chatGroupTitle">AI 工作台</h2>
+  <div id="workbenchThreadTools">
+    <button class="btn btn-outline btn-sm" id="chatGroupChangeDates" onclick="openGroupDateChange()" hidden>修改要求</button>
+    <button type="button" class="btn btn-outline btn-sm" id="chatGroupDetailsButton" aria-label="会话详情" title="会话详情" aria-haspopup="dialog" onclick="openChatGroupDetails()" hidden>···</button>
+  </div>
 </div>
 <div id="chatGroupDateEditor" hidden>
   <label for="chatGroupDateRequest">新的对比要求</label>
@@ -268,10 +278,21 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
   <button class="sug-btn" onclick="sendSug('ROAS是什么意思')">📚 ROAS解释</button>
   <button class="sug-btn" onclick="sendSug('对比本周与上周')">📅 周对比</button>
 </div>
+<div id="workbenchPromptTools" aria-label="商品任务" hidden>
+  <button type="button" class="btn btn-outline btn-sm" onclick="fillWorkbenchPrompt('帮我查一下【商品名】上周卖了多少件。')">查销量</button>
+  <button type="button" class="btn btn-outline btn-sm" onclick="fillWorkbenchPrompt('结合商品资料，帮我给【商品名】改写英文卖点，我确认后再应用。')">改英文卖点</button>
+  <button type="button" class="btn btn-outline btn-sm" id="chatGroupListing" aria-pressed="false" title="开启后可提交后台巡检" onclick="setGroupListingMode(this.getAttribute('aria-pressed')==='false')">巡检模式</button>
+  <button type="button" class="btn btn-outline btn-sm" id="searchTermImport" aria-haspopup="dialog" aria-expanded="false" aria-controls="searchTermSetup" onclick="openSearchTermSetup(this)">搜索词诊断</button>
+</div>
+<div id="searchTermAttachment" hidden>
+  <button type="button" id="searchTermAttachmentLabel" aria-haspopup="dialog" aria-expanded="false" aria-controls="searchTermSetup" onclick="openSearchTermSetup(this)"></button>
+  <button type="button" id="searchTermDetach" aria-label="移除搜索词报表" title="移除搜索词报表">×</button>
+</div>
 <div class="chat-input-area">
-  <textarea class="chat-input" id="chatInput" rows="1" aria-label="工作群消息" placeholder="输入问题…"
+  <textarea class="chat-input" id="chatInput" rows="1" aria-label="会话消息" placeholder="问销量、核对商品资料，或修改卖点…"
     onkeydown="if(event.key==='Enter' && !event.shiftKey && !event.isComposing){event.preventDefault();sendChat()}"></textarea>
   <button class="chat-send-btn" id="chatSend" onclick="sendChat()">发送</button>
+  <button type="button" class="btn btn-outline btn-sm" id="chatGroupRetry" onclick="retryGroupSubmission()" hidden>重试提交</button>
   <button type="button" class="btn btn-outline btn-sm" id="chatGroupBackground" onclick="sendGroupChat(true)" hidden>后台巡检</button>
   <button type="button" class="chat-send-btn" id="chatGroupStop" onclick="stopGroupRun(activeChatGroup, this.dataset.runId, this)" hidden><span aria-hidden="true"></span>停止本轮</button>
 </div>
@@ -279,53 +300,66 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
 <dialog id="chatGroupCreateDialog" class="workbench-create-dialog" aria-labelledby="chatGroupCreateTitle">
   <form id="chatGroupCreateForm" novalidate>
     <header class="workbench-create-heading">
-      <h2 id="chatGroupCreateTitle">新建工作群</h2>
+      <h2 id="chatGroupCreateTitle">新建会话</h2>
       <button type="button" class="btn btn-outline btn-sm" id="chatGroupCreateClose" onclick="closeChatGroupCreate()">关闭</button>
     </header>
     <div class="workbench-create-fields">
-      <label for="chatGroupCreateName">工作群名称</label>
+      <label for="chatGroupCreateName">会话名称</label>
       <input type="text" id="chatGroupCreateName" name="title" autocomplete="off" aria-describedby="chatGroupCreateFeedback" required autofocus>
       <p id="chatGroupCreateFeedback" role="alert" hidden></p>
     </div>
     <footer class="workbench-create-actions">
       <button type="button" class="btn btn-outline" id="chatGroupCreateCancel" onclick="closeChatGroupCreate()">取消</button>
-      <button type="submit" class="btn btn-primary" id="chatGroupCreateSubmit">创建工作群</button>
+      <button type="submit" class="btn btn-primary" id="chatGroupCreateSubmit">创建会话</button>
     </footer>
   </form>
 </dialog>
 <dialog id="chatGroupDetailsDialog" class="workbench-create-dialog" aria-labelledby="chatGroupDetailsHeading">
   <header class="workbench-create-heading">
-    <h2 id="chatGroupDetailsHeading">工作群详情</h2>
+    <h2 id="chatGroupDetailsHeading">会话详情</h2>
     <button type="button" class="btn btn-outline btn-sm" onclick="closeChatGroupDetails()">关闭</button>
   </header>
   <div class="workbench-create-fields">
     <dl>
-      <dt>工作群名称</dt><dd id="chatGroupDetailsName"></dd>
-      <dt>工作群 ID</dt><dd><code id="chatGroupDetailsId"></code></dd>
+      <dt>会话名称</dt><dd id="chatGroupDetailsName"></dd>
+      <dt>会话 ID</dt><dd><code id="chatGroupDetailsId"></code></dd>
     </dl>
     <p id="chatGroupDetailsFeedback" role="status" hidden></p>
   </div>
   <footer class="workbench-create-actions">
-    <button type="button" class="btn btn-primary" id="chatGroupDetailsCopy" onclick="copyChatGroupId()">复制工作群 ID</button>
+    <button type="button" class="btn btn-primary" id="chatGroupDetailsCopy" onclick="copyChatGroupId()">复制会话 ID</button>
   </footer>
 </dialog>
-<dialog id="workbenchDetail" aria-labelledby="workbenchDetailTitle">
+<dialog id="workbenchDetail" class="workbench-side-panel" aria-labelledby="workbenchDetailTitle">
   <header class="workbench-detail-header">
     <div><p id="workbenchDetailContext"></p><h2 id="workbenchDetailTitle"></h2></div>
     <button type="button" class="btn btn-outline btn-sm" id="workbenchDetailClose" onclick="closeGroupDetail()" autofocus>关闭</button>
   </header>
   <div id="workbenchDetailBody" tabindex="0"></div>
 </dialog>
-</div>
+<dialog id="searchTermSetup" class="workbench-side-panel" aria-labelledby="searchTermSetupTitle">
+  <header class="workbench-detail-header">
+    <h2 id="searchTermSetupTitle">搜索词诊断</h2>
+    <button type="button" class="btn btn-outline btn-sm" id="searchTermSetupClose" aria-label="关闭报表范围">关闭</button>
+  </header>
+  <div id="searchTermSetupBody"></div>
+</dialog>
 <section class="chat-view diagnosis-view" id="diagnosisView" aria-labelledby="diagnosisTitle" hidden>
-  <div class="diagnosis-actions">
-    <label for="diagnosisHistory">我的诊断任务</label>
-    <select id="diagnosisHistory" aria-describedby="diagnosisHistoryStatus"><option value="">选择历史任务</option></select>
-    <button type="button" id="diagnosisHistoryMore" class="btn btn-outline btn-sm" hidden>加载更多任务</button>
-    <span id="diagnosisHistoryStatus" class="diagnosis-meta" role="status"></span>
-  </div>
+  <header class="diagnosis-toolbar">
+    <div id="diagnosisBack"></div>
+    <details id="diagnosisHistoryPanel">
+      <summary>历史复核</summary>
+      <div class="diagnosis-history-fields">
+        <label for="diagnosisHistory">我的复核任务</label>
+        <select id="diagnosisHistory" aria-describedby="diagnosisHistoryStatus"><option value="">选择历史任务</option></select>
+        <button type="button" id="diagnosisHistoryMore" class="btn btn-outline btn-sm" hidden>加载更多任务</button>
+        <span id="diagnosisHistoryStatus" class="diagnosis-meta" role="status"></span>
+      </div>
+    </details>
+  </header>
+  <div class="diagnosis-workspace">
   <form id="diagnosisForm" class="diagnosis-form" novalidate>
-    <h2 id="diagnosisTitle">投放诊断</h2>
+    <h2 id="diagnosisTitle">广告计划复核</h2>
     <fieldset id="diagnosisInputs">
       <div id="diagnosisNaturalFields" class="diagnosis-fields">
         <label>诊断需求<input name="message" maxlength="2000" placeholder="帮我找出最近点击率下滑最明显、值得暂停复核的一条投放计划。"></label>
@@ -349,37 +383,61 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
       </div>
       </div>
       <div class="diagnosis-actions">
-        <button type="submit" id="diagnosisSubmit" class="btn btn-primary">开始诊断</button>
+        <button type="submit" id="diagnosisSubmit" class="btn btn-primary">开始复核</button>
+        <div class="diagnosis-actions diagnosis-secondary">
+        <button type="button" id="diagnosisExample" class="diagnosis-text-button">使用示例</button>
         <button type="button" id="diagnosisMode" class="btn btn-outline">手动指定计划与日期</button>
         <button type="button" id="diagnosisNew" class="btn btn-outline" onclick="resetDiagnosis()" hidden>新建诊断</button>
         <span id="diagnosisTask" class="diagnosis-meta"></span>
+        </div>
       </div>
     </fieldset>
     <p id="diagnosisValidation" role="alert"></p>
   </form>
   <div id="diagnosisRounds"></div>
+  </div>
 </section>
+<dialog id="diagnosisExecution" class="workbench-side-panel" aria-labelledby="diagnosisExecutionTitle">
+  <header class="workbench-detail-header">
+    <h2 id="diagnosisExecutionTitle">执行记录</h2>
+    <button type="button" class="btn btn-outline btn-sm" id="diagnosisExecutionClose">关闭</button>
+  </header>
+  <div class="diagnosis-execution-body">
+    <div id="diagnosisExecutionSummary"></div>
+    <div id="diagnosisExecutionTrace"></div>
+    <ol id="diagnosisExecutionSteps"></ol>
+  </div>
+</dialog>
+</div>
 <template id="diagnosisRound">
   <article class="diagnosis-round">
     <header><h3></h3><span class="diagnosis-status" role="status"></span></header>
     <p class="diagnosis-message" hidden></p>
     <p class="diagnosis-windows diagnosis-meta"></p>
     <p class="diagnosis-missing-trace diagnosis-meta" hidden>Trace ID 不可恢复</p>
-    <div class="diagnosis-trace diagnosis-meta" hidden>
-      <span>Trace ID <code></code></span>
-      <button type="button" class="btn btn-outline btn-sm">复制 Trace ID</button>
-      <span role="status"></span>
+    <div class="diagnosis-trace-slot" hidden>
+      <div class="diagnosis-trace diagnosis-meta" hidden>
+        <span>Trace ID <code></code></span>
+        <button type="button" class="diagnosis-text-button" aria-label="复制 Trace ID">复制</button>
+        <span role="status"></span>
+      </div>
     </div>
-    <div class="diagnosis-output" hidden>
+    <section class="diagnosis-comparison" aria-label="点击率对比" hidden></section>
+    <details class="diagnosis-output" hidden>
+      <summary>查看依据</summary>
       <h4>回复</h4><p class="diagnosis-reply"></p>
       <h4>诊断证据</h4><ul class="diagnosis-evidence"></ul>
       <h4>证据缺项</h4><ul class="diagnosis-gaps"></ul>
       <h4>规则引用</h4><div class="diagnosis-citations"></div>
-    </div>
+    </details>
+    <button type="button" class="diagnosis-execution-link diagnosis-text-button" aria-haspopup="dialog" aria-expanded="false" aria-controls="diagnosisExecution" hidden>执行记录</button>
     <section class="diagnosis-review" hidden>
       <h4>待确认 · 提交人工复核</h4>
-      <p class="diagnosis-review-snapshot diagnosis-meta" data-diagnosis-snapshot></p>
-      <ul class="diagnosis-review-evidence" data-diagnosis-evidence></ul>
+      <details class="diagnosis-review-details">
+        <summary>复核单详情</summary>
+        <p class="diagnosis-review-snapshot diagnosis-meta" data-diagnosis-snapshot></p>
+        <ul class="diagnosis-review-evidence" data-diagnosis-evidence></ul>
+      </details>
       <div class="diagnosis-actions">
         <button type="button" class="btn btn-primary btn-sm">确认创建本地复核单</button>
         <span role="status"></span>
@@ -445,6 +503,8 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 
 <button class="btn btn-primary" onclick="createMaterial()">上传</button></div></div></div>
 <script async src="/static/echarts.min.js"></script>
 <script src="/static/workbench.js"></script>
+<script src="/static/workbench-sources.js"></script>
+<script src="/static/search-terms.js"></script>
 <script>
 var TOKEN = "";
 var USER = null;
@@ -542,6 +602,7 @@ function doLogin(){
   }).catch(function(){ byId("loginErr").textContent="网络错误"; byId("loginErr").style.display="block"; });
 }
 function openSession(login, page){
+  window.closeWorkbenchSources?.(false);
   clearDiagnosisSession();
   TOKEN = login.token; USER = login.user;
   chatViewId = crypto.getRandomValues(new Uint32Array(4)).join("-");
@@ -565,6 +626,7 @@ function openSession(login, page){
   initApp(page);
 }
 function doLogout(){
+  window.closeWorkbenchSources?.(false);
   TOKEN=""; USER=null; byId("appLayout").style.display="none"; byId("loginPage").style.display="flex";
   sessionStorage.removeItem("ad.login");
   sessionStorage.removeItem("ad.chatPage");
@@ -596,13 +658,16 @@ document.addEventListener("keydown", function(event){
 
 function showPage(name,el){
   if(name!=="chat"){
+    window.closeWorkbenchSources?.(false);
+    closeSearchTermSetup();
+    closeDiagnosisExecution(false);
     closeChatGroupCreate(false);
     closeChatGroupDetails(false);
     closeGroupDetail(false);
     toggleGroupList(false);
   }
   document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");});
-  document.querySelectorAll("#sidebarNav a").forEach(function(a){
+  document.querySelectorAll("#sidebarNav a, #workbenchHome").forEach(function(a){
     a.classList.toggle("active", a === el);
     if(a === el) a.setAttribute("aria-current", "page");
     else a.removeAttribute("aria-current");
@@ -613,6 +678,7 @@ function showPage(name,el){
   byId("pageTitle").textContent = name==="chat" ? "AI 工作台" : titles[name]||name;
   byId("diagnosisToggle").hidden = name !== "chat";
   byId("chatClear").hidden = name !== "chat" || !byId("diagnosisView").hidden || chatMode !== "legacy";
+  syncWorkbenchShell();
   toggleProductNav(false);
   if(trendChart) setTimeout(resizeTrend,100);
   var loaders = {dashboard:loadDashboard,plans:loadPlans,budget:loadBudget,alerts:loadAlerts,materials:loadMaterials,chat:loadChatHistory,users:loadUsers,logs:loadLogs,decisions:loadDecisions,timeline:loadTimeline};
@@ -897,6 +963,7 @@ var groupPending = new Map();
 var backgroundDrafts = new Map();
 var backgroundWatch = null;
 var groupErrors = new Map();
+var groupSubmissionRetries = new Map();
 var groupSession = new AbortController();
 var groupDateEdit;
 var visibleEntryIds = [];
@@ -908,19 +975,25 @@ var diagnosisSession = new AbortController();
 var diagnosisHistorySession = new AbortController();
 var diagnosisHistoryLoaded = false;
 var diagnosisCursor = null;
+var diagnosisExecutionRound = null;
 
 function toggleDiagnosis(open){
   if(open){
+    window.closeWorkbenchSources?.(false);
+    closeSearchTermSetup();
     closeChatGroupCreate(false);
     closeChatGroupDetails(false);
     closeGroupDetail(false);
     toggleGroupList(false);
+  }else{
+    closeDiagnosisExecution(false);
+    byId("diagnosisHistoryPanel").open = false;
   }
   byId("diagnosisView").hidden = !open;
-  byId("ordinaryChatView").hidden = open;
   byId("chatClear").hidden = open || chatMode !== "legacy";
-  byId("diagnosisToggle").textContent = open ? "返回工作台" : "投放诊断";
+  byId("diagnosisToggle").textContent = open ? "返回工作台" : "广告计划复核";
   byId("diagnosisToggle").setAttribute("aria-expanded", open);
+  syncWorkbenchShell();
   rememberChatPage();
   if(open && TOKEN && !diagnosisHistoryLoaded) loadDiagnosisHistory();
 }
@@ -930,9 +1003,11 @@ function setDiagnosisMode(mode){
   byId("diagnosisNaturalFields").hidden = mode !== "natural";
   byId("diagnosisStructuredFields").hidden = mode !== "structured";
   byId("diagnosisMode").textContent = mode === "natural" ? "手动指定计划与日期" : "一句话诊断";
+  byId("diagnosisExample").hidden = mode !== "natural";
 }
 
 function resetDiagnosis(mode = diagnosisMode){
+  closeDiagnosisExecution(false);
   diagnosisSession.abort();
   diagnosisSession = new AbortController();
   diagnosisTaskId = "";
@@ -941,7 +1016,7 @@ function resetDiagnosis(mode = diagnosisMode){
   byId("diagnosisInputs").disabled = false;
   byId("diagnosisForm").elements.plan_id.readOnly = false;
   byId("diagnosisForm").elements.rule_id.readOnly = false;
-  byId("diagnosisSubmit").textContent = "开始诊断";
+  byId("diagnosisSubmit").textContent = "开始复核";
   byId("diagnosisSubmit").disabled = false;
   byId("diagnosisNew").hidden = true;
   byId("diagnosisTask").textContent = "";
@@ -953,6 +1028,12 @@ function resetDiagnosis(mode = diagnosisMode){
 }
 
 byId("diagnosisMode").onclick = () => resetDiagnosis(diagnosisMode === "natural" ? "structured" : "natural");
+byId("diagnosisExample").onclick = function(){
+  var input = byId("diagnosisForm").elements.message;
+  input.value = input.placeholder;
+  byId("diagnosisValidation").textContent = "";
+  input.focus();
+};
 
 function clearDiagnosisSession(){
   resetDiagnosis("natural");
@@ -1060,7 +1141,10 @@ async function openDiagnosisTask(taskId){
   }
 }
 
-byId("diagnosisHistory").onchange = function(){ openDiagnosisTask(this.value); };
+byId("diagnosisHistory").onchange = function(){
+  byId("diagnosisHistoryPanel").open = false;
+  openDiagnosisTask(this.value);
+};
 byId("diagnosisHistoryMore").onclick = loadDiagnosisHistory;
 
 function diagnosisWindows(baseline, current){
@@ -1071,6 +1155,8 @@ function diagnosisWindows(baseline, current){
 function createDiagnosisRound(baseline, current, natural = false){
   var rounds = byId("diagnosisRounds");
   var round = byId("diagnosisRound").content.firstElementChild.cloneNode(true);
+  round.executionEvidence = {baseline, current};
+  round.querySelector(".diagnosis-execution-link").onclick = () => openDiagnosisExecution(round);
   round.querySelector("h3").textContent = "第 "+(rounds.children.length+1)+" 轮";
   round.querySelector(".diagnosis-windows").textContent = natural && !baseline ?
     "尚未确定可比窗口" : diagnosisWindows(baseline, current);
@@ -1114,6 +1200,8 @@ function restoreDiagnosisRound(turn, token, signal){
     status.textContent = "已提交";
     round.querySelector(".diagnosis-reply").textContent = turn.reply;
   }
+  if(turn.status === "committed") renderDiagnosisComparison(round, snapshot);
+  output.open = round.querySelector(".diagnosis-comparison").hidden;
   renderDiagnosisEvidence(round.querySelector(".diagnosis-evidence"), snapshot, true);
   var gaps = round.querySelector(".diagnosis-gaps");
   setDiagnosisItems(gaps, snapshot.evidence_gaps ?? ["证据缺项不可恢复"]);
@@ -1125,15 +1213,18 @@ function restoreDiagnosisRound(turn, token, signal){
   if(turn.pause) showDiagnosisPause(round, {...snapshot, ...turn.pause, turn_id:turn.turn_id}, token, signal);
 }
 
-async function readChatStream(payload, token, onEvent, signal){
+async function readChatStream(payload, token, onEvent, signal, key){
   var response = await fetch("/api/chat/stream", {
-    method:"POST", headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},
+    method:"POST", headers:{"Content-Type":"application/json","Authorization":"Bearer "+token,
+      ...(key ? {"Idempotency-Key":key} : {})},
     body:JSON.stringify(payload), signal
   });
   if(!response.ok){
     var error = await response.json().catch(function(){ return {}; });
     var detail = typeof error?.detail === "string" ? error.detail : "请求失败";
-    throw new Error("HTTP "+response.status+" · "+detail);
+    var rejected = new Error("HTTP "+response.status+" · "+detail);
+    rejected.submissionRejected = response.status < 500;
+    throw rejected;
   }
   var reader = response.body.getReader();
   var decoder = new TextDecoder();
@@ -1151,7 +1242,11 @@ async function readChatStream(payload, token, onEvent, signal){
         if(!json) continue;
         var event = JSON.parse(json);
         onEvent(event);
-        if(event.type==="error") throw new Error(event.content || "执行失败，请重试");
+        if(event.type==="error"){
+          var failed = new Error(event.content || "执行失败，请重试");
+          failed.submissionRejected = true;
+          throw failed;
+        }
         if(event.type==="done" || event.type==="superseded" || event.type==="stopped") return;
       }
     }
@@ -1191,7 +1286,9 @@ function addDiagnosisCitation(container, citation, signal){
 }
 
 function showDiagnosisTrace(round, id, signal){
-  var trace = round.querySelector(".diagnosis-trace");
+  var trace = diagnosisExecutionRound === round ? byId("diagnosisExecutionTrace").firstElementChild :
+    round.querySelector(".diagnosis-trace");
+  round.querySelector(".diagnosis-execution-link").hidden = false;
   var code = trace.querySelector("code");
   code.textContent = id;
   trace.hidden = false;
@@ -1211,6 +1308,73 @@ function showDiagnosisTrace(round, id, signal){
     }
   };
 }
+
+function openDiagnosisExecution(round){
+  if(diagnosisExecutionRound === round) return closeDiagnosisExecution();
+  closeDiagnosisExecution(false);
+  var trace = round.querySelector(".diagnosis-trace:not([hidden])");
+  if(!trace) return;
+  diagnosisExecutionRound = round;
+  byId("diagnosisExecutionTrace").appendChild(trace);
+  round.querySelector(".diagnosis-execution-link").setAttribute("aria-expanded", "true");
+  refreshDiagnosisExecution(round);
+  var panel = byId("diagnosisExecution");
+  if(compactWorkbench.matches) panel.showModal();
+  else panel.show();
+  byId("diagnosisExecutionClose").focus({preventScroll:true});
+}
+
+function closeDiagnosisExecution(restoreFocus = true){
+  if(!diagnosisExecutionRound) return;
+  var round = diagnosisExecutionRound;
+  diagnosisExecutionRound = null;
+  round.querySelector(".diagnosis-trace-slot").appendChild(byId("diagnosisExecutionTrace").firstElementChild);
+  var control = round.querySelector(".diagnosis-execution-link");
+  control.setAttribute("aria-expanded", "false");
+  byId("diagnosisExecution").close();
+  if(restoreFocus) control.focus({preventScroll:true});
+}
+
+function refreshDiagnosisExecution(round){
+  if(diagnosisExecutionRound !== round) return;
+  var evidence = round.executionEvidence;
+  var roundLabel = round.querySelector("h3").textContent;
+  var state = round.querySelector(".diagnosis-status").dataset.state;
+  var summary = byId("diagnosisExecutionSummary");
+  summary.replaceChildren();
+  summary.dataset.state = state || "running";
+  var statusLabel = state === "done" ? "已提交" : state === "error" ? "未提交" : "进行中";
+  groupText(summary, "strong", roundLabel+" · "+statusLabel);
+  if(evidence.plan != null) groupText(summary, "small", "计划 #"+evidence.plan);
+
+  var steps = byId("diagnosisExecutionSteps");
+  steps.replaceChildren();
+  function step(title, details = [], status = "done"){
+    var row = groupText(steps, "li", "");
+    row.dataset.state = status;
+    groupText(row, "strong", title);
+    for(var detail of details) groupText(row, "small", detail);
+  }
+  if(evidence.ctr){
+    var details = ["baseline", "current"].map((name, index) => {
+      var window = evidence[name];
+      var value = evidence.ctr[index].toFixed(2)+"%";
+      var period = window?.start_date && window?.end_date ? " · "+groupCompactWindow(window) : "";
+      return (name === "baseline" ? "基准窗" : "当前窗")+period+" · "+value;
+    });
+    step("读取两窗指标", details);
+  }
+  if(evidence.ruleEvaluated) step("核对点击率规则", evidence.rule ? [evidence.rule] : []);
+  if(state === "done") step("保存复核结果", ["可在历史复核中查看"]);
+  else if(state === "error") step("本轮未提交", [], "error");
+  else step("等待本轮结果", [], "running");
+}
+
+byId("diagnosisExecutionClose").onclick = () => closeDiagnosisExecution();
+byId("diagnosisExecution").addEventListener("cancel", function(event){
+  event.preventDefault();
+  closeDiagnosisExecution();
+});
 
 async function diagnosisRequest(method, path, token, signal){
   var response = await fetch(path, {method, headers:{"Authorization":"Bearer "+token}, signal, cache:"no-store"});
@@ -1263,6 +1427,51 @@ function renderDiagnosisEvidence(list, snapshot, restored){
     }
   }
   setDiagnosisItems(list, items.length ? items : ["本轮无结构化指标或规则判定"]);
+}
+
+function renderDiagnosisComparison(round, snapshot){
+  var evidence = round.executionEvidence;
+  evidence.plan = snapshot.plan_id ?? snapshot.comparison?.candidates?.[0]?.plan_id ?? evidence.plan;
+  evidence.baseline = snapshot.baseline ?? evidence.baseline;
+  evidence.current = snapshot.current ?? evidence.current;
+  evidence.ruleEvaluated = typeof snapshot.rule_evaluation?.matched === "boolean";
+  evidence.rule = snapshot.rule_id;
+  var calculation = snapshot.calculation;
+  var values = [calculation?.baseline_ctr_pct, calculation?.current_ctr_pct];
+  if(!values.every(value => Number.isFinite(value) && value >= 0)) return;
+  evidence.ctr = values;
+  var panel = round.querySelector(".diagnosis-comparison");
+  panel.replaceChildren();
+  var plan = evidence.plan;
+  var heading = groupText(panel, "div", "");
+  heading.className = "diagnosis-comparison-heading";
+  groupText(heading, "strong", plan != null ? "计划 #"+plan : "点击率对比");
+  if(evidence.ruleEvaluated){
+    groupText(heading, "span", snapshot.rule_evaluation.matched ? "建议人工复核" : "未达复核阈值");
+  }
+  var max = Math.max(1, Math.ceil(Math.max(...values)));
+  var pair = groupText(panel, "div", "");
+  pair.className = "diagnosis-ctr-pair";
+  for(var [index, label] of ["基准窗 CTR", "当前窗 CTR"].entries()){
+    var metric = groupText(pair, "div", "");
+    groupText(metric, "span", label);
+    groupText(metric, "strong", values[index].toFixed(2)+"%");
+    var track = groupText(metric, "div", "");
+    track.className = "diagnosis-ctr-track";
+    track.setAttribute("aria-hidden", "true");
+    groupText(track, "span", "").style.width = (100 * values[index] / max)+"%";
+  }
+  var footer = groupText(panel, "div", "");
+  footer.className = "diagnosis-comparison-footer";
+  var decline = calculation.relative_decline_pct;
+  if(Number.isFinite(decline)){
+    var text = decline > 0 ? "相对下降 "+decline.toFixed(2)+"%" :
+      decline < 0 ? "相对上升 "+Math.abs(decline).toFixed(2)+"%" : "相对持平";
+    var change = groupText(footer, "strong", text);
+    if(decline > 0) change.className = "diagnosis-ctr-decline";
+  }
+  groupText(footer, "small", "同一刻度 0–"+max+"%");
+  panel.hidden = false;
 }
 
 function renderDiagnosisSnapshot(panel, snapshot){
@@ -1455,6 +1664,9 @@ byId("diagnosisForm").addEventListener("submit", async function(event){
         }
         output.hidden = false;
         reply.append(data.content);
+        renderDiagnosisComparison(round, {...data, plan_id: data.plan_id ?? (natural ? undefined : planId),
+          rule_id: data.rule_id ?? (natural ? undefined : ruleId)});
+        if(round.querySelector(".diagnosis-comparison").hidden) output.open = true;
         renderDiagnosisEvidence(round.querySelector(".diagnosis-evidence"), data, false);
         (data.evidence_gaps || []).forEach(function(gap){
           var item = document.createElement("li");
@@ -1475,11 +1687,13 @@ byId("diagnosisForm").addEventListener("submit", async function(event){
         status.dataset.state = "done";
         status.textContent = "已提交";
       }
+      refreshDiagnosisExecution(round);
     }, signal);
   }catch(error){
     if(!signal.aborted){
       status.dataset.state = "error";
       status.textContent = error.message;
+      refreshDiagnosisExecution(round);
       if(taskId && !natural) byId("diagnosisSubmit").textContent = "重试诊断";
     }
   }finally{
@@ -1491,6 +1705,7 @@ byId("diagnosisForm").addEventListener("submit", async function(event){
 });
 
 function resetChatGroups(){
+  resetSearchTermSetup();
   closeChatGroupCreate(false);
   closeChatGroupDetails(false);
   closeGroupDetail(false);
@@ -1504,6 +1719,7 @@ function resetChatGroups(){
   backgroundDrafts.clear();
   watchBackgroundInspection("", null);
   groupErrors.clear();
+  groupSubmissionRetries.clear();
   groupSession.abort();
   groupSession = new AbortController();
   activeChatGroup = "";
@@ -1514,9 +1730,11 @@ function resetChatGroups(){
   pendingChatReplies.clear();
   byId("chatGroupControls").hidden = true;
   byId("chatGroupHeading").hidden = true;
+  byId("workbenchPromptTools").hidden = true;
   byId("chatGroupList").replaceChildren();
   byId("chatMessages").replaceChildren();
   byId("chatThinking").style.display = "none";
+  byId("chatGroupRetry").hidden = true;
   byId("chatSend").hidden = false;
   byId("chatGroupStop").hidden = true;
   delete byId("chatGroupStop").dataset.runId;
@@ -1538,6 +1756,7 @@ async function chatGroupRequest(path, method, body, signal){
     if(response.status===401 && view===chatViewId) doLogout();
     var error = new Error(result.detail || "工作群请求失败");
     error.status = response.status;
+    error.approvalBlockReason = result.approval_block_reason;
     throw error;
   }
   return result.data;
@@ -1559,7 +1778,7 @@ function updateChatGroupControls(){
   var group = chatGroups.get(activeChatGroup);
   var running = groupPending.has(activeChatGroup) || Boolean(group?.running);
   byId("chatGroupDetailsButton").hidden = !group;
-  byId("chatGroupArchive").textContent = group?.archived ? "恢复当前群" : "归档当前群";
+  byId("chatGroupArchive").textContent = group?.archived ? "恢复会话" : "归档会话";
   byId("chatGroupArchive").disabled = !group || running;
   byId("chatGroupChangeDates").hidden = !group?.running?.can_change_dates;
   byId("chatInput").disabled = byId("chatSend").disabled = !group || group.archived || running;
@@ -1569,8 +1788,10 @@ function updateChatGroupControls(){
   if(stoppable) stop.dataset.runId = group.running.run_id;
   else delete stop.dataset.runId;
   byId("chatSend").hidden = stoppable;
-  byId("chatGroupListing").hidden = chatMode!=="groups";
-  byId("chatGroupListing").disabled = byId("chatInput").disabled;
+  byId("workbenchPromptTools").hidden = chatMode!=="groups" || !group;
+  for(const button of byId("workbenchPromptTools").querySelectorAll("button")){
+    button.disabled = byId("chatInput").disabled;
+  }
   byId("chatGroupBackground").hidden = chatMode!=="groups" ||
     byId("chatGroupListing").getAttribute("aria-pressed")!=="true";
   byId("chatGroupBackground").disabled = byId("chatInput").disabled;
@@ -1578,6 +1799,9 @@ function updateChatGroupControls(){
   if(running) byId("chatThinking").textContent = "正在处理本轮…";
   byId("chatGroupStatus").textContent = groupErrors.get(activeChatGroup) ||
     (group?.archived ? "已归档" : "");
+  var retry = byId("chatGroupRetry");
+  retry.hidden = !groupSubmissionRetries.has(activeChatGroup);
+  retry.disabled = groupPending.has(activeChatGroup);
 }
 
 function setGroupListingMode(enabled){
@@ -1585,16 +1809,27 @@ function setGroupListingMode(enabled){
   button.setAttribute("aria-pressed", String(enabled));
   button.classList.toggle("btn-primary", enabled);
   button.classList.toggle("btn-outline", !enabled);
-  byId("chatInput").placeholder = enabled ? "输入 SKU 和要完成的商品任务…" : "输入问题…";
+  byId("chatInput").placeholder = enabled ? "输入商品名、巡检范围和要核对的内容…" : "问销量、核对商品资料，或修改卖点…";
   byId("chatSuggestions").hidden = enabled;
   byId("chatGroupBackground").hidden = !enabled || chatMode!=="groups";
+}
+
+function fillWorkbenchPrompt(prompt){
+  var input = byId("chatInput");
+  if(input.disabled) return;
+  input.focus();
+  if(input.value.trim()) return;
+  var placeholder = "【商品名】";
+  var start = prompt.indexOf(placeholder);
+  input.value = prompt;
+  input.setSelectionRange(start, start + placeholder.length);
 }
 
 function renderChatGroupList(){
   var list = byId("chatGroupList");
   var focused = document.activeElement?.dataset.conversationId;
   var fragment = document.createDocumentFragment();
-  if(!chatGroups.size) groupText(fragment,"p","还没有工作群").className = "workbench-group-empty";
+  if(!chatGroups.size) groupText(fragment,"p","还没有会话").className = "workbench-group-empty";
   for(const group of chatGroups.values()){
     const button = groupText(fragment,"button","");
     button.type = "button";
@@ -1602,11 +1837,14 @@ function renderChatGroupList(){
     if(group.conversation_id===activeChatGroup) button.setAttribute("aria-current","true");
     groupText(button,"span",group.title);
     if(group.archived) groupText(button,"small","已归档");
-    button.addEventListener("click",() => selectChatGroup(button.dataset.conversationId));
+    button.addEventListener("click",() => {
+      if(!byId("diagnosisView").hidden) toggleDiagnosis(false);
+      selectChatGroup(button.dataset.conversationId);
+    });
   }
   list.replaceChildren(fragment);
   if(focused) Array.from(list.children).find(button => button.dataset.conversationId===focused)?.focus({preventScroll:true});
-  byId("chatGroupTitle").textContent = chatGroups.get(activeChatGroup)?.title || "选择工作群";
+  byId("chatGroupTitle").textContent = chatGroups.get(activeChatGroup)?.title || "AI 工作台";
   updateChatGroupControls();
 }
 
@@ -1625,7 +1863,7 @@ function chatBubble(kind, content){
 
 var groupToolLabels = {get_plan_metrics_by_date:"指标", search_knowledge:"规则", get_plan_detail:"详情",
   get_daily_report_by_date:"日报", get_listing_sales:"商品销量", get_listing_current:"原 Listing",
-  get_listing_facts:"商品事实"};
+  get_listing_facts:"商品事实", get_inspection_report:"搜索词报表", get_inspection_sources:"商品原文"};
 var groupGapLabels = {plan_history_not_mapped:"未绑定历史来源", plan_history_missing_dates:"历史数据缺报",
   source_version_mismatch:"历史来源版本不匹配", review_metrics_pending:"尚缺本轮窗口指标",
   review_rule_missing:"缺少指定版本的可核验条文", review_rule_conflict:"指定规则回执冲突",
@@ -1679,11 +1917,12 @@ function groupEventId(parent, label, value){
   if(label==="产物") code.dataset.artifactId = value;
 }
 
-function groupProgressEntry(entry){
+function groupProgressEntry(entry, inline = false){
   var event = entry.event;
   var item = document.createElement("li");
-  item.className = "msg assistant";
-  item.dataset.entryId = entry.entry_id;
+  item.className = inline ? "workbench-delegation-event" : "msg assistant";
+  if(inline) item.dataset.progressEntryId = entry.entry_id;
+  else item.dataset.entryId = entry.entry_id;
   item.dataset.runId = entry.run_id;
   if(!event){ item.textContent = entry.content; return item; }
   item.dataset.event = event.kind;
@@ -1878,6 +2117,47 @@ function groupProgress(run, entries, change, previous){
 }
 
 function renderGroupEvidence(panel, data){
+  if(data.kind==="operations_priority_inspection_v1"){
+    panel.replaceChildren();
+    groupText(panel,"h4","商品优先处理依据");
+    groupText(panel,"p","基准窗 "+data.windows.slice(0,2).join(" 至 ")+" · 当前窗 "+data.windows.slice(2).join(" 至 ")+" · 下滑阈值 "+data.threshold_pct+"%");
+    const selected = new Set(data.selected_skus);
+    const products = [...data.products].sort((a,b) => Number(selected.has(b.sku)) - Number(selected.has(a.sku)));
+    for(const product of products){
+      const section = groupText(panel,"section","");
+      const receipts = product.receipts;
+      const sales = receipts.get_listing_sales?.result;
+      const report = receipts.get_inspection_report?.result;
+      const sources = receipts.get_inspection_sources?.result;
+      const title = receipts.get_listing_current?.result;
+      groupText(section,"h5",product.sku+(selected.has(product.sku) ? " · 入选" : ""));
+      if(sales) groupListingChart(section,sales);
+      for(const gap of data.gaps.filter(row => row.sku === product.sku)){
+        groupText(section,"p",gap.details.join("、"));
+      }
+      if(report?.report) groupText(section,"p","报表 "+report.report.filename+" · v"+report.report.version);
+      if(title) groupText(section,"p","原标题 v"+title.version+" · "+title.title);
+      if(sources?.version != null) groupText(section,"p","商品事实 v"+sources.version);
+      if(sources?.document_version) groupText(section,"p","商品原文版本 "+sources.document_version);
+      for(const item of product.items){
+        const detail = groupText(section,"details","");
+        const labels = {title:"待审标题草案",review:"复核投放待办",observe:"继续观察",missing:"待补证据"};
+        groupText(detail,"summary",labels[item.action]+" · "+item.term);
+        groupText(detail,"p",item.scope.campaign+"（"+item.scope.campaign_id+"） · "+item.scope.ad_group+"（"+item.scope.ad_group_id+"）");
+        groupText(detail,"p",(item.attribution === "product" ? "商品" : "广告组")+" · "+item.metrics.impressions+" 曝光 · "+item.metrics.clicks+" 点击 · "+item.metrics.orders+" 单");
+        groupText(detail,"p",item.reason);
+        if(item.pending?.title) groupText(detail,"p",item.pending.title).dataset.inspectionDraft = "pending";
+        for(const quote of item.citations) groupText(detail,"blockquote",quote.statement || quote.content);
+        const rows = report.rows.filter(row => item.row_locations.some(loc => (row.sheet ?? null) === loc.sheet && row.line === loc.line));
+        for(const row of rows){
+          groupText(detail,"p",(row.sheet ? row.sheet+" · " : "")+"原报表第 "+row.line+" 行");
+          groupText(detail,"pre",row.raw || JSON.stringify(row.values)).className = "inspection-source-row";
+        }
+        for(const id of item.evidence_ids) groupText(detail,"code",id).dataset.artifactId = id;
+      }
+    }
+    return;
+  }
   if(data.kind==="listing_inspection_v1"){
     panel.replaceChildren();
     groupText(panel,"h4","逐款巡检依据");
@@ -1981,8 +2261,8 @@ function groupListingNumber(value){
   return typeof value==="number" && Number.isFinite(value) ? value.toLocaleString("zh-CN",{maximumFractionDigits:2}) : "未知";
 }
 
-function groupListingChart(panel, metrics){
-  var windows = [["基准窗",metrics.baseline],["当前窗",metrics.current]].filter(([,window]) => window);
+function groupListingChart(panel, metrics, {currentLabel = "当前窗", showChange = true} = {}){
+  var windows = [["基准窗",metrics.baseline],[currentLabel,metrics.current]].filter(([,window]) => window);
   var scale = Math.max(1,...windows.flatMap(([,window]) => (window.days || []).map(day => day.units ?? 0)));
   var chart = groupText(panel,"figure","");
   chart.className = "group-listing-chart";
@@ -2010,7 +2290,7 @@ function groupListingChart(panel, metrics){
       groupText(bar,"time",day.date.slice(5)).dateTime = day.date;
     }
   }
-  if(metrics.baseline) groupText(chart,"p","件数变化 "+groupListingNumber(metrics.units_delta)+" · 相对变化 "+
+  if(showChange && metrics.baseline) groupText(chart,"p","件数变化 "+groupListingNumber(metrics.units_delta)+" · 相对变化 "+
     (metrics.units_change_pct == null ? "未知" : groupListingNumber(metrics.units_change_pct)+"%")+
     (Object.hasOwn(metrics,"conversion_rate") ?
       " · 转化率 "+(metrics.conversion_rate == null ? "未知" : groupListingNumber(metrics.conversion_rate)+"%") : ""));
@@ -2194,8 +2474,8 @@ async function readChatGroupHistory(){
       var messages = byId("chatMessages");
       var atBottom = messages.scrollHeight-messages.scrollTop-messages.clientHeight < 30;
       var scrollTop = messages.scrollTop;
-      var focusedDelegation = document.activeElement?.closest(".workbench-delegation-toggle")
-        ?.closest(".workbench-delegation")?.dataset.runId;
+      var focusedTask = document.activeElement?.closest(".workbench-delegation-toggle")
+        ?.closest(".workbench-delegation-row");
       var progress = new Map();
       var changes = new Map();
       for(var entry of entries){
@@ -2210,8 +2490,8 @@ async function readChatGroupHistory(){
       if(!entries.length){
         var empty = groupText(fragment, "section", "");
         empty.className = "workbench-group-empty";
-        groupText(empty, "h3", "交代这个工作群的第一项任务");
-        groupText(empty, "p", "发送消息后，任务和结果会保存在当前工作群。");
+        groupText(empty, "h3", "今天想处理哪个商品？");
+        groupText(empty, "p", "可以查销量、核对商品资料，或起草新的英文卖点。");
       }
       var answers = new Set(entries.filter(entry => entry.kind==="assistant").map(entry => entry.run_id));
       var renderedDelegations = new Set();
@@ -2228,20 +2508,27 @@ async function readChatGroupHistory(){
         var delegation = null;
         if(run && !renderedDelegations.has(run.run_id) &&
           (entry.kind==="assistant" || (entry.kind==="user" && !answers.has(run.run_id)))){
-          delegation = buildGroupDelegation(conversationId, entry, run, progress.get(run.run_id) || [], changes.get(run.run_id));
+          var events = progress.get(run.run_id) || [];
+          delegation = buildSearchTermProgress(events, run) ||
+            buildGroupDelegation(conversationId, entry, run, events, changes.get(run.run_id));
           renderedDelegations.add(run.run_id);
         }
         if(entry.kind==="assistant"){
           if(delegation) fragment.appendChild(delegation);
           appendGroupCards(bubble, conversationId, entry, run);
+          appendSearchTermCards(bubble, conversationId, entry, run);
         }
         fragment.appendChild(bubble);
         if(entry.kind!=="assistant" && delegation) fragment.appendChild(delegation);
       });
       messages.replaceChildren(fragment);
       messages.scrollTop = atBottom ? messages.scrollHeight : scrollTop;
-      if(focusedDelegation) messages.querySelector(`.workbench-delegation[data-run-id="${CSS.escape(focusedDelegation)}"] .workbench-delegation-toggle`)
-        ?.focus({preventScroll:true});
+      if(focusedTask){
+        var focusedRun = CSS.escape(focusedTask.closest(".workbench-delegation").dataset.runId);
+        var focusedLabel = CSS.escape(focusedTask.dataset.taskLabel);
+        messages.querySelector(`.workbench-delegation[data-run-id="${focusedRun}"] .workbench-delegation-row[data-task-label="${focusedLabel}"] > summary`)
+          ?.focus({preventScroll:true});
+      }
       refreshOpenGroupDetail();
       visibleEntryIds = ids;
       visibleRunStates = states;
@@ -2283,6 +2570,7 @@ function selectChatGroup(conversationId){
   toggleGroupList(false);
   if(listWasOpen) byId("chatGroupToggle").focus({preventScroll:true});
   if(conversationId===activeChatGroup && conversationId) return readChatGroupHistory();
+  resetSearchTermSetup();
   closeChatGroupDetails(false);
   closeGroupDetail(false);
   setGroupListingMode(false);
@@ -2293,7 +2581,17 @@ function selectChatGroup(conversationId){
   clearTimeout(groupPoll);
   visibleEntryIds = [];
   visibleRunStates = "";
-  byId("chatMessages").replaceChildren();
+  var messages = byId("chatMessages");
+  messages.replaceChildren();
+  if(!conversationId){
+    var empty = groupText(messages, "section", "");
+    empty.className = "workbench-group-empty";
+    groupText(empty, "h3", "开始一项商品任务");
+    var create = groupText(empty, "button", "新建一个会话");
+    create.type = "button";
+    create.className = "btn btn-primary";
+    create.addEventListener("click", openChatGroupCreate);
+  }
   byId("chatInput").value = "";
   if(conversationId) localStorage.setItem(chatGroupPreference(), conversationId);
   rememberChatPage();
@@ -2389,11 +2687,29 @@ async function confirmGroupDates(){
   }
 }
 
+function syncWorkbenchShell(){
+  var onChat = byId("page-chat").classList.contains("active");
+  var inSession = onChat && !byId("chatGroupHeading").hidden;
+  byId("appLayout").dataset.workbench = inSession ? "session" : onChat ? "standalone" : "legacy";
+  var showingDiagnosis = onChat && !byId("diagnosisView").hidden;
+  var actions = byId(showingDiagnosis ? "diagnosisBack" : inSession ? "workbenchThreadTools" : "productHeaderActions");
+  var diagnosis = byId("diagnosisToggle");
+  if(diagnosis.parentElement !== actions) actions.prepend(diagnosis);
+  var home = byId("workbenchHome");
+  var homeSlot = byId(inSession ? "workbenchRailHome" : onChat ? "workbenchHeaderHome" : "sidebarNav");
+  if(home.parentElement !== homeSlot) homeSlot.prepend(home);
+  var account = byId(inSession ? "workbenchAccount" : onChat ? "workbenchFallbackAccount" : "sidebar");
+  if(byId("workbenchLogout").parentElement !== account){
+    account.append(byId("userInfo"), byId("workbenchLogout"));
+  }
+}
+
 function showChatGroupWorkspace(){
   chatMode = "groups";
   byId("chatGroupHeading").hidden = false;
   byId("chatGroupControls").hidden = false;
   byId("chatClear").hidden = true;
+  syncWorkbenchShell();
 }
 
 function openChatGroupDetails(){
@@ -2431,14 +2747,14 @@ async function copyChatGroupId(){
   try{
     await navigator.clipboard.writeText(group.conversation_id);
     if(view!==chatViewId || selection!==groupSelection || !dialog.open || !TOKEN) return;
-    feedback.textContent = "工作群 ID 已复制";
+    feedback.textContent = "会话 ID 已复制";
   }catch{
     if(view!==chatViewId || selection!==groupSelection || !dialog.open || !TOKEN) return;
     var range = document.createRange();
     range.selectNodeContents(id);
     window.getSelection()?.removeAllRanges();
     window.getSelection()?.addRange(range);
-    feedback.textContent = "已选中工作群 ID，请手动复制";
+    feedback.textContent = "已选中会话 ID，请手动复制";
   }
   feedback.hidden = false;
 }
@@ -2458,14 +2774,14 @@ function setChatGroupCreateBusy(busy){
   byId("chatGroupCreateCancel").disabled = busy;
   var submit = byId("chatGroupCreateSubmit");
   submit.disabled = busy;
-  submit.textContent = busy ? "正在创建…" : "创建工作群";
+  submit.textContent = busy ? "正在创建…" : "创建会话";
 }
 
 function openChatGroupCreate(){
   var dialog = byId("chatGroupCreateDialog");
   if(!TOKEN || dialog.open || groupCreateRequest) return;
   var input = byId("chatGroupCreateName");
-  input.value = "新工作群";
+  input.value = "新会话";
   showChatGroupCreateError("");
   dialog.showModal();
   input.select();
@@ -2492,7 +2808,7 @@ byId("chatGroupCreateForm").addEventListener("submit", async function(event){
   var input = byId("chatGroupCreateName");
   var title = input.value.trim();
   if(!title || Array.from(title).length>80){
-    showChatGroupCreateError("工作群名称须为 1–80 字", true);
+    showChatGroupCreateError("会话名称须为 1–80 字", true);
     input.focus();
     return;
   }
@@ -2506,17 +2822,18 @@ byId("chatGroupCreateForm").addEventListener("submit", async function(event){
     var group = await chatGroupRequest("", "POST", {title:title}, signal);
     if(groupCreateRequest!==request || view!==chatViewId || !TOKEN) return;
     if(typeof group?.conversation_id!=="string" || !group.conversation_id){
-      throw new Error("创建回执异常，请检查工作群列表后重试");
+      throw new Error("创建回执异常，请检查会话列表后重试");
     }
     groupListRevision++;
     chatGroups.set(group.conversation_id, group);
     showChatGroupWorkspace();
     closeChatGroupCreate(false);
+    if(!byId("diagnosisView").hidden) toggleDiagnosis(false);
     await selectChatGroup(group.conversation_id);
     if(view===chatViewId && activeChatGroup===group.conversation_id && TOKEN) byId("chatInput").focus();
   }catch(error){
     if(groupCreateRequest===request && view===chatViewId && TOKEN){
-      showChatGroupCreateError(error.status ? error.message : "创建工作群失败，请检查网络后重试");
+      showChatGroupCreateError(error.status ? error.message : "创建会话失败，请检查网络后重试");
       input.focus();
     }
   }finally{
@@ -2765,37 +3082,85 @@ async function startBackgroundInspection(conversationId, message, signal){
   return result.data.run_id;
 }
 
+async function submitGroupRequest(conversationId, send,
+    key = crypto.randomUUID?.() || crypto.getRandomValues(new Uint32Array(4)).join("-")){
+  var view = chatViewId;
+  groupSubmissionRetries.delete(conversationId);
+  groupErrors.delete(conversationId);
+  try{
+    var result = await send(key);
+    if(result?.replayed && !["running", "completed"].includes(result.status)){
+      var ended = new Error("原运行已结束，请查看会话历史，或发起新一轮。");
+      ended.submissionRejected = true;
+      throw ended;
+    }
+    return result;
+  }catch(error){
+    if(view===chatViewId && TOKEN){
+      groupErrors.set(conversationId, error.message);
+      if(!error.submissionRejected && !groupSession.signal.aborted)
+        groupSubmissionRetries.set(conversationId, () => submitGroupRequest(conversationId, send, key));
+    }
+    throw error;
+  }finally{
+    if(view===chatViewId && activeChatGroup===conversationId && TOKEN) updateChatGroupControls();
+  }
+}
+
+function retryGroupSubmission(){
+  if(!groupPending.has(activeChatGroup)) groupSubmissionRetries.get(activeChatGroup)?.().catch(() => {});
+}
+
+async function submitGroupChat(conversationId, body, key){
+  var view = chatViewId;
+  var pending = {};
+  var result;
+  groupPending.set(conversationId, pending);
+  updateChatGroupControls();
+  try{
+    var streaming = readChatStream(body, TOKEN, function(data){
+      if(data.conversation_id!==conversationId || (pending.runId && pending.runId!==data.run_id))
+        throw new Error("工作群标识异常");
+      pending.runId = data.run_id;
+      if(data.replayed) result = data;
+      if(data.type==="thinking" && view===chatViewId && activeChatGroup===conversationId) readChatGroupHistory();
+    }, groupSession.signal, key);
+    readChatGroupHistory();
+    await streaming;
+    return result;
+  }finally{
+    if(view===chatViewId && TOKEN){
+      if(groupPending.get(conversationId)===pending) groupPending.delete(conversationId);
+      if(activeChatGroup===conversationId) await readChatGroupHistory();
+    }
+  }
+}
+
 async function sendGroupChat(background = false){
   var conversationId = activeChatGroup;
   var input = byId("chatInput");
   var message = input.value.trim();
   if(!message || input.disabled || !conversationId) return;
+  if(!background && searchTermSelectionFor(conversationId)) return sendSearchTermDiagnosis(message);
+  input.value = "";
+  if(!background){
+    var body = {message, conversation_id:conversationId};
+    if(byId("chatGroupListing").getAttribute("aria-pressed")==="true") body.listing_operations = true;
+    await submitGroupRequest(conversationId, key => submitGroupChat(conversationId, body, key)).catch(() => {});
+    return;
+  }
   var view = chatViewId;
   var pending = {};
-  var body = {message, conversation_id:conversationId};
-  if(byId("chatGroupListing").getAttribute("aria-pressed")==="true") body.listing_operations = true;
-  input.value = "";
   groupPending.set(conversationId, pending);
   groupErrors.delete(conversationId);
   updateChatGroupControls();
   try{
-    if(background){
-      pending.runId = await startBackgroundInspection(conversationId, message, groupSession.signal);
-      if(view===chatViewId && activeChatGroup===conversationId) watchBackgroundInspection(conversationId, pending.runId);
-      return;
-    }
-    var streaming = readChatStream(body, TOKEN, function(data){
-      if(data.conversation_id!==conversationId || (pending.runId && pending.runId!==data.run_id))
-        throw new Error("工作群标识异常");
-      pending.runId = data.run_id;
-      if(data.type==="thinking" && view===chatViewId && activeChatGroup===conversationId) readChatGroupHistory();
-    }, groupSession.signal);
-    readChatGroupHistory();
-    await streaming;
+    pending.runId = await startBackgroundInspection(conversationId, message, groupSession.signal);
+    if(view===chatViewId && activeChatGroup===conversationId) watchBackgroundInspection(conversationId, pending.runId);
   }catch(error){
     if(view===chatViewId && TOKEN && groupPending.get(conversationId)===pending){
       groupErrors.set(conversationId, error.message);
-      if(background && activeChatGroup===conversationId) input.value = message;
+      if(activeChatGroup===conversationId) input.value = message;
     }
   }finally{
     if(view===chatViewId && TOKEN){
@@ -2857,8 +3222,12 @@ function esc(s){ if(!s) return ""; return String(s).replace(/&/g,"&amp;").replac
 function initApp(page="chat"){ showPage(page,document.querySelector('[data-page="'+page+'"]')); startAutoRefresh(); }
 var refreshTimers={};
 function startAutoRefresh(){
-  refreshTimers.dashboard=setInterval(loadDashboard,30000);
-  refreshTimers.alerts=setInterval(loadAlerts,60000);
+  refreshTimers.dashboard=setInterval(() => {
+    if(byId("page-dashboard").classList.contains("active")) loadDashboard();
+  },30000);
+  refreshTimers.alerts=setInterval(() => {
+    if(byId("page-alerts").classList.contains("active")) loadAlerts();
+  },60000);
 }
 
 byId("loginPass").addEventListener("keydown",function(e){if(e.key==="Enter")doLogin();});

@@ -1,5 +1,7 @@
 """Persistent, immutable source releases for the SQLite listing catalog."""
 
+import json
+
 SCHEMA = (
     """CREATE TABLE IF NOT EXISTS product_document_releases (
         id INTEGER PRIMARY KEY, shop_id TEXT NOT NULL, marketplace_id TEXT NOT NULL, sku TEXT NOT NULL,
@@ -25,11 +27,14 @@ SCHEMA = (
 
 SCOPE_KEYS = ("shop_id", "marketplace_id", "sku")
 
-# Both read paths join the current product and its owner in the same snapshot.
-AUTHORIZED = """
+_CHUNK_RELEASES = """
     FROM product_document_chunks c
     JOIN product_documents d ON d.id=c.source_id
     JOIN product_document_releases r ON r.id=d.release_id
+"""
+
+# Both read paths join the current product and its owner in the same snapshot.
+AUTHORIZED = _CHUNK_RELEASES + """
     JOIN listing_test_products p USING (shop_id, marketplace_id, sku)
     JOIN listing_test_shops s USING (shop_id, marketplace_id)
     WHERE s.user_id=? AND r.active=1
@@ -55,6 +60,57 @@ def scoped_chunk(conn, user_id, chunk_id):
         f"SELECT {CHUNK_COLUMNS}, d.original {AUTHORIZED} AND c.chunk_id=?",
         (user_id, chunk_id),
     ).fetchone()
+
+
+def fact_source(conn, user_id, scope, original):
+    """Resolve a stored fact's file and row to one readable structured source."""
+    if (not isinstance(original, dict) or type(original.get("line")) is not int
+            or original["line"] < 1 or not isinstance(original.get("file"), str)
+            or not isinstance(original.get("release"), str)):
+        return None
+    location = f"row:{original['line']}"
+    matches = []
+    for row in conn.execute(
+        f"""SELECT {CHUNK_COLUMNS}, d.original, r.fingerprint {AUTHORIZED}
+            AND r.shop_id=? AND r.marketplace_id=? AND r.sku=? AND r.version=?
+            AND d.filename=? AND c.strategy='structured'""",
+        (user_id, *scope, original["release"], original["file"]),
+    ):
+        for region in json.loads(row["regions"]):
+            start, end = region["start_offset"], region["end_offset"]
+            if (region["location"] == location and row["start_offset"] <= start < end <= row["end_offset"]
+                    and row["content"] == row["original"][row["start_offset"]:row["end_offset"]]):
+                matches.append({"release": row["version"], "fingerprint": row["fingerprint"],
+                                "document_id": row["document_id"], "chunk_id": row["chunk_id"],
+                                "file": row["filename"], "line": original["line"],
+                                "start_offset": start, "end_offset": end})
+    return matches[0] if len(matches) == 1 else None
+
+
+def visible_receipt_headers(conn, user_id, chunk_ids):
+    """Return receipt headings for the chunks the current user can look up."""
+    scope = AUTHORIZED + " AND EXISTS (SELECT 1 FROM users u WHERE u.id=s.user_id) AND"
+    return _receipt_headers(conn, chunk_ids, scope, (user_id,))
+
+
+def stored_receipt_headers(conn, chunk_ids):
+    """Locate complete stored headings for redaction, independent of current access."""
+    return _receipt_headers(conn, chunk_ids, _CHUNK_RELEASES + " WHERE", ())
+
+
+def _receipt_headers(conn, chunk_ids, scope, params):
+    ids = sorted(chunk_ids)
+    headers = {}
+    # Legacy group history can span more than one SQLite bind-variable batch.
+    for offset in range(0, len(ids), 500):
+        batch = ids[offset:offset + 500]
+        placeholders = ",".join("?" for _ in batch)
+        rows = conn.execute(
+            f"SELECT c.chunk_id, r.sku, r.version {scope} c.chunk_id IN ({placeholders})",
+            (*params, *batch),
+        )
+        headers.update((row["chunk_id"], f"{row['sku']} · {row['version']}") for row in rows)
+    return headers
 
 
 def active_version(conn, scope):

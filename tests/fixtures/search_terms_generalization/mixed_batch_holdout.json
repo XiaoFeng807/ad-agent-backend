@@ -1,0 +1,67 @@
+{
+  "label": "官方字段夹具 · 合成数据",
+  "question": "帮我看看这款商品的广告搜索词，哪些值得写进标题，哪些需要复核投放？先给我建议和依据。",
+  "rules": {"min_impressions": 100, "min_clicks": 20, "title_min_orders": 2, "title_min_cvr_pct": 10, "title_max_length": 75},
+  "report_header": "Date,Campaign Name,Ad Group Name,Campaign ID,Ad Group ID,Customer Search Term,Impressions,Clicks,Spend,Purchases,Sales,Currency",
+  "report_defaults": {"Date": "2026-11-14", "Impressions": 320, "Clicks": 20, "Spend": "14.00", "Purchases": 4, "Sales": "99.60", "Currency": "USD"},
+  "membership": {"shop": "sp-mixed-batch-holdout", "marketplace": "US", "advertiser": "BATCH-HOLDOUT-US",
+    "from": "2026-11-14", "to": "2026-11-16", "control_sku": "BATCH-CONTROL", "control_asin": "B0BAT00009"},
+  "batches": [
+    {
+      "id": "blender-jar", "sku": "BATCH-JAR", "asin": "B0BAT00001", "title": "Dorset Countertop Blender Jar",
+      "original": [
+        "Product type\tCountertop Blender Jar\t-\tWhole\t-",
+        "Width\t127\tmm\tWhole\t-",
+        "Compatible models\tAster AX-40 | Aster AX-50\t-\tWhole\tComplete list",
+        "Cleaning\tDishwasher safe\t-\tBody\tTop rack only"
+      ],
+      "items": [
+        {"id": "jar-model-conflict", "intent": "compatibility", "group": "verified", "term": "countertop blender jar for aster ax-40 pro"},
+        {"id": "jar-width-19", "intent": "size", "group": "low", "term": "5 inch wide countertop blender jar", "report_changes": {"Clicks": 19}},
+        {"id": "jar-seal-missing", "intent": "restriction", "group": "verified", "term": "countertop blender jar seal top rack dishwasher safe"},
+        {"id": "jar-width-20", "intent": "size", "group": "verified", "term": "5 inch wide countertop blender jar"},
+        {"id": "jar-width-mixed", "intent": "size", "group": "mixed", "term": "5 inch wide countertop blender jar",
+         "report_changes": {"Impressions": 150, "Clicks": 9, "Spend": "6.30", "Purchases": 2, "Sales": "49.80"},
+         "second_row": {"Date": "2026-11-15", "Impressions": 170, "Clicks": 10, "Spend": "7.00", "Purchases": 2, "Sales": "49.80"}}
+      ]
+    },
+    {
+      "id": "fryer-basket", "sku": "BATCH-BASKET", "asin": "B0BAT00002", "title": "Linden Air Fryer Basket",
+      "original": [
+        "Product type\tAir Fryer Basket\t-\tWhole\t-",
+        "Width\t187\tmm\tWhole\t-",
+        "Compatible models\tFenwick FW-200 Max | Fenwick FW-210\t-\tWhole\tComplete list",
+        "Cleaning\tHand wash only\t-\tTray\t-",
+        "Cleaning\tDishwasher safe\t-\tBody\tTop rack only"
+      ],
+      "items": [
+        {"id": "basket-model-mixed", "intent": "compatibility", "group": "mixed", "term": "air fryer basket for fenwick fw-200 max",
+         "report_changes": {"Impressions": 150, "Clicks": 10, "Spend": "7.00", "Purchases": 2, "Sales": "49.80"},
+         "second_row": {"Date": "2026-11-15", "Impressions": 170, "Clicks": 10, "Spend": "7.00", "Purchases": 2, "Sales": "49.80"}},
+        {"id": "basket-tray-conflict", "intent": "restriction", "group": "verified", "term": "air fryer basket tray top rack dishwasher safe"},
+        {"id": "basket-model-20", "intent": "compatibility", "group": "verified", "term": "air fryer basket for fenwick fw-200 max"},
+        {"id": "basket-depth-missing", "intent": "size", "group": "verified", "term": "8 inch deep air fryer basket"},
+        {"id": "basket-model-19", "intent": "compatibility", "group": "low", "term": "air fryer basket for fenwick fw-200 max", "report_changes": {"Clicks": 19}}
+      ]
+    },
+    {
+      "id": "filter-pitcher", "sku": "BATCH-PITCHER", "asin": "B0BAT00003", "title": "Wren Water Filter Pitcher",
+      "original": [
+        "Product type\tWater Filter Pitcher\t-\tWhole\t-",
+        "Width\t152.4\tmm\tWhole\t-",
+        "Compatible models\tBriar BF-8\t-\tWhole\t-",
+        "Cleaning\tHand wash only\t-\tLid\t-",
+        "Cleaning\tDishwasher safe\t-\tBody\tTop rack only"
+      ],
+      "items": [
+        {"id": "pitcher-lid-20", "intent": "restriction", "group": "verified", "term": "water filter pitcher lid hand wash only"},
+        {"id": "pitcher-width-conflict", "intent": "size", "group": "verified", "term": "5 inch wide water filter pitcher"},
+        {"id": "pitcher-lid-19", "intent": "restriction", "group": "low", "term": "water filter pitcher lid hand wash only", "report_changes": {"Clicks": 19}},
+        {"id": "pitcher-lid-mixed", "intent": "restriction", "group": "mixed", "term": "water filter pitcher lid hand wash only",
+         "report_changes": {"Impressions": 170, "Clicks": 11, "Spend": "7.70", "Purchases": 2, "Sales": "49.80"},
+         "second_row": {"Date": "2026-11-15", "Impressions": 150, "Clicks": 10, "Spend": "7.00", "Purchases": 2, "Sales": "49.80"}},
+        {"id": "pitcher-model-missing", "intent": "compatibility", "group": "verified", "term": "water filter pitcher for briar bf-8 plus"}
+      ]
+    }
+  ]
+}

@@ -44,9 +44,10 @@ class PipelineCoordinator:
         return self.orchestrator.get_optimized_context(
             user_id, through_message_id=through_message_id, exclude_chat_view_id=exclude_chat_view_id,
         )
-    def save_conversation(self, user_id, role, content, priority=1, *, chat_view_id=None, user_message_id=None):
+    def save_conversation(self, user_id, role, content, priority=1, *, chat_view_id=None, user_message_id=None,
+                          validate=None):
         return self.orchestrator.save_conversation(user_id, role, content, priority, chat_view_id=chat_view_id,
-                                                 user_message_id=user_message_id)
+                                                 user_message_id=user_message_id, validate=validate)
     def get_history(self, user_id):
         return self.orchestrator.get_history(user_id)
     def chat_stream(self, messages, user_id=None, **kwargs):

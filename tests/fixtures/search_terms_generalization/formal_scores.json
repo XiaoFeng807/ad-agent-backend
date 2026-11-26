@@ -1,0 +1,20 @@
+{
+  "cases": {
+    "sink-mat-support": {"action": "title", "code": "supported_missing", "source_rows": [2, 3], "demand": {"product_type": "silicone sink mat", "attribute": "size", "value": "127", "unit": "mm", "conditions": {}}},
+    "sink-mat-conflict": {"action": "review", "code": "fact_conflict", "source_rows": [2, 3], "demand": {"product_type": "silicone sink mat", "attribute": "size", "value": "127", "unit": "mm", "conditions": {}}},
+    "sink-mat-missing": {"action": "observe", "code": "unverified", "source_rows": [], "demand": {"product_type": "silicone sink mat", "attribute": "size", "value": "127", "unit": "mm", "conditions": {}}},
+    "sink-mat-covered": {"action": "observe", "code": "already_in_title", "source_rows": [2, 3], "demand": {"product_type": "silicone sink mat", "attribute": "size", "value": "127", "unit": "mm", "conditions": {}}},
+    "sink-mat-low": {"action": "observe", "code": "sample", "source_rows": [], "demand": {"product_type": "silicone sink mat", "attribute": "size", "value": "127", "unit": "mm", "conditions": {}}},
+    "wall-plate-support": {"action": "title", "code": "supported_missing", "source_rows": [2, 3], "demand": {"product_type": "tv wall plate", "attribute": "vesa", "value": "100x100", "unit": "mm", "conditions": {}}},
+    "wall-plate-missing": {"action": "observe", "code": "unverified", "source_rows": [], "demand": {"product_type": "tv wall plate", "attribute": "vesa", "value": "100x100", "unit": "mm", "conditions": {}}},
+    "purifier-model-support": {"action": "title", "code": "supported_missing", "source_rows": [2, 3], "demand": {"product_type": "air purifier filter", "attribute": "model", "value": "zephyr zp-340 pro", "unit": "", "conditions": {}}},
+    "purifier-model-conflict": {"action": "review", "code": "fact_conflict", "source_rows": [2, 3], "demand": {"product_type": "air purifier filter", "attribute": "model", "value": "zephyr zp-340 pro", "unit": "", "conditions": {}}},
+    "purifier-model-missing": {"action": "observe", "code": "unverified", "source_rows": [], "demand": {"product_type": "air purifier filter", "attribute": "model", "value": "zephyr zp-340 pro", "unit": "", "conditions": {}}},
+    "purifier-mixed": {"action": "observe", "code": "unattributed", "source_rows": [], "demand": {"product_type": "air purifier filter", "attribute": "model", "value": "zephyr zp-340 pro", "unit": "", "conditions": {}}},
+    "container-body": {"action": "title", "code": "supported_missing", "source_rows": [2, 3], "demand": {"product_type": "food storage container", "attribute": "cleaning", "value": "dishwasher safe", "unit": "", "conditions": {"part": "body", "restriction": "top rack only"}}},
+    "container-lid": {"action": "title", "code": "supported_missing", "source_rows": [2, 4], "demand": {"product_type": "food storage container", "attribute": "cleaning", "value": "hand wash only", "unit": "", "conditions": {"part": "lid", "restriction": ""}}},
+    "container-whole-conflict": {"action": "review", "code": "fact_conflict", "source_rows": [2, 3, 4], "demand": {"product_type": "food storage container", "attribute": "cleaning", "value": "dishwasher safe", "unit": "", "conditions": {"part": "whole", "restriction": ""}}},
+    "container-seal-missing": {"action": "observe", "code": "unverified", "source_rows": [], "demand": {"product_type": "food storage container", "attribute": "cleaning", "value": "dishwasher safe", "unit": "", "conditions": {"part": "seal", "restriction": "top rack only"}}},
+    "container-conversion-floor": {"action": "observe", "code": "sample", "source_rows": [], "demand": {"product_type": "food storage container", "attribute": "cleaning", "value": "dishwasher safe", "unit": "", "conditions": {"part": "body", "restriction": "top rack only"}}}
+  }
+}

@@ -3,12 +3,15 @@
 import json
 import os
 from contextlib import closing, contextmanager
-from dataclasses import dataclass
+from collections.abc import Callable
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from hashlib import sha256
 from time import time_ns
 from uuid import uuid4
 
 from backend.database import alert_review, chat_storage, diagnosis_pauses, listing_operations, mysql_diagnosis, orders
+from backend.database import product_receipt_history, review_receipt_history, search_term_reports
 from backend.observability import add_trace_step
 
 
@@ -45,6 +48,13 @@ def upgrade_sqlite(conn):
         id INTEGER PRIMARY KEY AUTOINCREMENT, run_id TEXT NOT NULL REFERENCES chat_group_runs(run_id),
         kind TEXT NOT NULL, content TEXT NOT NULL, priority INTEGER NOT NULL DEFAULT 1, details TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )""")
+    conn.execute("""CREATE TABLE IF NOT EXISTS chat_group_run_requests (
+        user_id INTEGER NOT NULL, conversation_id TEXT NOT NULL REFERENCES chat_groups(conversation_id),
+        action TEXT NOT NULL, request_key TEXT NOT NULL, fingerprint TEXT NOT NULL,
+        run_id TEXT NOT NULL UNIQUE REFERENCES chat_group_runs(run_id),
+        shop_id TEXT, marketplace TEXT,
+        PRIMARY KEY (user_id, conversation_id, action, request_key)
     )""")
     conn.execute("""CREATE TABLE IF NOT EXISTS chat_group_date_proposals (
         proposal_id TEXT PRIMARY KEY,
@@ -207,12 +217,16 @@ def set_archived(user_id, conversation_id, archived):
 
 
 def _legacy_entries(conn, user_id, *, limit=None):
-    sql = """SELECT id, role AS kind, content, priority, created_at FROM conversations
-             WHERE user_id=? AND role IN ('user', 'assistant')"""
+    columns, join = chat_storage.review_receipt_columns(conn, "c")
+    sql = f"""SELECT c.id, c.role AS kind, c.content, c.priority, c.created_at, {columns}
+              FROM conversations c {join} WHERE c.user_id=? AND c.role IN ('user', 'assistant')"""
     if limit is not None:
-        rows = conn.execute(sql + " ORDER BY id DESC LIMIT ?", (user_id, limit)).fetchall()
-        return list(reversed(rows))
-    return conn.execute(sql + " ORDER BY id", (user_id,)).fetchall()
+        rows = reversed(conn.execute(sql + " ORDER BY c.id DESC LIMIT ?", (user_id, limit)).fetchall())
+    else:
+        rows = conn.execute(sql + " ORDER BY c.id", (user_id,)).fetchall()
+    entries = [dict(row) for row in rows]
+    chat_storage.filter_review_receipts(conn, user_id, entries, role_key="kind")
+    return entries
 
 
 _ENTRIES = """FROM chat_group_entries e JOIN chat_group_runs r ON r.run_id=e.run_id
@@ -229,10 +243,28 @@ def _listing_visible(conn, user_id, details):
     candidates = ()
     if kind == listing_operations.KIND:
         candidates = details.get("candidates") or (details["target"],)
-    elif kind in {listing_operations.SELECTION_KIND, listing_operations.INSPECTION_KIND}:
+    elif kind in {listing_operations.SELECTION_KIND, listing_operations.INSPECTION_KIND, search_term_reports.INSPECTION_KIND}:
         candidates = details["candidates"]
-    return all(not listing_operations.scope_error(conn, user_id, row["shop_id"], row["marketplace_id"], row["sku"])
-               for row in candidates)
+    elif kind == search_term_reports.KIND:
+        return search_term_reports.has_shop_access(conn, user_id, details["report"])
+    return (all(not listing_operations.scope_error(conn, user_id, row["shop_id"], row["marketplace_id"], row["sku"])
+                for row in candidates)
+            and (kind not in {listing_operations.KIND, listing_operations.INSPECTION_KIND,
+                              search_term_reports.INSPECTION_KIND}
+                 or listing_operations.evidence_visible(conn, user_id, details)))
+
+
+def _reply_visible(conn, user_id, content, details):
+    return (_olist_visible(conn, user_id, details) and _listing_visible(conn, user_id, details)
+            and review_receipt_history.visible(conn, user_id, content, details))
+
+
+def _stored_reply_details(value):
+    try:
+        details = json.loads(value) if value else None
+    except ValueError:
+        return {}
+    return details if isinstance(details, dict) else {}
 
 
 def _sales_summary(metrics, *, olist):
@@ -275,24 +307,41 @@ def history(user_id, conversation_id):
         runs_by_id = {run["run_id"]: run for run in runs}
         if conversation_id == _legacy_id(user_id):
             entries.extend({**dict(row), "entry_id": f"legacy:{row['id']}"} for row in _legacy_entries(conn, user_id))
-        for row in conn.execute(
+        rows = conn.execute(
             "SELECT e.*, r.trace_id " + _ENTRIES + " ORDER BY e.id", (conversation_id,)
-        ).fetchall():
+        ).fetchall()
+        replies = {row["id"]: _stored_reply_details(row["details"]) for row in rows if row["kind"] == "assistant"}
+        hidden_reviews = {row["run_id"] for row in rows if row["id"] in replies
+                          and not review_receipt_history.visible(conn, user_id, row["content"], replies[row["id"]])}
+        hidden_listings = {row["run_id"] for row in rows if row["id"] in replies
+                           and not _listing_visible(conn, user_id, replies[row["id"]])}
+        for row in rows:
             entry = dict(row)
             details = entry.pop("details")
             if entry["kind"] == "stop":
                 runs_by_id[entry["run_id"]]["stop"] = json.loads(details)
                 continue
-            if details and entry["kind"] == "assistant":
-                decoded = json.loads(details)
+            if entry["run_id"] in hidden_reviews:
+                if entry["kind"] == "worker":
+                    continue
+                if entry["kind"] == "assistant":
+                    entries.append({**entry, "entry_id": f"entry:{entry['id']}",
+                                    "content": review_receipt_history.UNAVAILABLE})
+                    continue
+            if entry["run_id"] in hidden_listings:
+                if entry["kind"] == "worker":
+                    continue
+                if entry["kind"] == "assistant":
+                    approved = [item for item in listings.get(entry["id"], ()) if item["state"] == "approved"]
+                    entries.append({**entry, "entry_id": f"entry:{entry['id']}",
+                                    "content": "当前商品或依据无法查看。",
+                                    **({"listing_actions": approved} if approved else {})})
+                    continue
+            if decoded := replies.get(entry["id"]):
                 kind = decoded.get("kind")
                 if not _olist_visible(conn, user_id, decoded):
                     entries.append({**entry, "entry_id": f"entry:{entry['id']}",
                                     "content": "当前店铺访问权限已变化，无法查看该轮销量结果。"})
-                    continue
-                if not _listing_visible(conn, user_id, decoded):
-                    entries.append({**entry, "entry_id": f"entry:{entry['id']}",
-                                    "content": "当前店铺访问权限已变化，无法查看该轮商品结果。"})
                     continue
                 if kind == listing_operations.SELECTION_KIND:
                     entries.append({**entry, "entry_id": f"entry:{entry['id']}"})
@@ -303,36 +352,49 @@ def history(user_id, conversation_id):
                     entry["sales_summary"] = _sales_summary(decoded.get("metrics"), olist=False)
                     entry["evidence_gap_count"] = len(decoded.get("gaps") or [])
                     entry["has_product_details"] = bool(decoded.get("listing") or decoded.get("facts"))
-                elif kind == listing_operations.INSPECTION_KIND:
+                elif kind in {listing_operations.INSPECTION_KIND, search_term_reports.INSPECTION_KIND}:
                     entry["evidence_kind"] = kind
                 elif kind == orders.OLIST_SALES_EVIDENCE:
                     entry["evidence_kind"] = kind
                     entry["sales_summary"] = _sales_summary(decoded["metrics"], olist=True)
+                elif kind == search_term_reports.KIND:
+                    entry["evidence_kind"] = kind
+                    entry["search_terms"] = [{key: item[key] for key in ("id", "term", "action", "reason")}
+                                             for item in decoded["items"]]
                 elif proposals := pauses.get(entry["id"]):
                     entry["pause_actions"] = proposals
                 entries.append({**entry, "entry_id": f"entry:{entry['id']}", "has_evidence": True})
                 continue
             entries.append({**entry, "entry_id": f"entry:{entry['id']}",
-                            **({"event": json.loads(details)} if details else {})})
+                            **({"event": json.loads(details)} if details and entry["kind"] != "assistant" else {})})
+        product_receipt_history.filter_receipts(conn, user_id, entries, role_key="kind")
         return {"conversation": group, "entries": entries, "runs": runs}
+
+
+def read_reply_evidence(conn, user_id, conversation_id, run_id):
+    _group(conn, user_id, conversation_id)
+    row = conn.execute(
+        "SELECT e.id, e.content, e.details " + _ENTRIES
+        + " AND r.run_id=? AND r.status='completed' AND e.kind='assistant' AND e.details IS NOT NULL",
+        (conversation_id, run_id),
+    ).fetchone()
+    if row is None:
+        raise GroupNotFound
+    details = _stored_reply_details(row["details"])
+    if not details or not _reply_visible(conn, user_id, row["content"], details):
+        raise GroupNotFound
+    if details.get("kind") == search_term_reports.KIND:
+        search_term_reports.normalize_legacy_metrics(details)
+    return {"conversation_id": conversation_id, "run_id": run_id, "entry_id": f"entry:{row['id']}",
+            **details}
 
 
 def reply_evidence(user_id, conversation_id, run_id):
     with closing(chat_storage.connect(read_only=True)) as conn:
         require_schema(conn)
-        _group(conn, user_id, conversation_id)
-        row = conn.execute(
-            "SELECT e.id, e.details " + _ENTRIES
-            + " AND r.run_id=? AND r.status='completed' AND e.kind='assistant' AND e.details IS NOT NULL",
-            (conversation_id, run_id),
-        ).fetchone()
-        if row is None:
-            raise GroupNotFound
-        details = json.loads(row["details"])
-        if not _olist_visible(conn, user_id, details) or not _listing_visible(conn, user_id, details):
-            raise GroupNotFound
-        return {"conversation_id": conversation_id, "run_id": run_id, "entry_id": f"entry:{row['id']}",
-                **details}
+        if not mysql_diagnosis.is_mysql(conn):
+            conn.execute("BEGIN")
+        return read_reply_evidence(conn, user_id, conversation_id, run_id)
 
 
 @dataclass(frozen=True)
@@ -345,6 +407,7 @@ class GroupRun:
     requested_at: datetime | None = None
     product_context: dict | None = None
     slot_acquired_ns: int | None = None
+    check_progress_session: Callable | None = field(default=None, repr=False, compare=False)
 
     def _entry(self, conn, kind, content, priority=1, details=None):
         return conn.execute(
@@ -359,6 +422,8 @@ class GroupRun:
                 "SELECT 1 FROM chat_group_runs WHERE conversation_id=? AND run_id=? AND status IN ('superseded', 'stopped')",
                 (self.conversation_id, self.run_id),
             ).fetchone()):
+                return
+            if self.check_progress_session is not None and not self.check_progress_session(conn):
                 return
             self._entry(conn, "worker", content, details=json.dumps(
                 {"kind": kind, **event, "run_id": self.run_id}, ensure_ascii=False))
@@ -385,6 +450,10 @@ class GroupRun:
                 if latest != receipt:
                     evidence = {}
                     content = finish_without_scope(latest, self.trace_id, evidence_sink=evidence.update)
+            if evidence and evidence.get("kind") == search_term_reports.INSPECTION_KIND:
+                from backend.agent.operations_inspection import commit_result
+
+                content, evidence = commit_result(conn, self, content, evidence)
             message_id = self._entry(conn, "assistant", content, priority,
                                      details=json.dumps(evidence, ensure_ascii=False) if evidence else None)
             if evidence and evidence.get("kind") == listing_operations.KIND:
@@ -398,7 +467,8 @@ class GroupRun:
                     conn.execute("UPDATE chat_group_entries SET content=?, details=NULL WHERE id=?",
                                  (content, message_id))
             elif evidence and evidence.get("kind") not in (orders.OLIST_SALES_EVIDENCE, listing_operations.SELECTION_KIND,
-                                                           listing_operations.INSPECTION_KIND):
+                                                           listing_operations.INSPECTION_KIND, search_term_reports.KIND,
+                                                           search_term_reports.INSPECTION_KIND):
                 diagnosis_pauses.create_group_pause_proposals(conn, self, message_id, evidence)
             self._finish(conn, "completed")
             return message_id, content
@@ -462,14 +532,17 @@ def _accept(conn, user_id, conversation_id, trace_id, message, priority, *, back
         ).fetchall()
     prior = []
     for row in reversed(rows):
-        details = json.loads(row["details"] or "{}")
+        details = _stored_reply_details(row["details"])
         if _olist_visible(conn, user_id, details) and _listing_visible(conn, user_id, details):
-            prior.append(row)
+            entry = dict(row)
+            if row["kind"] == "assistant" and not review_receipt_history.visible(conn, user_id, row["content"], details):
+                entry.update(content=review_receipt_history.UNAVAILABLE, details=None)
+            prior.append(entry)
     product_context = None
     for row in reversed(prior):
         if row["kind"] != "assistant" or row["status"] != "completed" or not row["details"]:
             continue
-        details = json.loads(row["details"])
+        details = _stored_reply_details(row["details"])
         kind = details.get("kind")
         if kind == listing_operations.KIND and details.get("target"):
             product_context = {"kind": kind, "target": details["target"]}
@@ -484,6 +557,8 @@ def _accept(conn, user_id, conversation_id, trace_id, message, priority, *, back
     if conversation_id == _legacy_id(user_id) and len(prior) < 49:
         prior = _legacy_entries(conn, user_id, limit=49 - len(prior)) + prior
     context = [{"role": row["kind"], "content": row["content"] or "", "priority": row["priority"]} for row in prior]
+    if not mysql_diagnosis.is_mysql(conn):
+        product_receipt_history.filter_choices(conn, user_id, context)
     context.append({"role": "user", "content": message, "priority": priority})
     conn.execute(
         "INSERT INTO chat_group_runs (run_id, conversation_id, trace_id, status) VALUES (?, ?, ?, 'running')",
@@ -498,14 +573,68 @@ def _accept(conn, user_id, conversation_id, trace_id, message, priority, *, back
     return GroupRun(user_id, conversation_id, run_id, trace_id, message_id, requested_at, product_context, acquired_ns), context
 
 
-def accept(user_id, conversation_id, trace_id, message, priority):
+@dataclass(frozen=True)
+class RunRequest:
+    action: str
+    key: str
+    fingerprint: str
+
+    @classmethod
+    def from_payload(cls, action, key, payload):
+        encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("ascii")
+        return cls(action, key, sha256(encoded).hexdigest())
+
+    def replay(self, conn, user_id, conversation_id):
+        # Call while holding the same group/write lock used for new admission.
+        row = conn.execute(
+            """SELECT r.run_id, r.trace_id, r.status, q.fingerprint, q.shop_id, q.marketplace
+               FROM chat_group_run_requests q JOIN chat_group_runs r
+               ON r.run_id=q.run_id AND r.conversation_id=q.conversation_id
+               WHERE q.user_id=? AND q.conversation_id=? AND q.action=? AND q.request_key=?""",
+            (user_id, conversation_id, self.action, self.key),
+        ).fetchone()
+        if row is None:
+            return None
+        if row["fingerprint"] != self.fingerprint:
+            raise GroupConflict("idempotency_key_conflict")
+        return {key: row[key] for key in ("run_id", "trace_id", "status", "shop_id", "marketplace")}
+
+    def record(self, conn, run, *, shop_id=None, marketplace=None):
+        conn.execute(
+            """INSERT INTO chat_group_run_requests
+               (user_id, conversation_id, action, request_key, fingerprint, run_id, shop_id, marketplace)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            (run.user_id, run.conversation_id, self.action, self.key, self.fingerprint,
+             run.run_id, shop_id, marketplace),
+        )
+
+
+def _accept_new(conn, group, trace_id, message, priority):
+    if group["archived"]:
+        raise GroupConflict("请先恢复归档工作群")
+    if _running(conn, group["conversation_id"]):
+        raise GroupConflict("此工作群已有一轮正在运行")
+    return _accept(conn, group["user_id"], group["conversation_id"], trace_id, message, priority)
+
+
+def accept(user_id, conversation_id, trace_id, message, priority, *, identity=None, authorize=None):
     with _write() as conn:
         group = _group(conn, user_id, conversation_id, lock=True)
-        if group["archived"]:
-            raise GroupConflict("请先恢复归档工作群")
-        if _running(conn, conversation_id):
-            raise GroupConflict("此工作群已有一轮正在运行")
-        return _accept(conn, user_id, conversation_id, trace_id, message, priority)
+        if authorize is not None:
+            authorize(conn)
+        if identity is not None and (replay := identity.replay(conn, user_id, conversation_id)):
+            if replay["status"] == "completed":
+                row = conn.execute(
+                    "SELECT content, details FROM chat_group_entries WHERE run_id=? AND kind='assistant'",
+                    (replay["run_id"],),
+                ).fetchone()
+                if row and not _reply_visible(conn, user_id, row["content"], _stored_reply_details(row["details"])):
+                    raise GroupNotFound
+            return None, {key: replay[key] for key in ("run_id", "trace_id", "status")}
+        run, context = _accept_new(conn, group, trace_id, message, priority)
+        if identity is not None:
+            identity.record(conn, run)
+        return run, context
 
 
 def _review_request(conn, run_id):
@@ -641,7 +770,7 @@ def confirm_change(user_id, conversation_id, run_id, proposal_id, trace_id, *, d
         return replacement, context, change
 
 
-def committed_turn(conn, user_id, conversation_id, user_message_id, assistant_message_id):
+def committed_turn(conn, user_id, conversation_id, user_message_id, assistant_message_id, *, visible_only=False):
     row = conn.execute(
         """SELECT q.content AS question, a.content AS answer, a.details FROM chat_group_entries q
            JOIN chat_group_entries a ON a.run_id=q.run_id
@@ -651,6 +780,10 @@ def committed_turn(conn, user_id, conversation_id, user_message_id, assistant_me
              AND q.id=? AND q.kind='user' AND a.id=? AND a.kind='assistant'""",
         (user_id, conversation_id, user_message_id, assistant_message_id),
     ).fetchone()
-    if row and (not row["details"] or _olist_visible(conn, user_id, json.loads(row["details"]))):
+    if row and _olist_visible(conn, user_id, (details := _stored_reply_details(row["details"]))):
+        if visible_only and not review_receipt_history.visible(
+            conn, user_id, row["answer"], details,
+        ):
+            return None
         return row["question"], row["answer"]
     return None

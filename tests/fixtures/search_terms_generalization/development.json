@@ -1,0 +1,88 @@
+{
+  "label": "官方字段夹具 · 合成数据",
+  "question": "帮我看看这款商品的广告搜索词，哪些值得写进标题，哪些需要复核投放？先给我建议和依据。",
+  "rules": {"min_impressions": 100, "min_clicks": 20, "title_min_orders": 2, "title_min_cvr_pct": 10, "title_max_length": 75},
+  "report_header": "Date,Campaign Name,Ad Group Name,Campaign ID,Ad Group ID,Customer Search Term,Impressions,Clicks,Spend,Purchases,Sales,Currency",
+  "report_defaults": {"Date": "2026-11-09", "Impressions": 320, "Clicks": 30, "Spend": "21.00", "Purchases": 4, "Sales": "99.96", "Currency": "USD"},
+  "membership": {"shop": "sp-generalization", "marketplace": "US", "advertiser": "SYNTHETIC-US", "from": "2026-11-09", "to": "2026-11-10", "control_sku": "DEV-CONTROL", "control_asin": "B0DEV00009"},
+  "products": [
+    {
+      "id": "size", "sku": "DEV-TRAY", "asin": "B0DEV00001", "intent": "size",
+      "title": "Pinefield Desk Tray", "covered_title": "Pinefield Desk Tray 127 mm Wide",
+      "term": "5 inch wide desk tray",
+      "support": ["Product type\tDesk Tray\t-\tWhole\t-", "Width\t127\tmm\tWhole\t-"],
+      "conflict": ["Product type\tDesk Tray\t-\tWhole\t-", "Width\t152.4\tmm\tWhole\t-"],
+      "missing": ["Product type\tDesk Tray\t-\tWhole\t-", "Length\t127\tmm\tWhole\t-"]
+    },
+    {
+      "id": "vesa", "sku": "DEV-BRACKET", "asin": "B0DEV00002", "intent": "compatibility",
+      "title": "Kite Monitor Bracket", "covered_title": "Kite Monitor Bracket VESA 100x100",
+      "term": "vesa 100×100 monitor bracket",
+      "support": ["Product type\tMonitor Bracket\t-\tWhole\t-", "VESA\t100x100\tmm\tMount\tComplete list"],
+      "conflict": ["Product type\tMonitor Bracket\t-\tWhole\t-", "VESA\t75x75\tmm\tMount\tComplete list"],
+      "missing": ["Product type\tMonitor Bracket\t-\tWhole\t-", "VESA\t100\tmm\tMount\t-"]
+    },
+    {
+      "id": "cleaning", "sku": "DEV-MUG", "asin": "B0DEV00003", "intent": "restriction",
+      "title": "Bramble Travel Mug", "covered_title": "Bramble Travel Mug, Body Top Rack Only Dishwasher Safe",
+      "term": "travel mug body top rack dishwasher safe",
+      "support": ["Product type\tTravel Mug\t-\tWhole\t-", "Cleaning\tDishwasher safe\t-\tBody\tTop rack only", "Cleaning\tHand wash only\t-\tLid\t-"],
+      "conflict": ["Product type\tTravel Mug\t-\tWhole\t-", "Cleaning\tHand wash only\t-\tBody\t-", "Cleaning\tHand wash only\t-\tLid\t-"],
+      "missing": ["Product type\tTravel Mug\t-\tWhole\t-", "Cleaning\tHand wash only\t-\tLid\t-"]
+    },
+    {
+      "id": "cabinet", "sku": "DEV-CABINET", "asin": "B0DEV00004", "intent": "compatibility",
+      "title": "Tamar Under Cabinet Display Bracket",
+      "covered_title": "Tamar Under Cabinet Display Bracket VESA 100x100",
+      "term": "vesa 100x100 under cabinet display bracket",
+      "support": ["Product type\tUnder Cabinet Display Bracket\t-\tWhole\t-", "VESA\t100x100\tmm\tMount\tComplete list"],
+      "conflict": ["Product type\tUnder Cabinet Display Bracket\t-\tWhole\t-", "VESA\t75x75\tmm\tMount\tComplete list"],
+      "missing": ["Product type\tUnder Cabinet Display Bracket\t-\tWhole\t-", "VESA\t100\tmm\tMount\t-"],
+      "no_spec": ["Color\tBlack\t-\tWhole\t-"]
+    }
+  ],
+  "cases_per_product": ["support", "conflict", "missing", "covered", "low", "mixed"],
+  "low_report_changes": {"Clicks": 15},
+  "extra_development_cases": [
+    {"id": "cleaning-conversion-floor", "product": "cleaning", "variant": "low-conversion",
+     "report_changes": {"Purchases": 1}},
+    {"id": "size-impressions-below", "product": "size", "variant": "low-conversion",
+     "report_changes": {"Impressions": 99}, "boundary": ["impressions", "below"]},
+    {"id": "size-impressions-at", "product": "size", "variant": "support",
+     "report_changes": {"Impressions": 100}, "boundary": ["impressions", "at"]},
+    {"id": "vesa-click-at", "product": "vesa", "variant": "support",
+     "report_changes": {"Clicks": 20}, "boundary": ["clicks", "at"]},
+    {"id": "size-orders-below", "product": "size", "variant": "low-conversion",
+     "report_changes": {"Clicks": 20, "Purchases": 1}, "boundary": ["orders", "below"]},
+    {"id": "size-orders-at", "product": "size", "variant": "support",
+     "report_changes": {"Clicks": 20, "Purchases": 2}, "boundary": ["orders", "at"]},
+    {"id": "cleaning-cvr-below", "product": "cleaning", "variant": "low-conversion",
+     "report_changes": {"Clicks": 41, "Purchases": 4}, "boundary": ["cvr", "below"]},
+    {"id": "cleaning-cvr-at", "product": "cleaning", "variant": "support",
+     "report_changes": {"Clicks": 40, "Purchases": 4}, "boundary": ["cvr", "at"]},
+    {"id": "cleaning-conflict-title-low", "product": "cleaning", "variant": "conflict",
+     "report_changes": {"Clicks": 41, "Purchases": 4}},
+    {"id": "cabinet-click-19", "product": "cabinet", "variant": "low-conversion",
+     "report_changes": {"Clicks": 19}},
+    {"id": "cabinet-click-19-hidden-conflict", "product": "cabinet", "variant": "low-conversion",
+     "document_version": "conflict", "report_changes": {"Clicks": 19}},
+    {"id": "cabinet-click-20", "product": "cabinet", "variant": "support",
+     "report_changes": {"Clicks": 20}},
+    {"id": "cabinet-click-20-missing", "product": "cabinet", "variant": "missing",
+     "report_changes": {"Clicks": 20}},
+    {"id": "cabinet-click-20-empty", "product": "cabinet", "variant": "missing",
+     "document_version": "no_spec", "report_changes": {"Clicks": 20}},
+    {"id": "cabinet-click-20-conflict", "product": "cabinet", "variant": "conflict",
+     "report_changes": {"Clicks": 20}},
+    {"id": "cabinet-click-19-mixed", "product": "cabinet", "variant": "mixed",
+     "report_changes": {"Clicks": 19}},
+    {"id": "cabinet-click-20-suffix-conflict", "product": "cabinet", "variant": "conflict",
+     "term": "under cabinet display bracket vesa 100 x 100 mm", "report_changes": {"Clicks": 20}}
+  ],
+  "attacks": [
+    {"id": "wrong-sku", "product": "size", "variant": "support", "control_source": ["Product type\tDesk Tray\t-\tWhole\t-", "Width\t127\tmm\tWhole\t-"]},
+    {"id": "widened-condition", "product": "cleaning", "variant": "support"},
+    {"id": "low-sample-title", "product": "size", "variant": "low"},
+    {"id": "fake-sample-audit", "product": "size", "variant": "low"}
+  ]
+}

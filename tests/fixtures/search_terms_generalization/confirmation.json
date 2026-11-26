@@ -1,0 +1,52 @@
+{
+  "label": "官方字段夹具 · 合成数据",
+  "question": "帮我看看这款商品的广告搜索词，哪些值得写进标题，哪些需要复核投放？先给我建议和依据。",
+  "rules": {"min_impressions": 100, "min_clicks": 20, "title_min_orders": 2, "title_min_cvr_pct": 10, "title_max_length": 75},
+  "report_header": "Date,Campaign Name,Ad Group Name,Campaign ID,Ad Group ID,Customer Search Term,Impressions,Clicks,Spend,Purchases,Sales,Currency",
+  "report_defaults": {"Date": "2026-11-10", "Impressions": 380, "Clicks": 32, "Spend": "22.40", "Purchases": 4, "Sales": "119.96", "Currency": "USD"},
+  "membership": {"shop": "sp-generalization-confirmation", "marketplace": "US", "advertiser": "CONFIRM-US", "from": "2026-11-09", "to": "2026-11-10", "control_sku": "CONF-CONTROL", "control_asin": "B0CONF0009"},
+  "products": [
+    {
+      "id": "divider", "sku": "CONF-DIVIDER", "asin": "B0CONF0001", "intent": "size",
+      "title": "Rook Drawer Divider", "covered_title": "Rook Drawer Divider 5 Inch Wide",
+      "term": "12.7 cm wide drawer divider",
+      "support": ["Product type\tDrawer Divider\t-\tWhole\t-", "Width\t127\tmm\tWhole\t-"],
+      "conflict": ["Product type\tDrawer Divider\t-\tWhole\t-", "Width\t120\tmm\tWhole\t-"],
+      "missing": ["Product type\tDrawer Divider\t-\tWhole\t-", "Length\t127\tmm\tWhole\t-"]
+    },
+    {
+      "id": "arm", "sku": "CONF-ARM", "asin": "B0CONF0002", "intent": "compatibility",
+      "title": "Beacon Desk Monitor Arm",
+      "term": "desk monitor arm vesa 75×75",
+      "support": ["Product type\tDesk Monitor Arm\t-\tWhole\t-", "VESA\t75x75 | 100x100\tmm\tMount\tComplete list"],
+      "conflict": ["Product type\tDesk Monitor Arm\t-\tWhole\t-", "VESA\t75x100 | 100x100\tmm\tMount\tComplete list"]
+    },
+    {
+      "id": "brush", "sku": "CONF-BRUSH", "asin": "B0CONF0003", "intent": "compatibility",
+      "title": "Longfirth Vacuum Brush",
+      "term": "vacuum brush fits raven rv-70 max",
+      "support": ["Product type\tVacuum Brush\t-\tWhole\t-", "Compatible models\tRaven RV-70 Max | Raven RV-80\t-\tWhole\tComplete list"],
+      "missing": ["Product type\tVacuum Brush\t-\tWhole\t-", "Compatible models\tRaven RV-70\t-\tWhole\t-"]
+    },
+    {
+      "id": "jar", "sku": "CONF-JAR", "asin": "B0CONF0004", "intent": "restriction",
+      "title": "Cairn Blender Jar",
+      "term": "blender jar lid hand wash only",
+      "support": ["Product type\tBlender Jar\t-\tWhole\t-", "Cleaning\tDishwasher safe\t-\tBody\tTop rack only", "Cleaning\tHand wash only\t-\tLid\t-"]
+    }
+  ],
+  "cases": [
+    {"id": "divider-support", "product": "divider", "variant": "support"},
+    {"id": "divider-conflict", "product": "divider", "variant": "conflict"},
+    {"id": "divider-missing", "product": "divider", "variant": "missing"},
+    {"id": "divider-covered", "product": "divider", "variant": "covered"},
+    {"id": "arm-support", "product": "arm", "variant": "support"},
+    {"id": "arm-conflict", "product": "arm", "variant": "conflict"},
+    {"id": "brush-support", "product": "brush", "variant": "support"},
+    {"id": "brush-missing", "product": "brush", "variant": "missing"},
+    {"id": "brush-mixed", "product": "brush", "variant": "mixed"},
+    {"id": "jar-lid", "product": "jar", "variant": "support"},
+    {"id": "jar-whole-conflict", "product": "jar", "variant": "support", "term": "dishwasher safe blender jar"},
+    {"id": "jar-seal-missing", "product": "jar", "variant": "support", "term": "blender jar seal dishwasher safe"}
+  ]
+}

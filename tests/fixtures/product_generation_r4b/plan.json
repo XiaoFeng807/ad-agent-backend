@@ -1,0 +1,803 @@
+{
+  "task": "TASK-044-T2-R4-B",
+  "accounts": [
+    "owner",
+    "other"
+  ],
+  "catalog": [
+    {
+      "target": {
+        "shop_id": "r4b-pigment",
+        "marketplace_id": "CN",
+        "sku": "CF-42"
+      },
+      "title": "壁画色卡比对框 CF-42",
+      "principal": "owner"
+    },
+    {
+      "target": {
+        "shop_id": "r4b-pigment",
+        "marketplace_id": "CN",
+        "sku": "CF-43"
+      },
+      "title": "壁画色卡比对框 CF-43",
+      "principal": "owner"
+    },
+    {
+      "target": {
+        "shop_id": "r4b-clock",
+        "marketplace_id": "CN",
+        "sku": "PS-18"
+      },
+      "title": "机械钟摆幅校验座 PS-18",
+      "principal": "owner"
+    }
+  ],
+  "releases": [
+    {
+      "target": {
+        "shop_id": "r4b-pigment",
+        "marketplace_id": "CN",
+        "sku": "CF-42"
+      },
+      "version": "proof-v1",
+      "documents": [
+        {
+          "id": "frame-spec",
+          "file": "frame-spec.tsv",
+          "kind": "specs"
+        },
+        {
+          "id": "frame-weight",
+          "file": "frame-weight.md",
+          "kind": "manual"
+        },
+        {
+          "id": "frame-clips",
+          "file": "frame-clips.md",
+          "kind": "manual"
+        },
+        {
+          "id": "frame-gap-a",
+          "file": "frame-gap-a.md",
+          "kind": "manual"
+        },
+        {
+          "id": "frame-gap-b",
+          "file": "frame-gap-b.md",
+          "kind": "manual"
+        }
+      ]
+    },
+    {
+      "target": {
+        "shop_id": "r4b-pigment",
+        "marketplace_id": "CN",
+        "sku": "CF-42"
+      },
+      "version": "proof-v0",
+      "documents": [
+        {
+          "id": "frame-obsolete",
+          "file": "frame-obsolete.tsv",
+          "kind": "specs"
+        }
+      ]
+    },
+    {
+      "target": {
+        "shop_id": "r4b-pigment",
+        "marketplace_id": "CN",
+        "sku": "CF-43"
+      },
+      "version": "proof-v1",
+      "documents": [
+        {
+          "id": "frame-neighbor",
+          "file": "frame-neighbor.tsv",
+          "kind": "specs"
+        }
+      ]
+    },
+    {
+      "target": {
+        "shop_id": "r4b-clock",
+        "marketplace_id": "CN",
+        "sku": "PS-18"
+      },
+      "version": "proof-v1",
+      "documents": [
+        {
+          "id": "swing-spec",
+          "file": "swing-spec.tsv",
+          "kind": "specs"
+        },
+        {
+          "id": "swing-prep",
+          "file": "swing-prep.md",
+          "kind": "manual"
+        },
+        {
+          "id": "swing-travel-a",
+          "file": "swing-travel-a.md",
+          "kind": "manual"
+        },
+        {
+          "id": "swing-travel-b",
+          "file": "swing-travel-b.md",
+          "kind": "manual"
+        },
+        {
+          "id": "swing-material",
+          "file": "swing-material.md",
+          "kind": "manual"
+        }
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "id": "A01",
+      "scene": "单事实",
+      "query": "CF-42 的观察口内宽多大？测量时遮光片要放在哪个位置？",
+      "target": {
+        "shop_id": "r4b-pigment",
+        "marketplace_id": "CN",
+        "sku": "CF-42"
+      },
+      "principal": "owner",
+      "version": "proof-v1",
+      "routing": "supported",
+      "evidence": [
+        {
+          "doc": "frame-spec",
+          "location": "row:2"
+        }
+      ],
+      "expected": {
+        "facts": [
+          {
+            "name": "观察口内宽",
+            "entity": "CF-42",
+            "value": "63",
+            "unit": "mm",
+            "ids": [
+              1
+            ],
+            "conditions": [
+              {
+                "text": "遮光片完全抽出",
+                "id": 1
+              }
+            ]
+          }
+        ],
+        "missing": [],
+        "conflict": false,
+        "forbidden": [
+          "不带遮光片位置的通用宽度",
+          "CF-43 的 68 mm",
+          "旧版的 57 mm"
+        ]
+      }
+    },
+    {
+      "id": "A02",
+      "scene": "不同原文支持两事实",
+      "query": "CF-42 的空框称重是多少？观察口内宽又是多少？请带上测量条件。",
+      "target": {
+        "shop_id": "r4b-pigment",
+        "marketplace_id": "CN",
+        "sku": "CF-42"
+      },
+      "principal": "owner",
+      "version": "proof-v1",
+      "routing": "supported",
+      "evidence": [
+        {
+          "doc": "frame-spec",
+          "location": "row:2"
+        },
+        {
+          "doc": "frame-weight",
+          "location": "page:11"
+        }
+      ],
+      "expected": {
+        "facts": [
+          {
+            "name": "空框质量",
+            "entity": "CF-42",
+            "value": "420",
+            "unit": "g",
+            "ids": [
+              2
+            ],
+            "conditions": [
+              {
+                "text": "取下两张底衬",
+                "id": 2
+              }
+            ]
+          },
+          {
+            "name": "观察口内宽",
+            "entity": "CF-42",
+            "value": "63",
+            "unit": "mm",
+            "ids": [
+              1
+            ],
+            "conditions": [
+              {
+                "text": "遮光片完全抽出",
+                "id": 1
+              }
+            ]
+          }
+        ],
+        "missing": [],
+        "conflict": false,
+        "forbidden": [
+          "互换两处出处",
+          "空框包含底衬",
+          "报告外宽"
+        ]
+      }
+    },
+    {
+      "id": "A03",
+      "scene": "编号章节必需条件",
+      "query": "CF-42 需要几枚边夹？还要满足什么使用条件，如何扣紧？",
+      "target": {
+        "shop_id": "r4b-pigment",
+        "marketplace_id": "CN",
+        "sku": "CF-42"
+      },
+      "principal": "owner",
+      "version": "proof-v1",
+      "routing": "supported",
+      "evidence": [
+        {
+          "doc": "frame-spec",
+          "location": "row:3"
+        },
+        {
+          "doc": "frame-clips",
+          "location": "page:27"
+        }
+      ],
+      "expected": {
+        "facts": [
+          {
+            "name": "边夹数量",
+            "entity": "CF-42",
+            "value": "3",
+            "unit": "枚",
+            "ids": [
+              1
+            ],
+            "conditions": [
+              {
+                "text": "底衬完全干燥",
+                "id": 2
+              },
+              {
+                "text": "比对框平放在无纹台面（平放、无纹均必需）",
+                "id": 2
+              },
+              {
+                "text": "先对齐上沿",
+                "id": 2
+              },
+              {
+                "text": "按对角顺序扣紧边夹",
+                "id": 2
+              }
+            ]
+          }
+        ],
+        "missing": [],
+        "conflict": false,
+        "forbidden": [
+          "把 M27 当作型号",
+          "仅转述按 M27 操作即视为满足所有条件",
+          "在潮湿底衬上使用"
+        ]
+      }
+    },
+    {
+      "id": "A04",
+      "scene": "同 SKU 同工况真冲突｜型号只在问题",
+      "query": "CF-42 比对框竖直且遮光片扣至第二档时，遮光片到色卡的间隙是多少？",
+      "target": {
+        "shop_id": "r4b-pigment",
+        "marketplace_id": "CN",
+        "sku": "CF-42"
+      },
+      "principal": "owner",
+      "version": "proof-v1",
+      "routing": "conflict",
+      "evidence": [
+        {
+          "doc": "frame-gap-a",
+          "location": "page:31"
+        },
+        {
+          "doc": "frame-gap-b",
+          "location": "page:34"
+        }
+      ],
+      "expected": {
+        "facts": [
+          {
+            "name": "遮光片与色卡的间隙",
+            "entity": "CF-42",
+            "value": "6",
+            "unit": "mm",
+            "ids": [
+              1
+            ],
+            "conditions": [
+              {
+                "text": "比对框竖直",
+                "id": 1
+              },
+              {
+                "text": "遮光片扣至第二档",
+                "id": 1
+              }
+            ]
+          },
+          {
+            "name": "遮光片与色卡的间隙",
+            "entity": "CF-42",
+            "value": "8",
+            "unit": "mm",
+            "ids": [
+              2
+            ],
+            "conditions": [
+              {
+                "text": "比对框竖直",
+                "id": 2
+              },
+              {
+                "text": "遮光片扣至第二档",
+                "id": 2
+              }
+            ]
+          }
+        ],
+        "missing": [],
+        "conflict": true,
+        "forbidden": [
+          "把 M31 或 M34 当型号",
+          "从两个值择一、取平均或写成可接受范围",
+          "断言两个工况不同"
+        ]
+      }
+    },
+    {
+      "id": "A05",
+      "scene": "相近 SKU 和旧版本隔离",
+      "query": "买的是 CF-42，遮光片完全抽出时观察口有多宽？",
+      "target": {
+        "shop_id": "r4b-pigment",
+        "marketplace_id": "CN",
+        "sku": "CF-42"
+      },
+      "principal": "owner",
+      "version": "proof-v1",
+      "routing": "supported",
+      "evidence": [
+        {
+          "doc": "frame-spec",
+          "location": "row:2"
+        }
+      ],
+      "expected": {
+        "facts": [
+          {
+            "name": "观察口内宽",
+            "entity": "CF-42",
+            "value": "63",
+            "unit": "mm",
+            "ids": [
+              1
+            ],
+            "conditions": [
+              {
+                "text": "遮光片完全抽出",
+                "id": 1
+              }
+            ]
+          }
+        ],
+        "missing": [],
+        "conflict": false,
+        "forbidden": [
+          "混用 CF-43 的 68 mm",
+          "使用旧版 57 mm"
+        ]
+      },
+      "controls": [
+        {
+          "target": {
+            "shop_id": "r4b-pigment",
+            "marketplace_id": "CN",
+            "sku": "CF-43"
+          },
+          "version": "proof-v1",
+          "reference": {
+            "doc": "frame-neighbor",
+            "location": "row:2"
+          },
+          "principal": "owner",
+          "http": 200
+        },
+        {
+          "target": {
+            "shop_id": "r4b-pigment",
+            "marketplace_id": "CN",
+            "sku": "CF-42"
+          },
+          "version": "proof-v0",
+          "reference": {
+            "doc": "frame-obsolete",
+            "location": "row:2"
+          },
+          "principal": "owner",
+          "http": 404
+        }
+      ]
+    },
+    {
+      "id": "B01",
+      "scene": "编号章节与计时起点",
+      "query": "PS-18 做摆杆校验要等多久才算稳定？准备和计时顺序也请说明。",
+      "target": {
+        "shop_id": "r4b-clock",
+        "marketplace_id": "CN",
+        "sku": "PS-18"
+      },
+      "principal": "owner",
+      "version": "proof-v1",
+      "routing": "supported",
+      "evidence": [
+        {
+          "doc": "swing-prep",
+          "location": "page:46"
+        },
+        {
+          "doc": "swing-spec",
+          "location": "row:2"
+        }
+      ],
+      "expected": {
+        "facts": [
+          {
+            "name": "摆杆稳定等待时间",
+            "entity": "PS-18",
+            "value": "24",
+            "unit": "s",
+            "ids": [
+              2
+            ],
+            "conditions": [
+              {
+                "text": "断开拨杆驱动",
+                "id": 1
+              },
+              {
+                "text": "摆座对准水平刻线",
+                "id": 1
+              },
+              {
+                "text": "连续完成两次自由摆动",
+                "id": 1
+              },
+              {
+                "text": "最后一次摆动完成后开始计时",
+                "id": 2
+              }
+            ]
+          }
+        ],
+        "missing": [],
+        "conflict": false,
+        "forbidden": [
+          "把 M46 当型号",
+          "从刚断开驱动时起计时",
+          "补充未记载的稳定阈值"
+        ]
+      }
+    },
+    {
+      "id": "B02",
+      "scene": "同 SKU 同工况真冲突｜双方原文显式带 SKU",
+      "query": "PS-18 在自由摆动、零位锁解除时，指针回程到底多少？",
+      "target": {
+        "shop_id": "r4b-clock",
+        "marketplace_id": "CN",
+        "sku": "PS-18"
+      },
+      "principal": "owner",
+      "version": "proof-v1",
+      "routing": "conflict",
+      "evidence": [
+        {
+          "doc": "swing-travel-b",
+          "location": "page:56"
+        },
+        {
+          "doc": "swing-travel-a",
+          "location": "page:51"
+        }
+      ],
+      "expected": {
+        "facts": [
+          {
+            "name": "指针回程",
+            "entity": "PS-18",
+            "value": "7",
+            "unit": "mm",
+            "ids": [
+              1
+            ],
+            "conditions": [
+              {
+                "text": "自由摆动模式",
+                "id": 1
+              },
+              {
+                "text": "零位锁解除",
+                "id": 1
+              }
+            ]
+          },
+          {
+            "name": "指针回程",
+            "entity": "PS-18",
+            "value": "5",
+            "unit": "mm",
+            "ids": [
+              2
+            ],
+            "conditions": [
+              {
+                "text": "自由摆动模式",
+                "id": 2
+              },
+              {
+                "text": "零位锁解除",
+                "id": 2
+              }
+            ]
+          }
+        ],
+        "missing": [],
+        "conflict": true,
+        "forbidden": [
+          "把 M51 或 M56 当型号",
+          "从两个值择一、取平均或写成可接受范围",
+          "断言两个工况不同"
+        ]
+      }
+    },
+    {
+      "id": "B03",
+      "scene": "部分可答且已知项有编号条件",
+      "query": "PS-18 的摆杆稳定等待时间和侧壳表面硬度分别是多少？",
+      "target": {
+        "shop_id": "r4b-clock",
+        "marketplace_id": "CN",
+        "sku": "PS-18"
+      },
+      "principal": "owner",
+      "version": "proof-v1",
+      "routing": "partial_support",
+      "evidence": [
+        {
+          "doc": "swing-spec",
+          "location": "row:2"
+        },
+        {
+          "doc": "swing-prep",
+          "location": "page:46"
+        }
+      ],
+      "expected": {
+        "facts": [
+          {
+            "name": "摆杆稳定等待时间",
+            "entity": "PS-18",
+            "value": "24",
+            "unit": "s",
+            "ids": [
+              1
+            ],
+            "conditions": [
+              {
+                "text": "断开拨杆驱动",
+                "id": 2
+              },
+              {
+                "text": "摆座对准水平刻线",
+                "id": 2
+              },
+              {
+                "text": "连续完成两次自由摆动",
+                "id": 2
+              },
+              {
+                "text": "最后一次摆动完成后开始计时",
+                "id": 1
+              }
+            ]
+          }
+        ],
+        "missing": [
+          "侧壳表面硬度"
+        ],
+        "conflict": false,
+        "forbidden": [
+          "给侧壳硬度值",
+          "误将等待时间也报缺证",
+          "把 M46 当型号"
+        ]
+      }
+    },
+    {
+      "id": "B04",
+      "scene": "完全无答案｜空引文",
+      "query": "PS-18 侧壳表面硬度和运行噪声分别是多少？",
+      "target": {
+        "shop_id": "r4b-clock",
+        "marketplace_id": "CN",
+        "sku": "PS-18"
+      },
+      "principal": "owner",
+      "version": "proof-v1",
+      "routing": "insufficient_evidence",
+      "evidence": [],
+      "expected": {
+        "facts": [],
+        "missing": [
+          "侧壳表面硬度",
+          "运行噪声"
+        ],
+        "conflict": false,
+        "forbidden": [
+          "推测硬度、噪声或单位级别",
+          "把产品所有资料都说成不存在",
+          "编造引用"
+        ]
+      }
+    },
+    {
+      "id": "B05",
+      "scene": "多事实｜条件与不同出处",
+      "query": "PS-18 的刻度标尺是什么材质？校验窗打开至止挡时，内沿高度是多少？",
+      "target": {
+        "shop_id": "r4b-clock",
+        "marketplace_id": "CN",
+        "sku": "PS-18"
+      },
+      "principal": "owner",
+      "version": "proof-v1",
+      "routing": "supported",
+      "evidence": [
+        {
+          "doc": "swing-spec",
+          "location": "row:3"
+        },
+        {
+          "doc": "swing-material",
+          "location": "page:19"
+        }
+      ],
+      "expected": {
+        "facts": [
+          {
+            "name": "刻度标尺材质",
+            "entity": "PS-18",
+            "value": "磷青铜",
+            "unit": null,
+            "ids": [
+              2
+            ],
+            "conditions": []
+          },
+          {
+            "name": "校验窗净高",
+            "entity": "PS-18",
+            "value": "76",
+            "unit": "mm",
+            "ids": [
+              1
+            ],
+            "conditions": [
+              {
+                "text": "校验窗打开至止挡",
+                "id": 1
+              }
+            ]
+          }
+        ],
+        "missing": [],
+        "conflict": false,
+        "forbidden": [
+          "把磷青铜写成侧壳材质",
+          "互换两项出处",
+          "把 76 mm 用于外沿"
+        ]
+      }
+    }
+  ],
+  "guards": [
+    {
+      "id": "G01",
+      "scene": "已授权后转权",
+      "query": "CF-42 的观察口内宽多大？",
+      "target": {
+        "shop_id": "r4b-pigment",
+        "marketplace_id": "CN",
+        "sku": "CF-42"
+      },
+      "principal": "owner",
+      "version": "proof-v1",
+      "evidence": [
+        {
+          "doc": "frame-spec",
+          "location": "row:2"
+        }
+      ],
+      "action": "transfer_shop",
+      "expected_status": "guarded",
+      "expected_http": 404
+    },
+    {
+      "id": "G02",
+      "scene": "旧固定引用切版失效",
+      "query": "CF-42 的观察口内宽多大？",
+      "target": {
+        "shop_id": "r4b-pigment",
+        "marketplace_id": "CN",
+        "sku": "CF-42"
+      },
+      "principal": "owner",
+      "version": "proof-v1",
+      "evidence": [
+        {
+          "doc": "frame-spec",
+          "location": "row:2"
+        }
+      ],
+      "action": "activate_previous",
+      "expected_status": "invalid_template_capture",
+      "expected_http": 404
+    },
+    {
+      "id": "G03",
+      "scene": "可读相近 SKU 引文错绑",
+      "query": "CF-42 的观察口内宽多大？",
+      "target": {
+        "shop_id": "r4b-pigment",
+        "marketplace_id": "CN",
+        "sku": "CF-42"
+      },
+      "principal": "owner",
+      "version": "proof-v1",
+      "evidence": [
+        {
+          "doc": "frame-neighbor",
+          "location": "row:2"
+        }
+      ],
+      "action": "wrong_sku",
+      "expected_status": "invalid_template_capture",
+      "expected_http": 200
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+.workbench-sources-dialog {
+  position: fixed;
+  inset: 0;
+  width: min(520px, calc(100vw - 32px));
+  max-width: none;
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 0;
+  overflow: auto;
+  border: 1px solid #dfe7f2;
+  border-radius: 16px;
+  background: #fff;
+  color: #172640;
+  box-shadow: 0 18px 52px #14243b24;
+}
+
+.workbench-sources-dialog::backdrop { background: #111e3566; }
+.sources-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e4eaf3;
+}
+.sources-dialog-header h2 { font-size: 19px; line-height: 1.4; }
+.sources-dialog-content { display: grid; gap: 10px; padding: 16px 20px 20px; }
+.source-card {
+  padding: 14px;
+  border: 1px solid #dfe7f2;
+  border-radius: 12px;
+  background: #f8faff;
+}
+.source-card-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.source-card-heading h3 { font-size: 15px; line-height: 1.4; }
+.source-card-status {
+  flex: none;
+  padding: 3px 7px;
+  border-radius: 6px;
+  background: #edf2fa;
+  color: #405a79;
+  font-size: 12px;
+}
+.source-card-status[data-state="demo"] { background: #e8efff; color: #254fae; }
+.source-card p { margin: 6px 0 0; color: #4b607b; font-size: 13px; line-height: 1.6; }
+.source-card-detail:not(:empty) { margin-top: 8px; padding-top: 2px; border-top: 1px solid #e4eaf3; }
+.source-shop-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 5px 10px; margin-top: 8px; font-size: 13px; }
+.source-shop-row span { min-width: 0; overflow-wrap: anywhere; }
+.source-shop-row a { color: #1949bf; font-weight: 650; text-underline-offset: 2px; }
+.workbench-sources-dialog :focus-visible { outline: 2px solid #2559d8; outline-offset: 2px; }

@@ -1,0 +1,51 @@
+{
+  "label": "官方字段夹具 · 合成数据",
+  "question": "帮我看看这款商品的广告搜索词，哪些值得写进标题，哪些需要复核投放？先给我建议和依据。",
+  "rules": {"min_impressions": 100, "min_clicks": 20, "title_min_orders": 2, "title_min_cvr_pct": 10, "title_max_length": 75},
+  "report_header": "Date,Campaign Name,Ad Group Name,Campaign ID,Ad Group ID,Customer Search Term,Impressions,Clicks,Spend,Purchases,Sales,Currency",
+  "report_defaults": {"Date": "2026-11-15", "Impressions": 320, "Clicks": 32, "Spend": "23.04", "Purchases": 4, "Sales": "98.96", "Currency": "USD"},
+  "membership": {"shop": "sp-sample-holdout", "marketplace": "US", "advertiser": "SAMPLE-HOLDOUT-US",
+    "from": "2026-11-14", "to": "2026-11-16", "control_sku": "SAMPLE-CONTROL", "control_asin": "B0SAMP0009"},
+  "products": [
+    {
+      "id": "silverware", "sku": "SAMPLE-ORGANIZER", "asin": "B0SAMP0001", "intent": "size",
+      "term": "3 inch deep silverware organizer", "title": "Oriel Silverware Organizer",
+      "support": ["Product type\tSilverware Organizer\t-\tWhole\t-", "Depth\t76.2\tmm\tWhole\t-"]
+    },
+    {
+      "id": "ceiling-mount", "sku": "SAMPLE-MOUNT", "asin": "B0SAMP0002", "intent": "compatibility",
+      "term": "vesa 75x75 ceiling monitor mount", "title": "Nacre Ceiling Monitor Mount",
+      "support": ["Product type\tCeiling Monitor Mount\t-\tWhole\t-", "VESA\t75x75\tmm\tMount\tComplete list"],
+      "conflict": ["Product type\tCeiling Monitor Mount\t-\tWhole\t-", "VESA\t100x100\tmm\tMount\tComplete list"]
+    },
+    {
+      "id": "coffee-filter", "sku": "SAMPLE-FILTER", "asin": "B0SAMP0003", "intent": "compatibility",
+      "term": "coffee filter for selwyn cf-28 elite", "title": "Morrow Coffee Filter",
+      "support": ["Product type\tCoffee Filter\t-\tWhole\t-", "Compatible models\tSelwyn CF-28 Elite\t-\tWhole\tComplete list"]
+    },
+    {
+      "id": "soap-dispenser", "sku": "SAMPLE-DISPENSER", "asin": "B0SAMP0004", "intent": "restriction",
+      "term": "soap dispenser tray hand wash only", "title": "Reeve Soap Dispenser",
+      "support": ["Product type\tSoap Dispenser\t-\tWhole\t-", "Cleaning\tHand wash only\t-\tTray\t-"]
+    }
+  ],
+  "cases": [
+    {"id": "impressions-99", "product": "silverware", "variant": "support", "boundary": ["impressions", "below"], "report_changes": {"Impressions": 99}},
+    {"id": "impressions-100", "product": "silverware", "variant": "support", "boundary": ["impressions", "at"], "report_changes": {"Impressions": 100}},
+    {"id": "impressions-101", "product": "silverware", "variant": "support", "boundary": ["impressions", "above"], "report_changes": {"Impressions": 101}},
+    {"id": "clicks-19", "product": "ceiling-mount", "variant": "support", "boundary": ["clicks", "below"], "report_changes": {"Clicks": 19}},
+    {"id": "clicks-20", "product": "ceiling-mount", "variant": "support", "boundary": ["clicks", "at"], "report_changes": {"Clicks": 20}},
+    {"id": "clicks-21", "product": "ceiling-mount", "variant": "support", "boundary": ["clicks", "above"], "report_changes": {"Clicks": 21}},
+    {"id": "orders-1", "product": "coffee-filter", "variant": "support", "boundary": ["orders", "below"], "report_changes": {"Clicks": 20, "Purchases": 1}},
+    {"id": "orders-2", "product": "coffee-filter", "variant": "support", "boundary": ["orders", "at"], "report_changes": {"Clicks": 20, "Purchases": 2}},
+    {"id": "orders-3", "product": "coffee-filter", "variant": "support", "boundary": ["orders", "above"], "report_changes": {"Clicks": 20, "Purchases": 3}},
+    {"id": "cvr-below-6-of-61", "product": "soap-dispenser", "variant": "support", "boundary": ["cvr", "below"], "report_changes": {"Clicks": 61, "Purchases": 6}},
+    {"id": "cvr-at-6-of-60", "product": "soap-dispenser", "variant": "support", "boundary": ["cvr", "at"], "report_changes": {"Clicks": 60, "Purchases": 6}},
+    {"id": "cvr-above-6-of-59", "product": "soap-dispenser", "variant": "support", "boundary": ["cvr", "above"], "report_changes": {"Clicks": 59, "Purchases": 6}},
+    {"id": "control-title", "product": "silverware", "variant": "support"},
+    {"id": "control-conflict", "product": "ceiling-mount", "variant": "conflict"},
+    {"id": "control-conflict-low-cvr", "product": "ceiling-mount", "variant": "conflict", "report_changes": {"Clicks": 61, "Purchases": 6}},
+    {"id": "control-conflict-low-clicks", "product": "ceiling-mount", "variant": "conflict", "report_changes": {"Clicks": 19}},
+    {"id": "control-mixed-low-sample", "product": "coffee-filter", "variant": "mixed", "report_changes": {"Clicks": 19, "Purchases": 1}}
+  ]
+}

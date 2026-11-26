@@ -6,8 +6,10 @@ import os
 from contextlib import closing, contextmanager
 from time import time_ns
 from uuid import uuid4
+from zoneinfo import ZoneInfo
 
-from backend.database import chat_groups, database, listing_operations
+from backend.database import chat_groups, database, listing_operations, orders
+from backend.database.listing_evidence import publication_inputs, publication_report_basis
 from backend.observability import add_trace_step, end_trace, start_trace
 
 
@@ -43,6 +45,14 @@ def upgrade_sqlite(conn):
         artifact_id TEXT UNIQUE NOT NULL REFERENCES background_inspection_artifacts(artifact_id),
         PRIMARY KEY (run_id, step)
     )""")
+    conn.execute("""CREATE TABLE IF NOT EXISTS background_inspection_publications (
+        user_id INTEGER NOT NULL, conversation_id TEXT NOT NULL, publication_id TEXT NOT NULL,
+        windows TEXT NOT NULL, run_id TEXT NOT NULL REFERENCES background_inspections(run_id),
+        PRIMARY KEY (user_id, conversation_id, publication_id, windows)
+    )""")
+    from backend.database import inspection_subscriptions
+
+    inspection_subscriptions.upgrade_sqlite(conn)
 
 
 def _json(data):
@@ -106,12 +116,94 @@ def accept(user_id, conversation_id, key, message, model, make_spec, trace_id, r
         now = chat_groups.alert_review.now()
         spec = make_spec(conn, user_id, message, now)
         spec.update(model=model, basis=basis(conn, user_id, spec["candidates"]))
-        run, _ = chat_groups._accept(conn, user_id, conversation_id, trace_id, message, 1,
-                                     background=True, requested_at=now)
-        conn.execute("""INSERT INTO background_inspections (run_id, user_id, idempotency_key, request_json, spec)
-                        VALUES (?, ?, ?, ?, ?)""", (run.run_id, user_id, key, request_json, _json(spec)))
-        emit(conn, run.run_id, "accepted", trace_id=trace_id, request_id=request_id, acquired_ns=run.slot_acquired_ns)
-        return run.run_id, True
+        return _insert(conn, user_id, conversation_id, key, message, request_json, spec, now, trace_id, request_id), True
+
+
+def _insert(conn, user_id, conversation_id, key, message, request_json, spec, now, trace_id, request_id):
+    run, _ = chat_groups._accept(conn, user_id, conversation_id, trace_id, message, 1,
+                                 background=True, requested_at=now)
+    conn.execute("""INSERT INTO background_inspections (run_id, user_id, idempotency_key, request_json, spec)
+                    VALUES (?, ?, ?, ?, ?)""", (run.run_id, user_id, key, request_json, _json(spec)))
+    emit(conn, run.run_id, "accepted", trace_id=trace_id, request_id=request_id, acquired_ns=run.slot_acquired_ns)
+    return run.run_id
+
+
+def publication_visible(conn, user_id, publication):
+    target = publication["target"]
+    return (not listing_operations.scope_error(conn, user_id, **target)
+            and orders.has_access(conn, user_id, publication["snapshot"]["source"], target["shop_id"]))
+
+
+def accept_publication(user_id, conversation_id, publication_id, windows, recheck, model, reader, trace_id, request_id):
+    """Bind a server publication and its actual inputs in the group admission transaction."""
+    with chat_groups._write() as conn:
+        group = chat_groups._group(conn, user_id, conversation_id)
+        record = reader(conn, user_id, publication_id)
+        return _accept_publication(conn, group, publication_id, windows, recheck, model, record, trace_id, request_id)
+
+
+class PublicationReportUnused(LookupError):
+    pass
+
+
+def _accept_publication(conn, group, publication_id, windows, recheck, model, record, trace_id, request_id,
+                        *, expected_report=None, allow_listing_proposal=True, subscription_id=None):
+    user_id, conversation_id = group["user_id"], group["conversation_id"]
+    notification_key = (user_id, conversation_id, publication_id, _json(windows))
+    if record is None or record["publication_id"] != publication_id:
+        raise listing_operations.ListingNotFound
+    publication = {key: record[key] for key in ("publication_id", "target", "batch_id",
+                                                "sequence", "published_at", "published_by_user_id")}
+    publication["snapshot"] = listing_operations._order_snapshot(record)
+    if not publication_visible(conn, user_id, publication):
+        raise listing_operations.ListingNotFound
+    original = conn.execute("""SELECT run_id FROM background_inspection_publications
+        WHERE (user_id, conversation_id, publication_id, windows)=(?,?,?,?)""", notification_key).fetchone()
+    if original and not recheck:
+        return original["run_id"], False
+    now = chat_groups.alert_review.now()
+    today = now.astimezone(ZoneInfo(listing_operations.SALES_TIMEZONE)).date().isoformat()
+    if windows[-1] >= today:
+        raise listing_operations.ListingInvalid("请提供两个已结束的销量比较窗口")
+    spec = {"publication": publication, "windows": windows, "statistics_date": today, "model": model}
+    inputs = publication_inputs(conn, user_id, conversation_id, spec)
+    if (inputs["sales"] or {}).get("order_snapshot") != publication["snapshot"]:
+        raise chat_groups.GroupConflict("listing_publication_superseded")
+    if expected_report is not None:
+        report = inputs["report"]
+        if (report.get("report") or {}).get("import_id") != expected_report:
+            raise PublicationReportUnused("report_unused")
+        if publication_report_basis(report, None) is None:
+            raise PublicationReportUnused("report_incomplete")
+    spec["input_digest"] = listing_operations._digest(inputs)
+    if subscription_id is not None:
+        spec["subscription_id"] = subscription_id
+    # The user key column is also used by the legacy HTTP route. Its ASCII limit
+    # leaves this server-generated namespace independent of user keys.
+    identity = [conversation_id, windows, spec["input_digest"]]
+    if not allow_listing_proposal:
+        spec["allow_listing_proposal"] = False
+        identity.append("inspect")
+    key = "发布:" + listing_operations._digest(identity)
+    while existing := conn.execute("""SELECT b.run_id, r.status FROM background_inspections b
+                JOIN chat_group_runs r USING (run_id) WHERE b.user_id=? AND b.idempotency_key=?""",
+                                   (user_id, key)).fetchone():
+        if not recheck or existing["status"] in ("completed", "running"):
+            break
+        key = "发布:" + listing_operations._digest([key, existing["run_id"]])
+    if existing:
+        run_id, created = existing["run_id"], False
+    else:
+        if group["archived"] or chat_groups._running(conn, conversation_id):
+            raise chat_groups.GroupConflict("工作群已归档或已有一轮正在运行")
+        target = publication["target"]
+        message = f"检查已发布的商品数据 · {target['shop_id']} / {target['marketplace_id']} / {target['sku']}"
+        run_id = _insert(conn, user_id, conversation_id, key, message, _json(spec), spec, now, trace_id, request_id)
+        created = True
+    if allow_listing_proposal:
+        conn.execute("""INSERT OR IGNORE INTO background_inspection_publications VALUES (?, ?, ?, ?, ?)""",
+                     (*notification_key, run_id))
+    return run_id, created
 
 
 @contextmanager
@@ -123,7 +215,7 @@ def _read():
 
 def read(user_id, conversation_id, run_id, after=0, *, include_answer=False):
     with _read() as conn:
-        row = conn.execute("""SELECT r.status, b.finalized, b.answer_id FROM background_inspections b
+        row = conn.execute("""SELECT r.status, b.finalized, b.answer_id, b.spec FROM background_inspections b
              JOIN chat_group_runs r USING (run_id) JOIN chat_groups g USING (conversation_id)
              WHERE b.run_id=? AND g.conversation_id=? AND b.user_id=? AND g.user_id=?
              AND EXISTS (SELECT 1 FROM users WHERE id=?)""",
@@ -134,6 +226,13 @@ def read(user_id, conversation_id, run_id, after=0, *, include_answer=False):
                   for event in conn.execute("""SELECT seq, kind, payload FROM background_inspection_events
                       WHERE run_id=? AND seq>? ORDER BY seq""", (run_id, after))]
         result = {"run_id": run_id, "status": row["status"], "finalized": bool(row["finalized"]), "events": events}
+        spec = json.loads(row["spec"])
+        if publication := spec.get("publication"):
+            if not publication_visible(conn, user_id, publication):
+                raise chat_groups.GroupNotFound
+            result["publication"] = publication
+            result["windows"] = spec["windows"]
+            result["input_sha256"] = spec["input_digest"]
         if include_answer and row["answer_id"] is not None:
             answer = conn.execute("SELECT id, content, details FROM chat_group_entries WHERE id=?",
                                   (row["answer_id"],)).fetchone()
@@ -147,7 +246,14 @@ def read(user_id, conversation_id, run_id, after=0, *, include_answer=False):
 _PENDING = """FROM background_inspections b
     JOIN chat_group_runs r USING (run_id) JOIN chat_group_run_slots s USING (run_id)
     WHERE b.finalized=0 AND s.user_id=b.user_id AND s.released_ns IS NULL
-    AND r.status IN ('running', 'stopped', 'superseded')"""
+    AND r.status IN ('running', 'stopped', 'superseded')
+    AND (r.status!='running' OR json_extract(b.spec,'$.subscription_id') IS NULL OR EXISTS (
+        SELECT 1 FROM inspection_subscriptions a JOIN chat_groups g USING(conversation_id)
+        JOIN order_shop_access o ON (o.source,o.shop_id,o.user_id)=(a.source,a.shop_id,a.user_id)
+        JOIN listing_test_shops l ON (l.shop_id,l.marketplace_id,l.user_id)=(a.shop_id,a.marketplace_id,a.user_id)
+        JOIN listing_test_products p ON (p.shop_id,p.marketplace_id,p.sku)=(a.shop_id,a.marketplace_id,a.sku)
+        WHERE a.subscription_id=json_extract(b.spec,'$.subscription_id') AND g.user_id=a.user_id AND NOT g.archived
+    ))"""
 
 
 def pending():
@@ -175,6 +281,10 @@ class StaleExecution(RuntimeError):
 
 
 class Terminated(RuntimeError):
+    pass
+
+
+class AwaitingPublicationAccess(RuntimeError):
     pass
 
 
@@ -229,7 +339,22 @@ def _emit_execution(conn, job, kind, **payload):
 
 def validate(conn, job):
     _fence(conn, job)
-    if items := invalid_items(conn, job["user_id"], job["conversation_id"], job["spec"]):
+    spec = job["spec"]
+    if "publication" in spec:
+        owner, group = job["user_id"], job["conversation_id"]
+        try:
+            current = chat_groups._group(conn, owner, group)
+        except chat_groups.GroupNotFound:
+            raise Invalidated([{"source": "conversation_owner"}]) from None
+        if current["archived"] or not publication_visible(conn, owner, spec["publication"]):
+            if "subscription_id" in spec:
+                raise AwaitingPublicationAccess
+            raise Invalidated([{"source": "product_scope"}])
+        inputs = publication_inputs(conn, owner, group, spec)
+        if listing_operations._digest(inputs) != spec["input_digest"]:
+            raise Invalidated([{"source": "publication_inputs"}])
+        return inputs
+    if items := invalid_items(conn, job["user_id"], job["conversation_id"], spec):
         raise Invalidated(items)
 
 
@@ -272,6 +397,8 @@ def finish(job, status, content=None, evidence=None, *, invalid=None):
                 _emit_execution(conn, job, "invalidated", items=invalid)
             if content is not None:
                 entry_id = run._entry(conn, "assistant", content, details=_json(evidence) if evidence else None)
+                if evidence and evidence.get("proposal") and "publication" in job["spec"]:
+                    listing_operations.create_group_proposal(conn, run, entry_id, evidence)
             run._finish(conn, status)
         released_ns = chat_groups.time_ns()
         released = conn.execute("""UPDATE chat_group_run_slots SET released_ns=?

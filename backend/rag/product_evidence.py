@@ -376,6 +376,8 @@ def admit_evidence(result, rows, query, *, report_all_missing=False, multi_inten
         ]}
         rows = list(authorized.values())
     rules, facts = _rule_sets(rows[0]["evidence_rules"])
+    if multi_intent and not (rules or facts):
+        result = {**result, "unconfigured_evidence": True}
     if questions := questions_for(query, facts):
         return _admit_facts(result, questions)
     if multi_intent:

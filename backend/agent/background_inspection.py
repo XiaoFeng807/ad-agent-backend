@@ -12,7 +12,7 @@ from backend.agent.llm_provider import ProviderFactory
 from backend.agent.request_budget import ExecutionStopped, RequestBudget
 from backend.agent.team_tools import TeamBudget
 from backend.database import background_inspections as storage
-from backend.database import database, listing_operations as listings
+from backend.database import database, inspection_subscriptions, listing_operations as listings
 from backend.observability import add_trace_step, end_trace, new_trace_id, start_trace, trace_tool_call
 
 
@@ -55,10 +55,24 @@ def execute(job, provider):
         return artifact_id, result, call_id if tool else None
 
     try:
-        with storage._read() as conn:
-            storage.validate(conn, job)
         budget = RequestBudget(trace_id)
         budget.execution = TeamBudget(model_limit=2)
+        if "publication" in spec:
+            from backend.agent.operations_inspection import publication_draft
+
+            with storage._read() as conn:
+                inputs = storage.validate(conn, job)
+            artifact_id, inputs, _ = step("publication_inputs", lambda: inputs)
+            _, answer, _ = step("publication_draft", lambda: publication_draft(
+                job, inputs, artifact_id, provider, budget))
+            status, released = storage.finish(job, "completed", answer["content"], answer["evidence"])
+            if released is not None:
+                add_trace_step(trace_id, "admission", "released", runtime_call_id=run_id,
+                               evidence={"released_ns": released})
+            end_trace(trace_id, status)
+            return
+        with storage._read() as conn:
+            storage.validate(conn, job)
         products = {}
         for candidate in spec["candidates"]:
             sku = candidate["sku"]
@@ -96,11 +110,15 @@ def execute(job, provider):
     except storage.StaleExecution:
         end_trace(trace_id, "stale")
         return
+    except storage.AwaitingPublicationAccess:
+        end_trace(trace_id, "awaiting_access")
+        return
     except storage.Terminated:
         status, released = storage.finish(job, "stopped")
     except storage.Invalidated as error:
         labels = {"product_scope": "商品授权范围", "conversation_owner": "工作群属主", "listing": "Listing",
-                  "facts": "商品事实", "required_facts": "必需事实字段", "sales": "销量"}
+                  "facts": "商品事实", "required_facts": "必需事实字段", "sales": "销量",
+                  "publication_inputs": "已发布销量、报表或商品资料"}
         items = "、".join(" ".join(filter(None, (row.get("sku"), labels[row["source"]]))) for row in error.items)
         status, released = storage.finish(job, "invalidated", f"巡检依据已失效（{items}）。请重新发起巡检。",
                                           invalid=error.items)
@@ -146,12 +164,16 @@ def _attempt_trace(run_id, executor_id, generation):
     return trace_id
 
 
-def serve():
+def serve(*, on_poll=None):
     directory = _lock_directory()
     executor_id = uuid4().hex
     provider = ProviderFactory.create()
+    model = storage.configured_model()
     contended = set()
     while True:
+        if on_poll is not None:
+            on_poll()
+        progressed = inspection_subscriptions.consume(model)
         pending = storage.pending()
         contended.intersection_update(run_id for run_id, _ in pending)
         for run_id, generation in pending:
@@ -175,6 +197,8 @@ def serve():
                 execute(job, provider)
                 break
         else:
+            if progressed:
+                continue
             sleep(0.2)
 
 

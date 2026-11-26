@@ -82,7 +82,7 @@ async function run() {
     report.before = await plans(origin);
     assert.deepEqual(report.before, [101, 102, 201].map(id => ({ id, status: "active" })));
     await page.locator('[data-page="chat"]').click();
-    await page.getByRole("button", { name: "投放诊断", exact: true }).click();
+    await page.getByRole("button", { name: "广告计划复核", exact: true }).click();
     await page.locator("#diagnosisMode").click();
     const field = name => page.locator(`#diagnosisForm input[name="${name}"]`);
     await field("plan_id").fill("101");

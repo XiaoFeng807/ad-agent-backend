@@ -27,7 +27,7 @@ async function main(){
     await page.locator('#loginUser').fill('diagnosis-demo'); await page.locator('#loginPass').fill('demo-password');
     await page.locator('#loginCaptcha').fill('0726'); await page.locator('#loginCaptcha').press('Enter');
     await page.locator('#navUsername').getByText('diagnosis-demo', {exact:true}).waitFor();
-    await page.locator('[data-page="chat"]').click(); await page.getByRole('button',{name:'投放诊断',exact:true}).click();
+    await page.locator('[data-page="chat"]').click(); await page.getByRole('button',{name:'广告计划复核',exact:true}).click();
     async function submit(message){
       await page.getByRole('textbox',{name:'诊断需求'}).fill(message);
       const pending = page.waitForResponse(r => r.request().method()==='POST' && new URL(r.url()).pathname==='/api/chat/stream');

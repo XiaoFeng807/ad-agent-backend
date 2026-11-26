@@ -1,0 +1,249 @@
+[
+  {
+    "id": "C01",
+    "group": "timing",
+    "draft": "建议清洗间隔不超过 45 分钟[1]。应先合上排水阀，并从水位回到刻线时开始计时[2]。胶垫厚度缺少资料。",
+    "citations": [
+      1,
+      2
+    ],
+    "defects": [],
+    "input_gaps": [
+      "胶垫厚度"
+    ]
+  },
+  {
+    "id": "C02",
+    "group": "timing",
+    "draft": "建议清洗间隔不超过 45 分钟[1]。应先合上排水阀[2]。胶垫厚度缺少资料。",
+    "citations": [
+      1,
+      2
+    ],
+    "defects": [
+      "omitted_condition"
+    ],
+    "input_gaps": [
+      "胶垫厚度"
+    ]
+  },
+  {
+    "id": "C03",
+    "group": "timing",
+    "draft": "清洗间隔以 45 分钟为建议上限[1]。关闭排水阀后，待水位回到刻线再起算[2]。胶垫厚度缺少资料。",
+    "citations": [
+      1,
+      2
+    ],
+    "defects": [],
+    "input_gaps": [
+      "胶垫厚度"
+    ]
+  },
+  {
+    "id": "C04",
+    "group": "timing",
+    "draft": "资料建议清洗间隔最长 45 分钟，不能保证达到这个时长[1]。先合上排水阀并从水位回到刻线时计时[2]。胶垫厚度缺少资料。",
+    "citations": [
+      1,
+      2
+    ],
+    "defects": [],
+    "input_gaps": [
+      "胶垫厚度"
+    ]
+  },
+  {
+    "id": "C05",
+    "group": "timing",
+    "draft": "保证 45 分钟内无需清洗[1]。应先合上排水阀，并从水位回到刻线时开始计时[2]。胶垫厚度缺少资料。",
+    "citations": [
+      1,
+      2
+    ],
+    "defects": [
+      "strengthened_claim"
+    ],
+    "input_gaps": [
+      "胶垫厚度"
+    ]
+  },
+  {
+    "id": "C06",
+    "group": "timing",
+    "draft": "保证 45 分钟内无需清洗[1]。应先合上排水阀[2]。胶垫厚度缺少资料。",
+    "citations": [
+      1,
+      2
+    ],
+    "defects": [
+      "omitted_condition",
+      "strengthened_claim"
+    ],
+    "input_gaps": [
+      "胶垫厚度"
+    ]
+  },
+  {
+    "id": "C07",
+    "group": "timing-gap",
+    "draft": "资料建议清洗间隔不超过 45 分钟[1]。缺少编号手册，无法确认操作与计时条件。胶垫厚度也无原文。",
+    "citations": [
+      1
+    ],
+    "defects": [],
+    "input_gaps": [
+      "编号手册的操作与计时条件",
+      "胶垫厚度"
+    ]
+  },
+  {
+    "id": "C08",
+    "group": "same-excerpt",
+    "draft": "水平放置且锁舌闭合时，转接盘径向负载上限是 32 kg[1]。",
+    "citations": [
+      1
+    ],
+    "defects": [],
+    "input_gaps": []
+  },
+  {
+    "id": "C09",
+    "group": "same-excerpt",
+    "draft": "水平放置时，转接盘径向负载上限是 32 kg[1]。",
+    "citations": [
+      1
+    ],
+    "defects": [
+      "omitted_condition"
+    ],
+    "input_gaps": []
+  },
+  {
+    "id": "C10",
+    "group": "same-excerpt",
+    "draft": "水平放置且锁舌闭合时，转接盘保证能承受 32 kg 径向负载[1]。",
+    "citations": [
+      1
+    ],
+    "defects": [
+      "strengthened_claim"
+    ],
+    "input_gaps": []
+  },
+  {
+    "id": "C11",
+    "group": "estimate",
+    "draft": "在光阑关闭时，预计归零耗时 17 秒[1]。",
+    "citations": [
+      1
+    ],
+    "defects": [],
+    "input_gaps": []
+  },
+  {
+    "id": "C12",
+    "group": "estimate",
+    "draft": "在光阑关闭时，归零一定耗时 17 秒[1]。",
+    "citations": [
+      1
+    ],
+    "defects": [
+      "strengthened_claim"
+    ],
+    "input_gaps": []
+  },
+  {
+    "id": "C13",
+    "group": "bare-link",
+    "draft": "气阀检验等待时间是 51 秒[1][2]。关于外壳硬度，没有提供相关信息。",
+    "citations": [
+      1,
+      2
+    ],
+    "defects": [
+      "omitted_condition"
+    ],
+    "input_gaps": [
+      "外壳硬度"
+    ]
+  },
+  {
+    "id": "C14",
+    "group": "bare-link",
+    "draft": "气阀检验等待时间是 51 秒[1]。先移开防尘罩，让定位杆回到止挡[2]，从定位杆到止挡后开始计时[1]。关于外壳硬度，没有提供相关信息。",
+    "citations": [
+      1,
+      2
+    ],
+    "defects": [],
+    "input_gaps": [
+      "外壳硬度"
+    ]
+  },
+  {
+    "id": "D01",
+    "group": "conflict",
+    "draft": "投影片插入到底并锁住滑轨时，两份资料对投影盒的中心偏移记载不一致。检验卡[1]写 9 mm；装配记录给出 13 毫米[2]。",
+    "citations": [
+      1,
+      2
+    ],
+    "defects": [],
+    "input_gaps": []
+  },
+  {
+    "id": "D02",
+    "group": "conflict",
+    "draft": "投影片插入到底并锁住滑轨时，两份资料对投影盒的中心偏移记载不一致。检验卡记载 9 mm[1]，另一份资料见[2]。",
+    "citations": [
+      1,
+      2
+    ],
+    "defects": [
+      "incomplete_answer"
+    ],
+    "input_gaps": []
+  },
+  {
+    "id": "D03",
+    "group": "conflict",
+    "draft": "投影片插入到底并锁住滑轨时，两份资料对投影盒的中心偏移记载不一致。检验卡[2]写 9 mm；装配记录给出 13 毫米[1]。",
+    "citations": [
+      1,
+      2
+    ],
+    "defects": [
+      "citation_attribution"
+    ],
+    "input_gaps": []
+  },
+  {
+    "id": "D04",
+    "group": "conflict",
+    "draft": "投影片插入到底并锁住滑轨时，J62 型中心偏移 9 mm[1]，J67 型中心偏移 13 mm[2]。",
+    "citations": [
+      1,
+      2
+    ],
+    "defects": [
+      "incomplete_answer",
+      "unsupported_claim"
+    ],
+    "input_gaps": []
+  },
+  {
+    "id": "D05",
+    "group": "conflict",
+    "draft": "投影片插入到底并锁住滑轨时，中心偏移允许在 9–13 mm[1][2]。",
+    "citations": [
+      1,
+      2
+    ],
+    "defects": [
+      "incomplete_answer",
+      "unsupported_claim"
+    ],
+    "input_gaps": []
+  }
+]
