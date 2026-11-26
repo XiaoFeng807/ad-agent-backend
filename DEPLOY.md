@@ -2,13 +2,13 @@
 
 ## 本地运行
 
-使用 Python 3.12。浏览器验收另需 Node.js 22+ 和 npm 10+。用 [README 的本地启动](README.md#本地启动) 建立隔离模拟实例，或在新终端配置下节的 Provider。统一入口为 `fast_server:app`。
+首次体验使用 README 的独立演示库。日常业务实例使用 `business` 模式和自己的数据库。Python 3.12 的依赖由锁文件提供，浏览器验收另需 Node.js 22+ 与 npm 10+。[从空环境启动演示](README.md#本地启动)
 
 ```powershell
 .\.venv\Scripts\python.exe -m uvicorn fast_server:app --host 127.0.0.1 --port 5010
 ```
 
-首页为 `http://127.0.0.1:5010/`，OpenAPI 为 `/docs`。默认 `business` 模式可初始化空 SQLite，新库的业务账号需另外准备。本机示例账号随 README 的 `demo` 命令在独立库中创建。 [异地演示指南](docs/REMOTE_DEMO.md)
+统一入口为 `fast_server:app`。打开首页前先检查 `/api/ready`，接口文档在 `/docs`。新建业务库只有 schema，账号和业务数据需另行准备。[远程演示部署草案](docs/REMOTE_DEMO.md)
 
 ## 环境变量
 
@@ -32,8 +32,11 @@ if (!(Test-Path '.env')) { Copy-Item .env.example .env }
 | `RAG_DB_PATH` | 知识库 Chroma 目录。默认 `data/rag_db/`，新目录需要导入资料。 |
 | `PLAN_METRICS_DB_PATH` | 计划历史聚合 SQLite 的绝对路径。应用以只读方式打开，经绑定的本地计划才能查询。 |
 | `LISTING_SIGNIFICANT_DECLINE_PCT` | 可选的销量下滑判定阈值，配置或用户指定阈值后才按其判定。 |
+| `STOREPILOT_BACKGROUND_MODEL` | 启用后台巡检的模型标识。本机封闭 Compose 使用 `mock`。 |
+| `STOREPILOT_STARTS_PER_SECOND` | 经限额网关进入的每账号每秒新启动数。未设置时内部检查端点关闭。 |
+| `STOREPILOT_GROUP_INFLIGHT` | 工作群当前可并行执行的账号与全局额度，如 `2:3`。 |
 
-`LLM_PROVIDER=mock` 和 `AD_OFFLINE_ACCEPTANCE=1` 独立于演示种子开关。演示库应使用专用路径。启动在一个 SQLite 事务内为示例账号补齐本地日期最近 30 天中缺失的组合，已有日期和用户组合的所有旧行均保留。
+`demo` 模式在一个 SQLite 事务中补齐示例账号与最近 30 天缺失的日报。只配置 `LLM_PROVIDER=mock` 时，服务仍按 `APP_STARTUP_MODE` 初始化。
 
 ## 存活与就绪
 
@@ -55,7 +58,7 @@ SQLite 就绪检查打开现存文件，读取登录、普通会话、广告账�
 
 `PRODUCT_R4_CPU_ENABLED` 默认启用。设为 `0` 后重启可回到旧 CPU 召回。GPU 重排默认关闭，只有同时开功能和配置账号名单时才参与。支持从 GPU 超时回到当前启用的 CPU 路径。通过 SSE 的引用、历史和原文接口核对结果。商品资料的合成样例和导入命令见[复跑说明](docs/product-evidence/README.md)。
 
-`PRODUCT_EVIDENCE_MODEL_ADMISSION_ENABLED` 默认启用。对没有预配事实或引用规则的商品资料版本，聊天可用已配置的 Provider 从本轮授权候选逐项选择并复核原文。每轮最多两次请求，只提交当前问题、候选原文及本轮编号，答复仍由服务端原文模板呈现。设为 `0` 后回到只按预配规则引用的模式。Mock 和未配置密钥的实例沿用离线行为。
+`PRODUCT_EVIDENCE_MODEL_ADMISSION_ENABLED` 默认启用。没有匹配的预配引用规则时，已配置密钥的 Provider 可参与逐项选引与复核。模型输入来自本轮经过权限及活动版本检查的候选，实际调用受本轮预算控制。服务端检查选用的原文、适用条件和出处，再呈现结果与缺项。将开关设为 `0` 可关闭模型准入。Mock 或未配置密钥时使用离线路径。[公开样本与复跑](docs/product-evidence/README.md)
 
 ## 计划历史数据部署
 
@@ -75,16 +78,45 @@ SQLite 就绪检查打开现存文件，读取登录、普通会话、广告账�
 
 `pyproject.toml`、`uv.lock`、`locks/` 和 `package-lock.json` 为依赖来源。修改 Python 依赖时同时更新解析和 pip 哈希导出，升级后复跑门禁。
 
-## Docker 与对外演示
+## Docker
 
-容器配置统一使用端口 5010。根 Compose 固定 `business` 模式，将端口发布到宿主机回环地址，使用独立卷保存业务 SQLite、知识库与记忆。镜像健康检查使用 `/api/ready`，因此应在 `.env` 中配置独立 `JWT_SECRET`。固定 Provider 已在本机 WSL2 的 Linux 容器验收。
+根 Compose 以 `business` 模式启动单 Web，默认把 5010 发布到宿主回环。镜像健康检查使用 `/api/ready`。先从 `.env.example` 准备 `.env` 和实例专用 `JWT_SECRET`，再启动。准备依赖时镜像构建需要访问依赖来源或使用已有缓存。
 
-完整产品封闭预发使用显式 `DIAGNOSIS_SANDBOX_DB_PATH` 的 SQLite `business` 模式。备份时对业务库、只读聚合、知识库、会话记忆、资料清单和审计文件取同一停写截点。使用 `scripts/sqlite_store_backup.py` 核验和恢复备份。MySQL R2 提供回环诊断演练及有限的数据投影。
-
-异地部署使用专用实例，先在外网完成访问控制、SSE 和审批回执走查，再分享地址。 [异地演示指南](docs/REMOTE_DEMO.md)
+```bash
+docker compose up -d --build
+docker compose ps
+curl -fsS http://127.0.0.1:5010/api/ready
+```
 
 ### 封闭运行与启动额度
 
-使用 `deploy/storepilot-sealed/compose.yaml` 叠加配置和 `inspections` profile，可在本机启动 Web 及巡检消费者。封闭配置使用固定 Provider，Web 绑定宿主回环。需指定本地镜像和实例专用环境文件。
+WSL2 验收使用固定 Provider、合成 SQLite 数据、单独 Compose 项目和回环端口。封闭配置复用本地镜像，启用 `inspections` 后 Web 就绪且完成 schema 初始化，消费者再启动。Web 和消费者共享 `/app/data/business.sqlite3`。
 
-网关配置 `STOREPILOT_STARTS_PER_SECOND` 后，多个同机 Web 共享业务卷中的启动额度库。部署同一实例的各 Web 时使用相同额度和数据卷。审批、历史查询与工作群在途额度维持各自的接口约定。
+```bash
+# 预先准备本地镜像 storepilot:sealed，例如 docker build -t storepilot:sealed .
+export STOREPILOT_SEALED_IMAGE="$(docker image inspect --format '{{.Id}}' storepilot:sealed)"
+export STOREPILOT_SEALED_ENV_FILE="$(mktemp)"
+export STOREPILOT_SEALED_PORT=15046
+export STOREPILOT_BACKGROUND_MODEL=mock
+python3 -c 'import secrets; print("JWT_SECRET=" + secrets.token_urlsafe(48))' >"$STOREPILOT_SEALED_ENV_FILE"
+dc=(docker compose --env-file /dev/null -p storepilot-sealed -f docker-compose.yml
+    -f deploy/storepilot-sealed/compose.yaml --profile inspections)
+"${dc[@]}" config -q
+"${dc[@]}" up -d --wait
+"${dc[@]}" ps
+curl -fsS http://127.0.0.1:15046/api/ready
+```
+
+基本启动后可以通过已授权群订阅订单销量发布。多 Web 拓扑经过 Envoy 时，启动额度按认证账号在共享 SQLite 文件内占额。各 Web 使用相同额度配置、业务卷和签名密钥。网关负责速率检查，工作群在途名额由业务准入控制。[网关运行配置](deploy/storepilot-gateway/) · [账号额度实现](backend/agent/start_rate.py)
+
+## 备份与恢复
+
+在 Web 与消费者都停止写入后，从同一停写截点取得实例卷。备份工具识别 `business.sqlite3` 和同目录约定的知识库、会话记忆、资料、审计及可选的指标库和额度库。恢复后先核对清单与 SQLite，再用新卷启动实例。
+
+```bash
+python -m scripts.sqlite_store_backup backup /path/to/stopped-instance /path/to/new-backup
+python -m scripts.sqlite_store_backup verify /path/to/new-backup
+python -m scripts.sqlite_store_backup restore /path/to/new-backup /path/to/new-instance
+```
+
+外部演示使用专用实例及证据走查，MySQL R2 仅覆盖文档所列的诊断演练和有限投影。[远程演示部署草案](docs/REMOTE_DEMO.md) · [MySQL 演练接口](API.md#数据库运行模式)

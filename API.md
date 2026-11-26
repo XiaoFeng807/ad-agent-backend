@@ -1,6 +1,8 @@
 # API 接口文档
 
-应用统一通过 [fast_server.py](fast_server.py) 中的 `app` 启动。本文记录当前 FastAPI 契约，启动后可从 `/docs` 查阅 OpenAPI。启动命令见 [部署文档](DEPLOY.md)。
+FastAPI 启动后在 `/docs` 提供 OpenAPI。本文补充浏览器使用的 SSE、来源校验、审批和重放约定。[应用入口](fast_server.py) · [启动命令](DEPLOY.md)
+
+[认证](#认证) · [店铺订单](#店铺订单sqlite) · [巡检订阅](#后台巡检订阅与事件sqlite) · [商品审批](#工作群商品运营本地-sqlite-测试) · [商品资料](#商品资料检索与原文) · [搜索词诊断](#工作台广告搜索词诊断) · [健康检查](#健康检查)
 
 ## 数据库运行模式
 
@@ -18,6 +20,7 @@
 ## 认证
 
 标有 Bearer 的 HTTP 接口从 `Authorization: Bearer <token>` 读取凭据。
+同一账号重新登录后，旧令牌会失效。历史、原文、回执等接口按读取时的会话和资源权限判断。
 
 ### POST /api/login
 登录并获取 token。
@@ -41,7 +44,10 @@
 | `GET /api/orders/shops/olist-v2/{shop_id}/sales/products` | 返回授权卖家可用的 `product_id` 和数据日期边界。 |
 | `GET /api/orders/shops/olist-v2/{shop_id}/sales` | 按 `product_id`、`baseline_start`、`baseline_end`、`current_start`、`current_end` 和可选 `status` 读取两窗销量。日期窗等长、先后有序且互不重叠，每窗最多 90 天。默认纳入 `delivered` 和 `shipped`。结果包含每日件数与去重订单数、窗口总计、绝对及相对变化。零基准的相对变化为 `null`。 |
 | `POST /api/orders/shops/amazon-us-fbm/{shop_id}/preflight` | 换取 LWA 令牌并用近期一小时的窗口探测 Orders 访问，读取一页、每页最多一单，写入预检回执。 |
-| `POST /api/orders/shops/amazon-us-fbm/{shop_id}/sync` | 用带时区的 `updated_after`、`updated_before` 执行手动同步。结束时间需至少早于当前时间两分钟，分页全部成功后原子提交订单及回执。 |
+| `POST /api/orders/shops/amazon-us-fbm/{shop_id}/sync` | 用带时区的 `updated_after`、`updated_before` 执行手动同步。结束时间需至少早于当前时间两分钟。完整分页通过后，同事务写订单、导入回执和适用的销量发布。 |
+| `GET /api/orders/sales/publications` | 按 `after` 和 `limit` 读取当前账号有权查看的销量发布。 |
+| `GET /api/orders/sales/publications/{publication_id}` | 回查单个发布、商品销量快照和导入批次。 |
+| `GET /api/orders/shops/{source}/{shop_id}/sales-imports/{batch_id}` | 分页回查该店铺的导入批次与原行。 |
 
 订单来源为 `olist-v2` 或 `amazon-us-fbm`。Olist 的原始状态、交运时间、混合卖家标记为整单字段，`items[].ship_by` 为行项发货截止。Olist 下单、交运和行项截止保留 CSV 原值，时区未知。Amazon 的 `ship_by` 为整单发货截止，时间统一为 UTC。两者均提供 `synced_at`，有源更新时间时提供 `source_updated_at`。
 
@@ -67,7 +73,21 @@ Amazon 只接收可确认的美国站卖家自发货订单。明确属于其他�
 
 审批面板打开待审批提案时可在同一 GET 附加 `?review=true`。服务端只读校验群归档状态及当前证据快照，失效时返回 `approval_blocked`。确认 POST 在写事务内重新校验。
 
-动作跨群、跨账号或不存在时为 404，来源或版本变化为 409，存储失败为 503。真实 Amazon 商品读取和写入待店铺授权后另验。
+动作不可见或不存在时返回 404。依据失效时首次批准返回 409，存储失败返回 503。销量更正时，有权用户可从 `approval_block_reason` 查看原销量与当前销量；撤权后的响应不提供这些字段。已执行动作依据动作 ID 读回原回执，同一事务中只产生一次版本更新和一条回执。只撤订单读权时，Listing 仍可见的回执继续可读，旧订单与报表依据隐藏，复盘返回 404。
+
+## 后台巡检订阅与事件（SQLite）
+
+以下路径以 `/api/chat/conversations/{conversation_id}/background-inspections` 为前缀。请求使用 Bearer，并需要群和目标数据的读权。部署需要配置后台模型及运行消费者。
+
+| 接口 | 请求与结果 |
+| --- | --- |
+| `POST /subscriptions` | 登记 `source`、`shop_id`、`marketplace_id`、`sku`、两个日期窗的四个端点 `windows` 和布尔字段 `allow_listing_proposal`。成功返回 201 和 `subscription_id`。 |
+| `POST /publications` | 显式受理指定的 `publication_id` 和 `windows`，可传 `recheck`。有效订阅也可由消费者自动受理。 |
+| `POST /` | 路径为前缀本身。用 `message` 和 `Idempotency-Key` 受理后台巡检，首次返回 202，重放返回 200 和原 `run_id`。 |
+| `GET /{run_id}` | 读已授权的运行状态、事件和可见答案。可用 `after` 从指定事件序号继续读取。 |
+| `GET /{run_id}/events` | SSE 推送，使用 `Last-Event-ID` 或 `after` 续读，浏览器断线后消费者可以继续执行。 |
+
+报表覆盖不足时巡检可以保存说明。证据齐备且订阅允许生成提案时，产物仍等待人工批准。[封闭 Compose 配置](DEPLOY.md#封闭运行与启动额度)
 
 ## 商品资料检索与原文
 
@@ -80,7 +100,7 @@ SQLite 商品目录支持按授权店铺、站点和 SKU 查询当前有效资�
 
 `candidates` 用于查看召回排名。只有受支持的问题且必要原文齐全才返回 `evidence`。其余请求返回 `status=insufficient_evidence`，包括已授权但尚无有效资料的商品。未登录返回 401，越权商品、失效分块或不存在的分块返回 404。
 
-普通聊天和工作群可在 `POST /api/chat/stream` 的消息中输入「商品资料：店铺 站点 SKU 问题」。未选商品时，在站点后换行输入问题，聊天会列出该账号在店铺和站点内可见的商品名和完整 SKU。请选择 SKU 后按上述格式重新提交问题，服务端会重新核验权限并查询当时的生效版本。澄清提示和有效来源引用可在刷新后读回。 [资料导入与版本切换命令](scripts/product_evidence.py)
+普通聊天和工作群可在 `POST /api/chat/stream` 中输入「商品资料：店铺 站点 SKU 问题」。目标不明确时，系统展示能从题面可靠匹配且当前可读的选项，或请用户提供店铺、站点和 SKU。选择后重新提交，服务端在检索前重验权限与活动版本。澄清提示和有效来源引用可在刷新后读回。[资料导入与版本切换](docs/product-evidence/README.md)
 
 普通聊天与工作群的历史回查按当前店铺读权和活动版本展示来源。引用失效时隐藏该来源及其版本元数据并显示失效提示。仍有效的引用、原问题和缺项说明保留。历史回执在读取时处理，响应使用 `Cache-Control: no-store`。
 
@@ -401,7 +421,10 @@ data: {"type":"done","task_id":"a1b2c3d4e5f6478899aabbccddeeff00","trace_id":"4d
 ## 健康检查
 
 ### GET /api/health
-无需登录，返回静态服务状态和 API 版本 `3.0.0`。
+无需登录，返回 HTTP 200，`data.status` 为 `ok`，`data.version` 为 `3.0.0`。
+
+### GET /api/ready
+无需登录。启动完成、JWT 可用且基础存储检查通过时返回 200 和 `data.status="ready"`。暂不可用时返回 503 和 `data.status="not_ready"`。该探针只检查应用基础就绪。[探针与环境说明](DEPLOY.md#存活与就绪)
 
 ## 知识库
 

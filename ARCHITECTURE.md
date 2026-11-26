@@ -1,6 +1,21 @@
 # 项目架构
 
-StorePilot 通过 FastAPI/Uvicorn 提供工作台、REST、SSE 和兼容 WebSocket。工作台的普通聊天和业务任务由独立的 Agent 委派运行时处理。 [API 契约](API.md) · [浏览器实拍](docs/SHOWCASE.md)
+工作台通过 FastAPI 拉取数据和回执，通过 SSE 接收对话与任务进度。Agent 可以选择读取工具、委派取证和提出建议。服务端负责身份与数据范围、实际读写、事务和回执。[API 契约](API.md) · [浏览器实拍](docs/SHOWCASE.md)
+
+## 一条订单到审批的链路
+
+```mermaid
+flowchart LR
+    O["订单同步"] --> P["订单原行与销量发布"]
+    P --> W["后台消费者按授权订阅读取"]
+    R["报表补齐"] --> W
+    W --> A["巡检依据与待审提案"]
+    A --> H["人工批准"]
+    H --> T["同事务重验并写入商品与回执"]
+    T --> V["工作台读回与后续复盘"]
+```
+
+销量发布关联实际订单批次和原行，按店站 SKU 保存快照。巡检按覆盖、比较窗和当前资料判断可否生成待审。首次批准重新核对这些依赖，销量、资料或权限已经变化时，返回冲突或不可见状态。提交成功后可以用原动作 ID 读回唯一回执。复盘从执行回执出发，比较原基准窗与批准后七个完整日。[销量发布](backend/database/order_sales.py) · [后台订阅](backend/database/inspection_subscriptions.py) · [共用证据判断](backend/database/listing_evidence.py) · [审批事务](backend/database/listing_operations.py)
 
 ## 项目地图
 
@@ -18,12 +33,13 @@ StorePilot 通过 FastAPI/Uvicorn 提供工作台、REST、SSE 和兼容 WebSock
 
 ## Web 与 Agent 调用链
 
-- **启动与业务请求。** SQLite 模式的 FastAPI lifespan 调用 `init_db()`、`seed_data()` 和模拟日报生成器。数据路由调用业务工具或访问 SQLite。身份从经认证的会话取得，业务查询按属主、角色或授权店铺限制范围，具体契约见 [API](API.md)。
+- **启动与业务请求。** SQLite 实例默认以 `business` 模式初始化 schema。显式选择 `demo` 并指定独立 SQLite 路径才补齐演示数据。业务查询按服务端认证的账号、角色和店铺授权确定范围。[启动入口](fast_server.py)
 - **首页对话。** `index.html` → `POST /api/chat/stream` → 校验 Bearer Token → 从 `AgentPool` 获取 `PipelineCoordinator` → 写入用户消息及获取优化上下文 → `chat_stream()` → SSE 事件及回复存储 → `finally` 归还实例。首页可并发请求历史与发送消息，历史读取排除该页已渲染的消息。[历史接口](API.md)
 - **普通聊天与工作群 ReAct。** `PipelineCoordinator.chat_stream()` 交给编排器。主模型可直接作答、发起只读查询或填写任务单。直接查询与委派可共存于一个模型响应，服务端按原始调用 ID 回送结果。每批结束后，`HomeReAct` 根据经准入的证据、已知目标及共享模型、工具和时间额度作继续判断。连续两轮无新增证据时收尾，首次可纠正错误有一次反馈机会，专用补查沿用原准入。可选规划提炼用户明确的目标和条件。同步 `PipelineCoordinator.chat()` 另有关键词管线入口。
 - **请求内任务与产物。** `HomeReAct` 装配认证身份、工具白名单和请求内 `DelegationRun`。运行时校验依赖与引用，按任务装配临时 Worker。依赖方在上游任务完成后取得声明引用的已验收产物。追加复用同一看板。回执按工具证据、模型总结和缺项分别投影，仅向主模型提供当批字段和产物标识。旧助手、同事调用和降级读取共用首页执行额度。对话记忆另有独立的消息边界校验。 [工具接入](backend/agent/home_react.py) · [委派运行时](backend/agent/team_runtime.py)
 - **同轮重复动作。** 主 Agent 与 Worker 使用 `RunReadCache` 按业务参数串行化读取、原参补查和回执发布。重复读取优先使用通过当前属主与范围核验的原产物。派单有明确 `read_scope` 时，调度器按授权能力、读取范围、依赖和已接收产物判断是否需要创建 Worker。群历史保留运行提示，Trace 的 `business_read`、`tool_reuse`、`duplicate_dispatch` 和 `react_decision` 关联同一轮。
 - **取消与回收。** SSE 断线和发送失败触发请求级取消。主模型与 Worker 的模型请求和读取共用计数及截止时间。运行时关闭新调用和回执准入，等待在途同步工具退出，回收 Worker，再归还池中的编排器。首页 Trace 用分派运行 ID 关联 Worker 生命周期、原始工具调用及回执。助手回复提交后才发送唯一 `done`。
+- **后台巡检与共享限额。** 持久任务的执行与 SSE 订阅分离，订阅携带游标读回已经提交的事件。进程退出后，同机消费者可以基于持久领取记录和检查点续跑。网关启动速率按账号和固定秒窗占额，同机 Web 通过共享 SQLite 短事务统一判定。工作群全局及账号在途额度随轮次领取与释放记录管理。[后台存储](backend/database/background_inspections.py) · [账号启动额度](backend/agent/start_rate.py)
 - **一句话投放诊断。** SSE 的 `natural` 模式进入 `NaturalDiagnosisExecution`。主编排发现本人 active 计划，以最新共同覆盖日为锚点确定相邻等长窗口，每窗优先七天。数据 Agent 仅接收计划和日期清单，可查两窗指标和覆盖。知识 Agent 仅接收指定版本规则 ID，可查该规则。两角色并行调用现有 Provider，各自按供应商原始 `tool_call_id` 拼接工具消息。角色上下文只包含当前任务及本角色的取证消息。[编排实现](backend/agent/natural_diagnosis.py)
 - **自然诊断证据交接。** 每轮保存独立的运行时调用序列，按分派 ID 和工具参数采纳结构化回执。指标校验范围、日期、覆盖及来源绑定。知识回执核对规则版本、原文和可读回分块。唯一缺项为临时失败时，主编排在原分派下按相同参数补查一次。业务工具共用 12 次额度，含发现和提交。每轮至多两次分派、六次模型请求，单角色至多三次。Trace 可关联分派、模型调用、工具结果、证据采纳、补查和停止原因。
 - **自然诊断比较和审批。** 主编排用服务端校验过的回执复算 CTR 和排名。缺报或指定版本不可验证时，报告缺项并停止。保存比较和首次确认复核时重查候选状态和指标来源。命中阈值时保存快照和复核提案，确认后由独立 GET 返回原轮证据。暂停资格由独立的沙箱链路处理。[接口](API.md)
@@ -38,9 +54,9 @@ StorePilot 通过 FastAPI/Uvicorn 提供工作台、REST、SSE 和兼容 WebSock
 
 ## 知识检索
 
-- 知识搜索端点与 Agent 知识工具调用 `RAGKnowledge.generate()`。ChromaDB 提供 BGE 向量召回，TF-IDF 索引从持久分块重建，RRF 按分块 ID 合并两路结果。知识工具保留上下文与来源，并返回结构化证据。BGE 模型为 `BAAI/bge-small-zh-v1.5`，输出 512 维，默认离线加载。
+- **公共广告知识。** `RAGKnowledge.generate()` 使用 Chroma 中的持久分块，合并 BGE 向量与 TF-IDF 关键词排序。指定版本的规则可按 ID 精确查询。[知识索引](backend/rag/rag_knowledge.py)
 - 商品资料的发布版本、源文本、定位和 BGE 向量存入 SQLite。检索在同一读取快照内按商品目录授权和有效版本选出候选，再执行范围内向量评分。聊天默认保留原问题候选，并用属性别名和子问题补查，再逐项校验引用。回查原文时重新校验授权及有效版本。GPU 重排可按账号灰度，默认关闭。 [聊天检索](backend/rag/product_chat_search.py) · [资料导入](scripts/product_evidence.py)
-- `recall()` 提供向量召回、可用时的 TF-IDF 加余弦相似度召回，以及 RRF 融合。`causal_retrieve()` 使用该方法进行因果查询展开和排序，其调用未见于主知识搜索路径。
+- **引用和回显。** 商品资料会按 SKU、生效版和授权选候选。服务端验证部件、属性、条件及出处，允许部分可答。原文 GET、会话历史和业务回执按当前权限投影。撤权或切版后，失效来源的定位及链接随之隐藏。[准入](backend/rag/product_candidate_admission.py) · [历史投影](backend/database/product_receipt_history.py)
 
 ## 数据与外部依赖
 
@@ -68,6 +84,3 @@ StorePilot 通过 FastAPI/Uvicorn 提供工作台、REST、SSE 和兼容 WebSock
 [离线 SDK 回归](backend/agent/tests/test_provider_contract.py) 使用真实 Provider 和 OpenAI SDK，将 HTTP 传输替换为本地捕获，核对实际请求模型、工具定义和按原 ID 回喂的工具结果。[真实联调入口](scripts/run_real_diagnosis.py) 不替换模型，先建立独立 SQLite、测试用户与演示规则库，再经现有 ASGI 路由完成两轮、确认第一轮及回读。请求与响应钩子只记录允许的模型和工具字段；自由格式日志丢弃，归档 Trace 和报告统一脱敏。
 
 离线链路与真实模型分开报告。广告指标与原轮复核回读已用真实 DeepSeek 验证。总点击/总曝光、百分点差、相对降幅及指定规则版本的判定从服务端实际回执产生。证据与规则版本不一致或缺项时停止判定。SSE 将 `metrics/calculation/rule_evaluation` 连同引用、缺项传至同事务保存的原轮快照。 [真实 GLM 协作与商品审批实拍](docs/SHOWCASE.md)
-
-
-TASK-024：自然诊断可指定同任务已提交的比较轮次作为来源；接受事务固定继承的比较定义和规则，执行重新发现候选并按角色最小字段取证。每轮证据和提案独立保存，摘要只允许最新接受轮次更新。
